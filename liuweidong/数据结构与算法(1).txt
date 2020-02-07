@@ -1,0 +1,374 @@
+
+               我们都是自己命运的设计者，就看你能否掌握主动权。强者在心底勾勒未来，在隐忍中奋斗，在孤独中跋涉，用坚实的脚步靠近憧憬。
+	       弱者只会用语言描绘明天，在偶然中飘忽，在困苦中偏移，等走到终点，却发现抵达的地方早已不是原先想象的样子。
+	       命运不会偏袒谁，但会眷顾矢志不渝的人。
+
+一、树  
+   树的高度  ： 从底向上，最低为1
+   数的深度  ：从上到下，根节点的深度为1
+    二叉树的性质 ：
+
+	（1）若二叉树的层次从0开始，则在二叉树的第i层至多有2^i个结点(i>=0)。
+
+	（2）层次为k的二叉树最多有2^(k+1) - 1个结点(k>=-1)。 (空树的高度为-1)
+
+	（3）对任何一棵二叉树，如果其叶子结点(度为0)数为m, 度为2的结点数为n, 则m = n + 1。
+          满二叉树  共有2^(k+1) - 1个结点
+         完全二叉树从根结点到倒数第二层满足完美二叉树，最后一层可以不完全填充，其叶子结点都靠左对齐.
+
+	 二叉树：   链式二叉树（链表）
+	                 顺序二叉树(连续的数组) ： 只适用于完全二叉树,
+			                      第n个结点的左字结点的位置 ： 2 * n+1
+					      第n个结点的右字结点的位置  ： 2*n+2
+					      第n个结点的父节点位置为  ：（n-1）/2
+			将数组构建成顺序存储二叉树 ：
+				    public static void main(String[] args) {
+					int []data = new int[]{1,2,3,4,5,6,7};
+					frontTree(data,0);
+				    }
+
+
+				    //先序遍历顺序讯存储二叉树
+				    public static void frontTree(int []data, int start){
+					if(data != null && data.length >0){
+					    System.out.println(data[start]);
+					}
+					// 当前节点的左节点（root.left != null）
+					if(2*start + 1 < data.length){
+					    frontTree(data,2*start+1);
+					}
+					// 当前节点右节点（root.left != null）
+					if(2*start+2 < data.length){
+					    frontTree(data,2*start+2);
+					}
+				    }
+
+  堆排序 ：  大顶堆（从小到大排序）、小顶堆（从大到小排序）（同样只适用于完全二叉树）
+                  大顶堆 ：每个父结点的数值都大于子节点的数值
+		  小顶堆 ：每个父结点的数值都小于子节点的数值
+		     public void heapSort(int []data){
+			int start = (data.length - 2)/2;    // 找到最后一个非叶子结点
+			for(int i = start; i >=0; i--){
+			    maxHeap(data,data.length,i);
+			}
+			for (int i = data.length -1; i >=0; i--){
+			    int temp = data[0];
+			    data[0] = data[i];
+			    data[i] = temp;
+			    maxHeap(data,i,0);
+			}
+		    }
+
+		    // 先转化成大顶堆
+		    public  static void maxHeap(int []data, int size, int index){
+			// index为最后一个飞叶子结点
+			// 找到他的两个叶子节点进行比较
+			int left = 2*index+1;
+			int right = 2* index+2;
+			//要有每个节点都要比任意一个子节点的值要大，进行比较
+			// 假设此时根节点最大
+			int max = index;
+			if(left < size && data[left] > data[max]){
+				max = left;
+			}
+			if(right < size && data[right] > data[max]){
+			    max = right;
+			}
+			// 进行交换
+			if(index == max){
+			    return;
+			}else {
+			    int temp = data[index];
+			    data[index] = data[max];
+			    data[max] = temp;
+			    maxHeap(data,size,max);
+			}
+		    }
+
+线索二叉树 ：相当于一个双向链表。 分为中序线索二叉树、先序线索二叉树、后序线索二叉树
+                     线索化二叉树的一个结点的前一个结点，叫做 前驱结点， 后一个结点叫做 后继结点
+                     构建线索二叉树 ：
+		           public static void createSearchTree(Node node){
+				// 如果当前节点为空，则停止处理
+				if(node == null){
+				    return ;
+				}
+
+				// 先处理左子树
+				createSearchTree(node.left);
+				// 处理当前节点
+				if(node.left == null){
+				    node.left = pre;
+				    node.leftType = 1;
+				}
+				if(pre != null && pre.right == null){
+				    pre.right =node;
+				    pre.rightType = 1;
+				}
+				// 当前节点变为前驱节点
+				pre = node;
+
+				// 在处理右子树
+				createSearchTree(node.right);
+			    }
+			// 遍历线索二叉树
+			    public static void showSearchTree(Node node1){
+				Node node = node1;
+				while(node != null){
+				    while(node.leftType == 0){
+					node = node.left;
+				    }
+				    System.out.println(node.value);
+				    while (node.rightType == 1){
+					node =node.right;
+					System.out.println(node.value);
+				    }
+				    node = node.right;
+				}
+			    }
+
+
+
+赫夫曼树 ： 最优二叉树
+                 叶子结点带权路径  :  叶子节点 * 其前辈节点的个数
+		 树的带权路径长度  WPL ：  叶子结点带权路径之和，当树的带权路径长度最小时，称为最优二叉树。
+
+
+         // 构建赫夫曼树的步骤
+	// 先将数组中每一个数创建一个节点放到list集合中
+	// 对list集合进行排序，按有小到大的顺序排列
+	// 取出集合中前两个元素，作为子节点，父节点的值为两个子节点的值得和
+	// 移除前两个节点，并将新创建的父节点放到list集合中
+	// 用递归重复上述步骤，直至集合中只有一个 Node，将其放回，此时就是最优二叉树
+
+		 public static Node createHfTree(List<Node> list){
+		//maopaoSort(arr)
+		if(list.size() == 1){
+			System.out.println(list.get(0));
+			return list.get(0);
+		}
+		maopaoSort(list);
+		Node node1 = list.get(0);
+		Node node2 = list.get(1);
+		list.remove(node1);
+		list.remove(node2);
+		Node newNode = new Node(node1.value + node2.value);
+		newNode.left = node1;
+		newNode.right = node2;
+		list.add(newNode);
+		createHfTree(list);
+		return list.get(0);
+	}
+	
+	       //   此时Node节点需要实现comparable接口
+		public static void  maopaoSort(List<Node> list){  
+		   Collections.sort(list);
+		}
+}
+
+二叉排序树 ：（ 二叉查找树，二叉搜索树）BST：对于二叉树中的任意一个非叶子结点，要求左子节点比当前节点值小，右子节点比当前节点值大。
+                 好处 ： 既有利于查询某个节点，也有利于删除或插入某个节点
+		 该二叉树中序遍历后 是 从小到大 的排序方式
+             //  创建二叉搜索树
+		    public  static  Node createtree(Node root, int n){
+			if(root == null){
+			    root = new Node(n);
+			    return root;
+			}
+			// 当前值大于根节点，则为左子节点
+			if(root.value > n){
+			    root.left = createtree(root.left, n);
+			}else {
+			// 否则为右子节点
+			    root.right = createtree(root.right, n);
+			}
+			return root;
+		    }
+	    // 搜索二叉树查找某一个元素
+		    public static Node getIndex(Node node, int value){
+		    // 如果等于当前节点，直接返回
+		       if(node.value == value ){
+			   return node;
+		       }
+		       // 如果比当前的节点小，则向左进行遍历查找
+		       if(node.value > value && node.left != null){
+			   return getIndex(node.left,value);
+
+		       }
+		       // 如果大于当前节点则向右进行遍历查找
+		       if(node.value < value && node.right != null){
+			   return  getIndex(node.right, value);
+		       }
+		       // 找不到返回空即可
+		       return null;
+		    }
+
+	 // 删除某一个节点（先找到父节点）
+				   public static void deleteNode(Node root, int value){
+				 //当当前节点为空时，直接返回return
+				if(root == null){
+				    return ;
+				}else{
+				    // 找到要删除值得当前节点
+				    Node target = getIndex(root, value);
+				    // 找到该节点的父节点
+				    Node parent = seachParent(root, value);
+
+				    // 情况一 ： 删除的节点为叶子结
+				    if(target.left == null && target.right == null){
+					if(target.value < parent.value){
+					    parent.left = null;
+					    return;
+					}
+					if(target.value > parent.value){
+					    parent.right = null;
+					    return;
+					}
+				    }
+				    // 情况二， 删除的结点只有一个子节点
+				    if(target.left == null && target.right != null){
+					if(target.value < parent.value){
+					    parent.left = target.right;
+					    return;
+					}
+					if(target.value > parent.value){
+					    parent.right = target.right;
+					    return;
+					}
+				    }
+				    if(target.left != null && target.right == null){
+					if(target.value < parent.value){
+					    parent.left = target.left;
+					    return;
+					}
+					if(target.value > parent.value){
+					    parent.right = target.left;
+					    return;
+					}
+				    }
+				    // 情况三当目标结点有两个子节点时,遍历目标结点的右子树，找到右子树值最小的节点，删除
+				    // 并将其值赋给删除的目标接节点
+				    if(target.left!=null && target.right!=null){
+					int min = getMin(target.right);
+					target.value = min;
+				    }
+
+				}
+
+			    }
+			    // 找到右子树的最下值
+			    private static int getMin(Node right) {
+				Node target = right;
+				while (target.left != null){
+				    target = target.left;
+				}
+				int min = target.value;
+				deleteNode(root,target.value);
+				return min;
+			    }
+
+			    private static Node seachParent(Node root, int value) {
+				if((root.left!=null && root.left.value == value)||(root.right !=null && root.right.value ==value)){
+				    return root;
+				}else if(value < root.value && root.left!=null){
+				    return seachParent(root.left,value);
+				}else{
+				    if(value > root.value && root.right!=null){
+					return seachParent(root.right,value);
+				    }
+				    return null;
+				}
+
+			    }
+
+
+
+
+AVl 树（平衡二叉树） ： 也是一颗二叉排序树，要求左子树和右子树的高绝对值不能超过 1，也是一颗排序二叉树，需要进行旋转
+                       //  创建二叉搜索树
+		    public  static  Node createtree(Node root, int n){
+			if(root == null){
+			    root = new Node(n);
+			    return root;
+			}
+			if(root.value > n){
+			    root.left = createtree(root.left, n);
+			}else {
+			    root.right = createtree(root.right, n);
+			}
+			// 判断左右子树的高度差
+			if(height(root.left) - height(root.right) >=2){
+			    // 双旋转
+			    if (root.left != null && height(root.left.left) < height(root.left.right)) {
+				//先左旋转，在右旋转
+				leftRotate(root.left);
+				rightRotate(root);
+			    }else {
+				//此时进行右旋转
+				rightRotate(root);
+				System.out.println(height(root));
+				    }
+				}
+				if(height(root.right) - height(root.left) >= 2){
+				    if (root.right != null && height(root.right.right) < height(root.right.left)) {
+					//先左旋转，在右旋转
+					rightRotate(root.right);
+					leftRotate(root);
+				    }else {
+					leftRotate(root);
+				    }
+				}
+				return root;
+			    }
+
+				    // 进行左旋转
+			    private static void leftRotate(Node root) {
+				// 创建一个新节点等于根节点的值
+				Node newNode = new Node(root.value);
+				newNode.left = root.left;
+				newNode.right = root.right.left;
+				root.value = root.right.value;
+				root.right = root.right.right;
+				root.left = newNode;
+			    }
+
+			    // 进行右旋转
+			    private static void rightRotate(Node root) {
+				// 首先创建一个新的节点等于根节点
+				Node newNode = new Node(root.value);
+				// 新节点的右节点为根节点的右节点
+				newNode.right = root.right;
+				// 新节的左节点为根节点的左节点
+				newNode.left = root.left.right;
+				// 根节点的值等于左节点的值
+				root.value = root.left.value;
+				// 根节点的左节点等于左节点的左节点
+				root.left = root.left.left;
+				// 根节点的右节点等于新的节点
+				root.right = newNode;
+			    }
+
+			    // 求树的高度
+			    public static int height(Node root){
+				if(root == null){
+				    return 0;
+				}
+				return Math.max(height(root.left),height(root.right))+1;
+			    }
+
+  
+  红黑树 ：
+     红黑树的特性:
+	（1）每个节点或者是黑色，或者是红色。
+	（2）根节点是黑色。
+	（3）每个叶子节点（NIL）是黑色。 [注意：这里叶子节点，是指为空(NIL或NULL)的叶子节点！]
+	（4）如果一个节点是红色的，则它的子节点必须是黑色的。
+	（5）从一个节点到该节点的子孙节点的所有路径上包含相同数目的黑节点。
+
+哈希表 ：
+   设计散列函数  ： 直接定址法
+                             数据分析法
+			     平方取中法
+			     取余法 
+
+         

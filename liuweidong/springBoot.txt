@@ -1,0 +1,961 @@
+                                                           SpringBoot : 简化spring的开发的框架
+
+1、thyemleaf语句 ：（相关文档在 E:// dd文件中）
+        在pom.xml中引入如下依赖：
+		    <dependency>
+			    <groupId>org.springframework.boot</groupId>
+			    <artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+            限制版本号：
+		<properties>
+			<thymeleaf.version>3.0.9.RELEASE</thymeleaf.version>
+			<thymeleaf-layout-dialect.version>2.2.2</thymeleaf-layout-dialect.version>
+		</properties>
+
+     *  在静态资源下的templates文件下创建 html 相关的文件 。
+        <!DOCTYPE html>
+	<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+	<head>
+	    <meta charset="UTF-8">
+	    <title>Title</title>
+	</head>
+	<body>
+	       <div th:text="${hello}">成功</div>
+	</body>
+	</html>	
+        导入约束 ： xmlns:th="http://www.thymeleaf.org" ， 会有自动提示
+     * 在Controller层： public String success(Map<String,Object> map){}， 此时map中封装的数据将会被放进域中，进入视图层
+        取值 ： th:text="${键值}"， 代表标签的文本，当文本中本身有值时，其会被覆盖。
+	            th:id="${}"   th:class="${}"   动态获取 id 和 class
+		    th:utext="${}"  可以转化 html 语句
+         遍历 ： <div th:each="msg:${msg}">[[${msg}]]</div>      [[ ${}   ]] : 原样输出    也可以在标签内写 ： th:text="${msg}"
+	              <div th:each="msg:${msg}">[(${msg})]</div>     [(  ${}   )]: 可以转义html语句
+         访问 ：th:href="@{/index.html(l='zh_CH')}"                  th:href="@{/index.html(id=5)}"  代表项目的根目下，参数直接写（）,会自动解析
+         判断 ： th:if  <div  style="color: red" th:text="${msg}" th:if="${not #strings.isEmpty(msg)}">   满足th:if后，就回取 th：text 
+
+	 公共页面抽取问题 ：
+	    *   th:fragment    th:fragment="topbar"   定义抽取的页面
+	    *  在另一个页面中引入 ： th:insert="~{模板页面 :: topbar}"          <div th:replace="~{dashboard::#sidebar}"></div>
+	        引入的三种方式 ： th:insert   <div>抽取的元素</div>  ： 将抽取的元素放到了一个新的标签
+		                            th:replace : 将抽取的元素原样放置
+					    th:include : 
+           *   通过Id选择器的方式引入模板  ：
+	          在资源模板中定义 ID   id="sidebar"
+		  在另一个页面中引入 ; th:replace=~{模板页面 :: #sidebar}
+	 *  高亮判断传值 
+	      在公共页面进行判断 ：
+	          <a class="nav-link active"
+                        th:class="${activeUri}=='back'?'nav-link active':'nav-link'">
+	      在引入公共页面进行传值  : <div th:replace="~{commons/bar::#sidebar(activeUri='emps')}"></div>   传值方式 ：在尾部加上 （参数）
+
+	 * 格式化日期函数 ：  #dates.format(时期，格式)
+	        <td th:text="${#dates.format(emp.birth,'yyyy-MM-dd')}"
+
+          * 自定义设置属性 ： th:attr=""
+	      <button th:attr="del_uri=@{/delete(id=${emp.id})}" class="btn btn-sm btn-danger">删除</button>
+	       相当于在标签内设置了属性 ： del_uri = @{/delete?(id=1001)}
+        
+2、 springmvc需要补充 ：
+        @Configuration
+		// 自定义web 相关的功能，需要继承webmvcConfigurerAdapter，重写其中的方法
+		public class MyConfig extends WebMvcConfigurerAdapter {
+		    @Override
+		    public void addViewControllers(ViewControllerRegistry registry) {
+			//请求路径为liuweidong时，则会访问show的视图
+		       registry.addViewController("/liuweidong").setViewName("show");
+		    }
+         }
+
+	 指定访问路径的视图 ：
+	   @Bean
+	    public WebMvcConfigurerAdapter webMvcConfigurerAdapter() {
+		WebMvcConfigurerAdapter adapter = new WebMvcConfigurerAdapter() {
+		    @Override
+		    public void addViewControllers(ViewControllerRegistry registry) {
+			registry.addViewController("/").setViewName("index");
+			registry.addViewController("index.html").setViewName("index");
+		    }
+		};
+		return adapter;
+	    }
+
+3、spring实现国际化 ：       访问 :th:href="@{/index.html(l='zh_CH')}"
+        自定义组件 ： 实现lLocaleResolver 类
+	public class MyWebLocale implements LocaleResolver {
+	    @Override
+	    public Locale resolveLocale(HttpServletRequest httpServletRequest) {
+		String l = httpServletRequest.getParameter("l");
+		Locale locale = Locale.getDefault();
+		if(!StringUtils.isEmpty(l)){
+		    String[] ls = l.split("_");
+		    locale = new Locale(ls[0],ls[1]);                  // 创建locale()
+		}
+		return locale;
+	    }
+      需要在 @Configuration中配置@Bean 返回myWebLocale
+         @Bean
+	    public LocaleResolver localeResolver(){
+		return new MyWebLocale();
+	    }
+       国际化文件配置 ： 在resource目录下创建i18n文件，在该文件下 创建
+         login.properties : 默认国际化配置资源
+	 login_zh_CH.properties  ： 中文的配置资源
+	 login_en_US.properties ： 英文的配置资源
+       在application.proerties中配置  spring.messages.basename=i18n.login  ， 配置基本名
+     
+4、对于请求的限制 ：
+      @PostMapping(value = "/user/login")    等价于  @RequestMapping(value="",method = RequestMethod.POST)
+      @RequestParam(value = "passward") String password)              // 对于接收参数名的限制 ，必须是password
+      在使用thyemleaf时，需要在application.properties 中 禁用模板页面缓存 ：  spring.thymeleaf.cache=false
+       禁用缓存后，修改页面信息后，按住 Ctrl+F9 用于刷新页面
+
+5、自定义权限拦截器 在 组件中 compoment
+         public class MyInterceptor implements HandlerInterceptor{
+		    @Override
+		    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object object) throws Exception {
+			HttpSession session = request.getSession();
+			String username = (String) session.getAttribute("username");
+			if(username ==null){
+			    request.getRequestDispatcher("/index.html").forward(request,response);
+			    request.setAttribute("msg","请先登录");
+			    return false;
+			}
+			return true;
+		    }
+           自定义拦截器实现 HandlerInterceptor , 重写 preHandler的 方法。
+      注册组件：
+
+6、Restful CRUD
+      查询 ： emp --- get
+                 查询所有员工 ：  请求路径 th:href="@{/emps}"
+		 Controller 层 ：  @GetMapping("/emps")      等价于  ： @RequestMapping(value="/emps", method = {RequestMethod.GET}) 
+                                              public String list(Model model){
+      添加 ： emp --- post
+                  表单提交，增加原员工信息，正常方式即可
+      更新 ： emp --- put
+                 * 创建一个post表单页面
+		 * 在springMVC需要 ：HiddenHttpMethodFilter. 已经自动配置好了
+		 * 创建一个input， type=hidden， name="_method" value="put"
+                  需要在表单中设置隐藏域，对相关的请求进行设置 <input type="hidden" name="_method" value="put"/>
+		   页面请求 ：
+		       @PutMapping("/save")
+                       public String update(Employee employee)
+      删除 ： emp --- delete
+                  同样需要设置相关的隐藏域 ： 
+		  <form  id="deForm" method="post">
+								<input type="hidden" name="_method" value="delete">
+								<input type="hidden" name="id" id="ids">
+		 </form>
+
+7、springboot默认处理错误机制： 
+           默认效果 ： 返回一个错误效果 
+	   其他客户端： 响应的是json数据
+      * 当模板引擎可用的情况下，在templates 下创建 error文件夹，创建 具体错误页面的 html, 可以是 4xx.html 也可以是 5xx.html
+        springboot 用model封装了如下信息， 页面也能能获取到如下信息：
+	   timestamp: 时间戳
+	   status ： 状态码
+	   error : 错误提示
+	   message ： 异常信息
+	   errors : JSR数据校验的错误
+	* 没有模板引擎的情况下，去静态资源下去找
+	* 当上述两种情况都不好使时， 回来到springboot默认的错误页面
+
+    自定义页面错误处理效果 ：
+            自定已处理异常类 ： 
+	      @ControllerAdvice
+			public class ExceptionHandler {
+			    @org.springframework.web.bind.annotation.ExceptionHandler(UserException.class)
+			    public String handlerException(Exception e, HttpServletRequest request){
+				Map<String,Object> map = new HashMap<>();
+				request.setAttribute("javax.servlet.error.status_code",500);
+									map.put("sex","nan");                              // 自定义的属性，放进request中
+									map.put("message","nidaye");
+				request.setAttribute("ext",map);
+				return "forward:/error";                              // 转发到框架内部的处理页面，能够页面响应，也能json数据响应
+			    }
+			}
+             在组件中定义类实现defaultErrorAttributes, 重写其 getErrorAtrributes 方法 。
+	       @Component
+			public class MyErrorAttributes extends DefaultErrorAttributes{
+			    @Override
+			    public Map<String, Object> getErrorAttributes(RequestAttributes requestAttributes, boolean includeStackTrace) {
+				Map<String, Object> map = super.getErrorAttributes(requestAttributes, includeStackTrace);
+				map.put("name","liuweidong");
+				Map<String,Object> ext = (Map<String, Object>) requestAttributes.getAttribute("ext",0);     // 0 : request中获取
+				map.put("ext",ext);
+				return map;
+			    }
+      
+     8、配置嵌入式servlet容器：springboot默认使用内嵌的servlet容器。
+            * 可以在application.properties中进行相关的配资：
+	         更改端口号：server.port=8081
+		 访问路径 ： server.context-path=/emp
+                 更改Tomcat的一些配置 ： server.tomcat.xxx
+	   *  可以编写EmbeddedServletContainerCustomizer : 嵌入式servlet容器定制器，定制一个servlet容器：
+	           @Bean
+		    public  EmbeddedServletContainerCustomizer embeddedServletContainerCustomizer(){
+			return new EmbeddedServletContainerCustomizer() {
+			    @Override
+			    public void customize(ConfigurableEmbeddedServletContainer container) {
+				container.setPort(8089);
+			    }
+			};
+		    }
+          
+	   配置servlet的三大组件 ： 
+	      * 配置servlet， 自己定义一个类上诗实现httpServlet , 重写doGet 和 doPost 方法。
+			 public class MyServlet extends HttpServlet {
+			    @Override
+			    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+				PrintWriter writer = resp.getWriter();
+				writer.print("hello word");
+				writer.close();
+			    }
+
+			    @Override
+			    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+				doPost(req,resp);
+			    }
+                  在配置类中：
+		           // 注册servlet
+			    @Bean
+			    public ServletRegistrationBean myServlet(){
+			       return new ServletRegistrationBean(new MyServlet(),"/myServlet");             // 自己的servlet , 以及其访问路径
+			    }
+			
+               * 配置过滤器 filter : 同样自定义类实现 Filter接口 ;
+	          在配置类中 进行注册 ：
+		     // 注册过滤器
+			    @Bean
+			    public FilterRegistrationBean myFilter(){
+				FilterRegistrationBean filter = new FilterRegistrationBean(new MyFilter());
+				filter.setUrlPatterns(Arrays.asList("/hello","/myServlet"));
+				return filter;
+			    }
+       
+                 * 配置监听器 ： 定义类 实现八大监听器
+		     // 注册监听器
+			    @Bean
+			    public ServletListenerRegistrationBean mylistener(){
+				return  new ServletListenerRegistrationBean(new MyListener());
+			    }
+           
+	   spring配置其他容器  : 默认支持 jetty. undertow
+	           默认使用tomcat容器 ， 配置jetty容器 ：
+		      <dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<exclusions>
+				<exclusion>
+					<artifactId>spring-boot-starter-tomcat</artifactId>          //去除Tomcat容器
+					<groupId>org.springframework.boot</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		//  引入 jettty容器
+		<dependency>
+			<artifactId>spring-boot-starter-jetty</artifactId>
+			<groupId>org.springframework.boot</groupId>
+		</dependency>
+
+                配置undertow容器 ：
+		     <dependency>
+			    <groupId>org.springframework.boot</groupId>
+			    <artifactId>spring-boot-starter-thymeleaf</artifactId>
+		     </dependency>
+	   
+9、配置外部tomcat : 
+        * 解决端口占用问题  1099
+	   cmd --- 》  cd  c:\Window\System32----》 netstat -ano| findstr 1099---->taskkill -f -pid 396
+
+12、springboot数据访问 ： 
+             在配置文件中配置相关的属性： （spring.datasource.xxx:）
+	       spring:
+		  datasource:
+		    username: root
+		    password: 584521
+		    url: jdbc:mysql://192.168.1.106:3306/jdbc
+		    driver-class-name: com.mysql.jdbc.Driver
+		    schema:                // 配置相应的执行文件。
+                       - classpath:department.sql
+   
+           在项目启动的时候可以执行相关的SQL文件，文件的命名格式为 ，文件位置放在 classpath下：
+	       * 建表的文件命名方式 ： schema-*.sql
+	       * 向表中插入数据的文件 ： data-*.sql
+	       * 也可以在配置文件中通过 schema 属性 自定义文件名
+	         
+           操作数据库的方式 ： 通过JdbcTemplate模板进行操作数据库，进行相应的增删改查。JdbcTempate框架已经创建好了该bean，
+	                                  只需要@AutoWired 即可进行自动配置。
+
+	  配置druid数据源 ：
+	          在pom.xml中引入依赖 ： 
+		  <dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>druid</artifactId>
+			<version>1.1.8</version>
+		</dependency>
+          在application.yml中配置druid相关的信息 ： 在application-durid文件中。由于durid的一些配置参数框架没有提供，所以需要自己创建配置
+	   类，也可配置 druid的监控 ：
+	         @Configuration
+public class DruidConfig {
+
+		    @ConfigurationProperties(prefix = "spring.datasource")
+		    @Bean
+	            public DataSource getDataSource(){
+			return new DruidDataSource();                       // 其中的参数取 spring.datasource中去匹配
+		    }
+			    // 配置druid监控
+			    // 1、配置servlet
+			    @Bean
+			    public ServletRegistrationBean statViewServlet(){
+				ServletRegistrationBean bean = new ServletRegistrationBean(new StatViewServlet(), "/druid/*");
+				Map<String,String> map = new HashMap<>();
+				map.put("loginUsername","root");
+				map.put("loginPassword","584521");
+				map.put("allow","");   // 当第二个参数不写时，默认所有路径都可以访问，该种情况下只有localhost才能访问
+				map.put("deny","192.168.1.106");
+				bean.setInitParameters(map);
+				return bean;
+			    }
+
+			    // 2、配置filter进行监控
+			    @Bean
+			    public FilterRegistrationBean webStatFilter(){
+				FilterRegistrationBean bean = new FilterRegistrationBean(new WebStatFilter());
+				bean.setUrlPatterns(Arrays.asList("/*"));   // 拦截所有请求
+				Map<String,String> map = new HashMap<>();
+				map.put("exclusions","*.js,*.css,/druid/*");  // 一些静态资源不拦截
+				bean.setInitParameters(map);
+				return bean;
+			    }
+			}
+
+13、springboot与mybatis的整合 ：
+       *  在创建项目时在SQL处 的mybatis处打钩。在pom.xml中自动导入：
+	   <dependency>
+			<groupId>org.mybatis.spring.boot</groupId>
+			<artifactId>mybatis-spring-boot-starter</artifactId>
+			<version>1.3.3</version>
+	   </dependency>
+	* 编写mapper接口 ：（注解版）
+	    @Mapper                  // 带包自动进行注解解析
+		public interface DepartmentMapper {
+		    @Select("select * from department where id=#{id}")
+		    Department getDepartmentById(Integer id);
+		    @Delete("delete from department where id=#{id}")
+		    void deleteDepartmentById(Integer id);
+		    @Update("update department set departmentName=(#{departmentName}) where id=#{id}" )
+		    void updateDepartmentById(Department department);
+		    @Insert("insert into department (departmentName) values (#{departmentName})")
+		    void insertDepartment(Department department);
+		}
+	 * controller层的调用 ：
+	     @Autowired
+                 private DepartmentMapper mapper;
+	      直接用mapper调用相关的方法即可
+         * 对其进行扩展配置 ：
+	     自定义配置类：  （当表长的字段与 bean中属性不同时，可以开启驼峰命名法进行匹配）
+	       @Configuration
+			public class MybtisConfig {
+			    @Bean
+			    public ConfigurationCustomizer customizer(){
+			       return new ConfigurationCustomizer() {
+				    @Override
+				    public void customize(org.apache.ibatis.session.Configuration configuration) {
+					configuration.setMapUnderscoreToCamelCase(true);         // 开启驼峰命名法
+				    }
+				};
+			    }
+			}
+	         SQL语句
+                 @Update("update department set department_name=(#{departmentName}) where id=#{id}" )
+                       void updateDepartmentById(Department department);
+             * 为解决给每一个包都添加@Mapper， 可以在spring启动项上添加mapper,进行扫描mapper，在mapper类上就不必添加@Mapper注解
+	          @MapperScan(basePackages = "cn.hegongda.springmybatis.mapper")           // 扫描器
+                  @SpringBootApplication
+         
+	    xml 版  ：
+	        在创建mapper接口，在resource资源文件路径下创建SqlMapperConfig.xml 与 相关的mapper.xml文件，文件内容与以前的一致
+		在application.yml中加入配置 ：
+		     mybatis:
+			  config-location: classpath:mybatis/SqlMapperConfig.xml      // 指定全局配置文件
+			  mapper-locations: classpath:mybatis/mapper/*.xml              // 指定SQL语句的配置文件
+
+14、spring-jpa : 
+       配置 ： 定义实体类 ： 
+                   @Entity
+		   @Table(name = "user")
+		   @JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler"})    // 防止该错误 ：com.fasterxml.jackson.databind.exc.InvalidDefinitionException: No serializer
+		  public class User {
+		    @Id        // 主键
+		    @GeneratedValue(strategy = GenerationType.IDENTITY)         // 自增策略
+		    private Integer id;
+		    @Column(name = "name")             // 与表单字段对应
+		    private String name;
+		    @Column(name = "email")
+		    private String email;
+
+        在yml文件中的配置 ：（底层封装了hibernate）
+	spring.    jpa:
+		    hibernate:
+		      ddl-auto: update         
+		    show-sql: true
+
+         定义接口实现 JpsRespository<User,Integer>, 第二各参数 序列化主键：
+	   public interface MyJpa extends JpaRepository<User,Integer>{}该类不用写任何东西
+	 
+	 调用：@RestController
+			public class JpaController {
+			    @Autowired
+			    private MyJpa jpa;
+
+			    @GetMapping("/save")
+			    public User getUser(User user) {
+				jpa.save(user);
+				return user;
+			    }
+           在Jpa中封装了 curd以及sort和 分页的一些基本方法，可以直接调用
+
+
+15、springboot  缓存：
+         * 缓存机制 ：
+	       将缓存放到currentHahMap中， 先去缓存中查找，若有，直接取，没有，调用方法将查询到的结果放入缓存中。
+         * 在启动位置添加注解 ：@EnableCaching， 表示支持注解缓存
+	 * 在servic层添加注解 @Cacheable(cacheNames = "emp") ， 开启缓存。
+	    Cacheable中的属性 ：
+			 *1、cacheNames / value  ： 将缓存放到那个属性中。String[]
+			  2、key : 缓存使用的key,默认是缓存的查询条件做为key， 也可以自己指定。通过spel表达式。 
+				       也可以通过KeyGenerator, key的生成器，可以自己指定key :
+					       @Configuration
+						public class KeyGeneratorConfig {
+						    @Bean("myKeyGenerator")                                  // 确定keyGenerator的名称。
+						    public KeyGenerator keyGenerator(){
+							return new KeyGenerator() {
+							    @Override
+							    public Object generate(Object o, Method method, Object... objects) {
+							       return method.getName()+Arrays.asList(objects).toString();
+							    }
+							};
+						    }
+						}
+					 引用 ：   @Cacheable(cacheNames = "emp",keyGenerator = "myKeyGenerator")
+			    3、condition : 缓存条件  condition=“#a0>1” // 当传递第一个参数大于 1 时才会缓存。
+			    4、unless ：否定缓存 ， unless=“#a0==2”             // 当传递的第一个参数为2时，就不进行缓存。
+
+	    CachePut : 用于更新数据，即调用方法，也将数据存入缓存。缓存在调用方法之后。此时需要制定key，若不指定，则此时 key为empolye对象，
+	                      与缓存的key不符。
+	                    @CachePut(cacheNames = "emp",key = "#result.id")
+			    public Employee updateEmployee(Employee employee){
+				employeeMapper.updateEmpploye(employee);
+				return employee;
+			    }
+    
+              CacheEvict : 删除数据时，清除缓存 
+	                        // key用于指定删除的缓存, allEntries清除所有的缓存
+				// beforeInvocation : 默认是false ， 在方法执行之后清除缓存，若出现异常，则不会清除缓存
+				        若为true，则在方法执行之前清除缓存
+	                     @CacheEvict(value = "emp",key = "#id" allEntries=true， beforeinvocation=true)             
+				    public void deleteEmp(Integer id){
+				       // employeeMapper.deleteEmp(id);
+				    }
+
+		Caching : 复杂的缓存，其中可以包括Cacheable.Cacheput等的属性
+		CacheConfig : 用于抽取缓存的相同部分
+		              在类上注解 ： @CacheConfig(CacheNames="emp")
+
+16、springboot缓存中间件。
+           * 默认使用的是concurrentMapCacheManager,将数据保存到 currentHashMap<>中。
+	   * 整合redis搭建环境 ：
+	           <dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+	     在application.yml文件中配置 链接服务器的 IP地址 ：
+	          spring. redis.host: 192.168.1.104 
+            
+	    * 对redis进行相关的操作。使用的RedisCacheManager 对缓存进行管理
+	        1、在redis类中，自动封装了对数据的操作模板。 StringRedisTemplate  和 RedisTemplate
+		     可以对其进行自动装配。相当于jdbcTemplate
+		       @Autowired
+			StringRedisTemplate stringRedisTemplate;
+			@Autowired
+			RedisTemplate redisTemplate;
+			@Test
+			public void fun(){
+				stringRedisTemplate.opsForValue().append("name","weidong");
+			}
+	             
+		       StringRedisTemplate ： k-v 都是String,专门对字符串进行操作
+		       RedisTemplate ： k - v : 都是Object, 专门对对象进行操作
+		       通过stringRedisTemplate.opsForValue()对五中数据类型进行操作。  opsForList()/ opsForZset() / opsForHash() 等
+		 2、为了将对象以json的合格式写入redis，需要对redis进行配置，配置其序列化器，其默认使用的是 jdk序列化机制
+		         @Configuration
+				public class RedisConfig {
+				    @Bean
+				    public RedisTemplate<Object, Employee> empRedisTemplate(RedisConnectionFactory redisConnectionFactory) throws UnknownHostException {
+					RedisTemplate<Object, Employee> template = new RedisTemplate();
+					template.setConnectionFactory(redisConnectionFactory);
+					// 自定义template的序列化器
+					Jackson2JsonRedisSerializer<Employee> json = new Jackson2JsonRedisSerializer<Employee>(Employee.class);
+					template.setDefaultSerializer(json);
+					return template;
+				    }
+				}
+
+			 // redisCacheManager 默认的序列化机制（jdk序列化机制），需要对其进行配置
+			    @Bean
+			    public RedisCacheManager empCacheManager(RedisTemplate<Object, Employee> empRedisTemplate) {
+				RedisCacheManager cacheManager = new RedisCacheManager(empRedisTemplate);
+				cacheManager.setUsePrefix(true);          //使用前缀 ， key值为 emp:id
+				return cacheManager;
+			    }
+		     
+17、springboot 与消息 ： JMS/AMQP/QabbitMQ
+         * 在Linux上下载RabbitMQ镜像，启动镜像的方式 ：
+	      docker run -d -p 5672:5672 -p 15672:15672 --name rabbitmaq 24cb552c7c00    //第二个 -p是客户端界面的 ip
+	    登录客户端页面 ： http://192.168.1.104:15672
+	    输入用户和密码 ： guest  guest
+
+	    direct : 点对点传递消息
+	    fanout : 全都会收到发布的消息
+	    topic : 通配符匹配
+
+	 * springboot整合 RabbitMQ : 其配置的相关信息在 RabbitMQAutoConfig中 
+	    在配置文件中添加相关信息 ： （其他信息已经默认配置好了）
+	        spring.rabbitmq.host=192.168.1.104
+		spring.rabbitmq.password=guest
+		spring.rabbitmq.username=guest
+	   
+	     1）、   	 @Autowired
+				RabbitTemplate rabbitTemplate;
+
+				@Test         // 向消息队列中部写入信息
+				public void contextLoads() {
+					Map<String,String> map = new HashMap<>();
+					map.put("name","zhangsan");
+					// 该方法会自动将消息序列化后发送到消息队列
+					rabbitTemplate.convertAndSend("emp.direct","emp",map);
+				}
+
+				//在消息队列中获取消息，获取完消息信息后，消息队列中的信息条数为0
+				@Test
+				public void getMessage(){
+					Object emp = rabbitTemplate.receiveAndConvert("emp");
+					System.out.println(emp.getClass());
+					System.out.println(emp);
+				}
+		       
+             2）、	   由于其使用jdk默认的序列化机制，所以其在客户端会出现非正常的字符串。因此需要重写MessageConverter 用jackson2的序列化方式
+				   @Configuration
+				   public class MessageConvert {
+				    @Bean
+				    public MessageConverter getMessageConvert(){
+					return new Jackson2JsonMessageConverter();
+				    }
+				}
+             3）、   @RabbitLisenter(queues="")  : 监听消息队列，当消息队列中有信息时，会自动获取，此时需要在启动类上加 @EnableRabbit. 开启注解
+				@Service
+				public class BookService {
+				    @RabbitListener(queues = "emp")
+				    public void bookMessage(Book book){
+					System.out.println(book.getAuthor()+"  "+book.getName());
+				    }
+
+              4）、AmqpAdmin 用于创建 exchange 、消息队列以及删除
+	              @Test
+			public void createExchange(){
+				amqpAdmin.declareExchange(new DirectExchange("MQ.direct"));    // 创建 exchange 转换器
+				amqpAdmin.declareQueue(new Queue("MQ.news"));                       // 创建消息队列
+				amqpAdmin.declareBinding(new Binding("MQ.news",Binding.DestinationType.QUEUE,"MQ.direct","MQ",null));     // 创建绑定
+			}
+  
+  18、springboot 与 检索： ElasticSearch
+         * 在Linux上安装ElasticSearch 
+	    启动ElasticSearch : docker run  -e ES_JAVA_OPTS="-Xms256m -Xmx256m" -d -p 9200:9200 -p 9300:9300 --name ES01 5acf0e8da90b
+	       -e ES_JAVA_OPTS="-Xms256m -Xms256m"  :  由于该镜像启动需要2G堆内存，所需空间不够，需要对其进行限制
+	       -p 9200:9200  ： 正常的端口号
+	       -p 9300:9300   :  各个服务之间节点的端口号
+
+	 * ElasticSearch 具体查看相关的文档
+	 * springboot默认支持两种技术与ES进行交互
+	     1）、jest(默认不生效)，需要导入相关的包
+	                 <dependency>
+				<groupId>io.searchbox</groupId>
+				<artifactId>jest</artifactId>
+			        <version>5.3.3</version>
+		</dependency>
+            测试 ：
+						@Autowired
+						JestClient jestClient;
+						@Test
+						public void contextLoads() {
+						Book book = new Book(1,"luwe",23.6,"tom");
+					                         	// 构建索引 ： 9200/product/books/1
+						Index index = new Index.Builder(book).index("product").type("books").build();
+						try {
+							jestClient.execute(index);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+						}
+
+					@Test
+					public void get()  {
+						String query = "{\n" +
+								"    \"query\" : {\n" +
+								"        \"match\" : {\n" +
+								"            \"name\" : \"luwe\"\n" +
+								"        }\n" +
+								"    }\n" +
+								"}";
+						System.out.println(query);
+						// 获取索引
+						Search search = new Search.Builder(query).addIndex("product").addType("books").build();
+						try {
+							SearchResult result = jestClient.execute(search);
+							
+							System.out.println(result.getJsonObject());
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+	     2）、SpringData ElasticSearch  (默认使用该技术)
+	              在配置文件中添加 ：
+		          spring.data.elasticsearch.cluster-name=elasticsearch               
+                          spring.data.elasticsearch.cluster-nodes=192.168.1.104:9300
+		      在bean类上加上注解 ：
+		          @Document(indexName = "product", type = "book")                    // 指定索引名，索引类型
+                      操作检索时，可以自定义接口实现ElasticRepository的接口， 里面实现类增删查找。
+		            public interface BookRepsitory extends ElasticsearchRepository<Book,Integer> {  }
+		     
+			       @Autowired
+				BookRepsitory bookRepsitory;
+				@Test
+				public void show(){
+					Book book = new Book(2,"西游记",36.6,"刘卫东");
+					bookRepsitory.index(book);
+				}
+                                查询所有图书 ：
+				 Iterable<Book> books = bookRepsitory.findAll();
+					Iterator<Book> iterator = books.iterator();
+					while(iterator.hasNext()){
+						Book book = iterator.next();
+						System.out.println(book);
+			          }
+		                分页查询 ： 
+				     Pageable 是接口，PageRequest 是其实现类
+				       Page<Book> books = bookRepsitory.findAll(new PageRequest(0, 3, Sort.Direction.DESC, "price"));
+					for(Book book : books.getContent()){
+						System.out.println(book);
+					}
+				根据指定属性进行排序 ：
+				    Iterable<Book> books = bookRepsitory.findAll(new Sort(Sort.Direction.DESC,"price"));
+				可以在自定义类中自己定义一些方法，方法名参照springData-ElasticSearch文档。
+				     List<Book>  findByAuthorLike(String author);  （方法名中的关键字 要与 bean中的属性相对应）
+
+19、SpringBoot 与任务 ：
+          * 异步任务 ： 
+	     需要在启动类上加 @EnableAsync 的注解
+	     service层 ：
+	           @Async              // 开启异步
+		    public String show(){
+			try {
+			    Thread.sleep(3000);
+			} catch (InterruptedException e) {
+			    e.printStackTrace();
+			}
+			return "hellow";
+		    }
+                controller 层 ：
+			     @Autowired
+			    private AsyncService service;
+			    @GetMapping("show")
+			    public  String show(){
+				service.show();
+				return "success";              // 正常会在3s后才显示success，但是由于其开启了异步，所以开启新线程直接打印，不会等待
+			    }
+			}
+
+	      * 定时任务 ：
+	              public class ShudelServcie {
+			    // second(秒) minutes（分） hour（时）  day of month（日）  month（月） day of week（周）
+			    @Scheduled(cron = "0 * * * * MON-SAT")           /
+			    public void get(){
+				System.out.println("叮叮叮·····");
+			    }
+			}
+		    (cron = "0 * * * * MON-SAT")    // 周一到周六每天任意 0 秒时就会执行该方法
+		    (cron = "0/5 * * * * MON-SAT")   // 每隔5秒执行一次
+		    (cron = "0-4 * * * * MON-SAT")     // 0 1 2 3 4 秒执行，共执行 5 次  “-” 步长
+		    (cron = "0  0/5  14，18  *  * ？")    //  每天14点18点每隔5秒执行一次
+		    (cron = "0 15  10  ？  * MON-SAT")       // 每月周一至周六10:15 执行一次
+                    (cron = "0  0  2  ？ * 6L")             // 每隔月最后一个周6的凌晨2点执行一次   L: 代表最后
+                    (cron = "0   0  2  LW  * ?")     // 每个月最后一个工作日凌晨两点执行一次
+		    (cron = "0  0  2  * ?  1#1")    // 每个月第一个周一的凌晨两点执行一次。  1#1 第一个周一           1#2 第二个周一
+		    默认是串行化执行任务。
+		    当并行化执行任务时，需要配置任务的连接池
+		     @Configuration 
+		     @EnableScheduling 
+		     public class AsyncTaskConfig implements SchedulingConfigurer, AsyncConfigurer {
+		     //线程池线程数量 
+		     private int corePoolSize = 5; 
+
+		     @Bean 
+
+		     public ThreadPoolTaskScheduler taskScheduler() {
+		     ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler(); 
+		     scheduler.initialize();
+		     //初始化线程池 
+		     scheduler.setPoolSize(corePoolSize);
+		     //线程池容量 
+		     return scheduler;
+		     }
+
+
+		     @Override 
+		     public Executor getAsyncExecutor() { 
+		     Executor executor = taskScheduler(); return executor; }
+		     @Override 
+		     public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() { 
+		     return null; 
+		     }
+		     @Override 
+		     public void configureTasks(ScheduledTaskRegistrar scheduledTaskRegistrar) {
+		     scheduledTaskRegistrar.setTaskScheduler(taskScheduler()); 
+		     } 
+		     }
+
+	   *  邮件任务 ：
+	         引入依赖：                 <dependency>
+							<groupId>org.springframework.boot</groupId>
+							<artifactId>spring-boot-starter-mail</artifactId>
+						</dependency>
+		  在application.xml中配置 ：
+		           spring.mail.host=smtp.qq.com                                    // 服务器名称
+			   spring.mail.username=1198423961@qq.com              //  用户邮箱
+			   spring.mail.password=cilbqrvfyaspifga                        // QQ开启stmp时的登陆码
+			   spring.mail.properties.mail.stmp.ssl.enable=true         // 该项可以不配置，当出现安全异常时，进行配置
+	          mail将所有的设置都封装到了 ： JavaMailSenderImpl
+		         @Autowired
+	               JavaMailSenderImpl mailSender;
+		        @Test     // 发送普通邮件
+			public void mail(){
+				SimpleMailMessage message = new SimpleMailMessage();
+				message.setText("我已经爱上你");
+				message.setSubject("通知");
+				message.setFrom("1198423961@qq.com");
+				message.setTo("liuweidong584521@163.com");
+				mailSender.send(message);
+			}
+
+			@Test          //发送带文件的邮件
+			public void send() throws Exception{
+				// 创建复杂的消息邮件
+				MimeMessage mimeMessage = mailSender.createMimeMessage();
+				// 通过helper进行对邮件的操作
+				MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage,true);   // 第二个参数代表可以发送文件
+				messageHelper.setText("<span style='color:red'>I LOVE you</span>",true);                      // 第二个参数可以进行html设置
+				messageHelper.addAttachment("1.jpg",new File("C:\\Users\\Administrator\\Pictures\\1.jpg"));
+				messageHelper.setFrom("1198423961@qq.com");                                 发件人
+				messageHelper.setTo("liuweidong584521@163.com");                           收件人
+				mailSender.send(mimeMessage);
+			}
+
+20、springboot与安全。常用的安全框架：shiro 、spring Security
+       引入依赖 ： 
+            <dependency>
+				<groupId>org.thymeleaf.extras</groupId>
+				<artifactId>thymeleaf-extras-springsecurity4</artifactId>              // thymeleaf安全模板引擎与springboot可以完美整合
+	   </dependency>
+	   <dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+	</dependency>
+       限制版本号 ： 		<thymeleaf-extras-springsecurity4.version>3.0.2.RELEASE</thymeleaf-extras-springsecurity4.version>
+       在模板引擎页面导入命名空间 ： xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4" 
+       测试 ： WebSecurityConfigurerAdapter
+                 @EnableWebSecurity
+		public class SecurityConfig extends WebSecurityConfigurerAdapter{
+		    @Override
+		    protected void configure(HttpSecurity http) throws Exception {
+		       http.authorizeRequests().antMatchers("/").permitAll()                             // 允许所有人访问
+			       .antMatchers("/level1/**").hasRole("one")                                       // 该页面需要 有 one 全选前才能访问
+			       .antMatchers("/level2/**").hasRole("two")
+			       .antMatchers("/level3/**").hasRole("three");
+		       // 开启自动登录功能，如果没有权限，就回来到登录页面  /login.html
+		       http.formLogin().usernameParameter("name")                                         // 会自动登陆到登录页面
+			       .passwordParameter("pwd").loginPage("/userlogin");
+		       // 开启注销功能，注销后去哪一个页面，会访问 /logout路径进行注销
+			http.logout().logoutSuccessUrl("/");  //注销以后来到首页                            // 会自动注销删除cookie
+			// 生成cookie保存在客户端浏览器，当用户再次访问该网站时，会携带该cookie
+			http.rememberMe().rememberMeParameter("rember");     
+		    }
+
+		    @Override
+		    // 测试： 在缓存中认证
+		    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+		       // super.configure(auth);
+			auth.inMemoryAuthentication()
+				.withUser("liu").password("123").roles("one","two")
+				.and()
+				.withUser("lisi").password("123").roles("two","three");
+		    }
+
+	thymeleaf 语句  ： sec:authorize="!isAuthenticated()        // 判断是否已经验证
+	                             sec:authentication="name"                  // 获取用户的姓名
+				     sec:authentication="principal.authorities"                   // 获取用户的权限 （VIP1, VIP2）
+				     sec:authorize="hasRole('one')"            // 判断用户是否有该权限
+
+21、springboot 与 dubbo （分布式）
+        * 引入依赖 ： 
+	        	<dependency>
+				<groupId>com.alibaba.boot</groupId>
+				<artifactId>dubbo-spring-boot-starter</artifactId>
+				<version>0.1.0</version>
+			</dependency>
+
+			<!--引入zookeeper的客户端工具-->
+			<dependency>
+				<groupId>com.101tec</groupId>
+				<artifactId>zkclient</artifactId>
+				<version>0.5</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.zookeeper</groupId>
+				<artifactId>zookeeper</artifactId>
+				<version>3.4.6</version>
+			</dependency>
+
+	* 创建一个空工程，在创建两个子工程
+	 1）、    在服务端的配置文件内容 ： 
+			 dubbo.application.name=provider                                         // 命名
+			 dubbo.registry.address=zookeeper://192.168.1.104:2181        // zookeeper的端口
+			 dubbo.scan.base-packages=cn.provider.bookservice             // 注册服务的包
+		    在Service层的注解 ：
+			@Component
+			@Service  //将服务发布出去
+			public class BookServiceImpl implements cn.provider.bookservice.BookService {
+			    @Override
+			    public String getBook() {
+				return "西游记";
+			    }
+			}
+
+	  2）、 在消费端引入同样的依赖
+	           在消费端的文件配置 ：
+			    dubbo.application.name=consumer
+			    dubbo.registry.address=zookeeper://192.168.1.104:2181
+                    在service层的注解 ：
+		            @Reference                                   // 在注册中心中自动配置
+			    BookService bookService;
+			    public void hello(){
+				String book = bookService.getBook();
+				System.out.println(book);
+			    }
+        
+	springboot 与 springcloud（分布式）
+	    1）、配置注册中心 Eureka 服务器
+	            在配置文件中 ： 
+		        server:
+			  port: 8761       #配置服务器端口号
+			eureka:
+			  instance:
+			    hostname: eureka-server  # 主机的名字
+			  client:
+			    register-with-eureka: false    #不把主机本身注册进去
+			    fetch-registry: false     #不从主机上获取注册信息，因为自己就是服务中心
+			    service-url:
+			       defaultZone: http://localhost:8761/eureka/              # 其他项目获取服务的路径
+		       在启动类上加注解 ：
+		          @EnableEurekaServer     
+			登陆 http://localhsot:8761 会到 Eureka服务器客户端
+	   2 )、配置提供端 ：
+	          在配置文件中 ：
+		       server:
+			  port: 8081
+			eureka:
+			  instance:
+			    prefer-ip-address: true   #注册服务时使用服务的ip地址
+			  client:
+			    service-url:
+			       defaultZone: http://localhost:8761/eureka/
+			spring:
+			  application:
+			    name: provider-book         // 指定服务名称
+                  
+		    其他业务代码正常写即可
+	   3）、配置消费端 ：（也将该项目注册到了 eureka服务器）
+	            在配置文件中与提供端相同 ：
+		           server:
+			  port: 8081
+			eureka:
+			  instance:
+			    prefer-ip-address: true   #注册服务时使用服务的ip地址
+			  client:
+			    service-url:
+			       defaultZone: http://localhost:8761/eureka/
+			spring:
+			  application:
+			    name: provider-book         // 指定服务名称
+		     在启动类： 
+		        @EnableDiscoveryClient // 开启发现服务功能
+			@SpringBootApplication
+			public class ConsumerApplication {
+
+				public static void main(String[] args) {
+					SpringApplication.run(ConsumerApplication.class, args);
+				}
+
+				@LoadBalanced  // 实现负载均衡
+				@Bean  // 远程调用发送http请求
+				public RestTemplate restTemplate(){
+					return new RestTemplate();
+				}
+                        在controller层 ：
+			     @Autowired
+			    private RestTemplate restTemplate;
+			    @GetMapping("buy")
+			    public String buy(){
+				 return restTemplate.getForObject("http://PROVIDER-BOOK/get",String.class);    // url : 服务的名称加上提供端的请求就可以访问到提供服务中的相关方法
+			    }
+
+22、springboot  热部署（JeRbel 插件收费、spring Boot Devtools (spring 提供的）
+        当修改java的某一个文件后，不需要重新启动服务器，只要按 ctrl+f9 重新边一即可。
+	需要引入的依赖 ：
+	         <dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<optional>true</optional>
+		</dependency>
+          
+					       
+
+					 
+						    
+      
+          
+
+	 
+
+		       
+
+
+
+
+			  
+
+			   
+			      
+		   
+
+ 
+	
+	    
+	 
+	 
+	  
+
+							
+
+

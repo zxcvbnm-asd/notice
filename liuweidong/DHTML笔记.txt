@@ -1,0 +1,272 @@
+DHTNL：很多技术的简称
+  ** html  : 封装数据
+  **css  ; 使用属性和属性值设置样式
+  **dom ： 操作html文档
+  **javascript  ： 指的是js基本语句和语法
+
+
+1.document ： 整个文档
+    方法：
+      * write() : 页面输出变量值， 页面输出html代码
+
+      * getElementById();  : 通过ID得到标签
+		 <input type = "text"  id = "nameid"  >
+		  <script  style = "text/javascript">
+		  // 通过id得到标签
+		 var input1 = document.getElementById("nameid");
+		 // 查看标签里的ID值
+		 document.write(input1.id);
+	      // 设置标签值
+		input1.value = "aaaa";
+
+       * getElementsByName("nameid") : 通过name属性返回input集合
+
+		    <input type = "text"  name = "nameid"  value = "aaa"  >
+		   <input type = "text"  name = "nameid"  value = "bbb"  >
+		  <input type = "text"  name = "nameid"  value = "ccc"  >
+		   <input type = "text"  name = "nameid"  value = "ddd"  >
+	           <script  style = "text/javascript">
+                         返回集合 inputs
+			var inputs = document.getElementsByName("nameid");
+			数组长度
+	         	alert(inputs.length);
+			遍历：
+			for(var i = 0; i < inputs.length; i++)
+			{
+				document.write(inputs[i].value);
+			}
+    
+        * getElementsByTagName("标签")； 通过标签返回数组，与getElementsByName差不多
+
+2、在末尾添加节点：
+ <body>
+          <ul  id = "a2"> 
+	     <li> 111</li>
+	  </ul>
+	<input  type = "button"  value = "pp" onclick = "add1();"/>
+
+         <script  type = "text/javascript">
+		 function add1()
+		 {
+		   var ul1 = document.getElementById("a2");    // 通过id值获取标签<ul>
+		   var li1 = document.createElement("li");      //  创建<li>标签， 注意 ： document.createElement("li");  （create ）
+		   var text1 = document.createTextNode("555");     // 创建文本     document.createTextNode("文本内容");
+		      
+		   li1.appendChild(text1);   // 竟文本添加到《li》标签下  注意： 直接 appenChild(); 
+
+		   ul1.appendChild(li1);   // 将《li》标签添加到《ul》里面。
+		   }
+		 </script>
+ </body>
+
+2、标签元素 elemnet 
+       **** 必须先通过document获取到标签。
+
+       ** 方法：   getAttribute("")     setAttribute("")     removeAttribute("", "")           
+            <input  type = "button"  id = "name"  value = "aaaa"/>
+               <script  type = "text/javascript">
+	         // 先获取element
+		 var input1 = document.getElementById("name");
+		 alert(input1.value);
+
+		  //得到value 的值
+		 alert(input1.getAttribute("value"));
+  
+                   // 设置class的值，传递两个值
+		 input1.setAttribute("class", "list");
+		 alert(input1.getAttribute("class"));
+
+                    // 删除class属性的值
+		 input1.removeAttribute("class");
+		  alert(input1.getAttribute("class"));
+
+           **获取子标签的方法：
+                 --childNodes;  浏览器有的不兼容
+		 -- getElementsByTagName("标签");   返回数组。
+	      
+			  <ol  id = "name1">
+			      <li>111 </li>
+				  <li> 222</li>
+			   </ol>
+		        <input  type = "button"  id = "name"  value = "aaaa"/>
+		         <script  type = "text/javascript">
+			     var ol1 = document.getElementById("name1");
+
+			   //var li1 = ol1.childNodes;
+			   var oi1 = ol1.getElementsByTagName("li");
+			   alert(oi1.length);
+
+3、Node对象属性：
+       *nodeName
+       *nodeType
+       *nodeValue
+
+        <div  id = "name1" > hah</div> 
+         <script  type = "text/javascript">
+		 // 标签 
+		    var div1 = document.getElementById("name1");
+
+                          alert(div1.nodeName);     大写标签名 
+			  alert(div1.nodeType);       1
+			  alert(div1.nodeValue);      null
+                // 获取ID属性
+			var id1 = div1.getAttributeNode("id");     // 函数； getAttributeNode("")
+		          alert(id1.nodeName);         id
+			  alert(id1.nodeType);            2
+			  alert(id1.nodeValue);         name1
+               //获得文本 
+			  var text1 = div1.firstChild;              //  函数： firstChild;
+			  alert(text1.nodeName);    #text
+			  alert(text1.nodeType);            3
+			  alert(text1.nodeValue);         hah
+
+4、node属性二：
+			<ul  id = "ui1">
+		        <li  id = "id1">aaaaa</li>
+			<li  id = "id2">bbbb</li>
+			<li  id = "id3">ccccc</li>
+			<li  id = "id4">ddddd</li>
+
+		</ul>
+        ---父辈节点： 通过子节点得到父辈子节点
+        
+		          var li1 = document.getElementById("id1");
+			   var  ul1 = li1.parentNode;
+			   alert(ul1.id);
+
+	---子节点：通过父节点得到子节点
+	     *  childNodes;   不兼容
+
+	     *  firstChild;   得到第一个子节点
+
+	     * lastChild;   得到最后一个子节点
+
+	---同辈节点（兄弟节点）
+	     * nextSibling;  下一个兄弟节点
+
+			var li1 = document.getElementById("id3");
+			alert(li1.id);
+			alert(li1.previousSibling.id);
+			
+	     *previousSibling;  上一个兄弟节点
+
+5、Dom树的操作：
+     *appendChild()；  创建子节点
+
+     * insertBefore(newNode， oldNode);
+		<ul  id="ul1">
+			    <li id="li1"> AAAA</li>
+				<li id="li2">bbbbb</li>
+				<li id="li3">ddddd</li>
+			</ul>
+		   
+		 <body>
+			<script  type = "text/javascript">
+		    var li0 = document.createElement("li");
+			var text1 = document.createTextNode("cccccc");
+			li0.appendChild(text1);
+			var li3 = document.getElementById("li3");
+			var ul1 = document.getElementById("ul1");
+			ul1.insertBefore(li0, li3);
+			</script>
+            插入一个 “ccccc”
+
+    * removeChild(标签)  ：删除一个子标签
+     
+    * replaceChild(新标签， 旧标签)； 替换一个标签
+		 <ul ID="ul1">
+	   <li id="id1">茉莉清</li>
+	   <li id="id2">魔力瘦</li>
+	   <li id="id3">莫厉害</li>
+	   <li id="id4">魔力红</li>
+	 </ul>
+
+	  <input type = "button"  value = "替换"   onclick = "replace1()"/>
+	 <body>
+		 <script  type = "text/javascript">
+
+				function replace1()
+				{
+					var li3 = document.getElementById("id3");
+					var li4 = document.createElement("li");
+					var text1 = document.createTextNode("李静");
+					li4.appendChild(text1);
+					var ul1 = li3.parentNode;
+					ul1.replaceChild(li4, li3);
+			                var b= window.confirm("是否删除");
+					if(b == true)
+					{
+					ul1.removeChild(li4);
+					}
+					else
+					{
+						alert("完毕");
+					}
+				}
+
+     *cloneNode(true); 赋值方法。
+                                var ul1 = document.getElementById("ul1");
+				var copy1 = ul1.cloneNode(true);                        //务必要加（true）
+				var div1 = document.getElementById("div1");
+				div1.appendChild(copy1); 
+
+6、innerHTML属性： 不是dom中的属性
+      * 获取标签内容:
+            <div id="id1">niahao</div>
+          <body>
+         <script  type = "text/javascript">
+			var div1 = document.getElementById("id1");
+			alert(div1.innerHTML);      //弹出nihao
+		 </script>
+
+      *设置标签内容：
+            <div id="id1"></div>
+	<body>
+         <script  type = "text/javascript">
+                        
+			// 添加标题
+		         div1.innerHTML = "<h2>哈哈<h2>";
+
+	                / /添加一个表格
+			var tab = "<table  border = '1'  bordercolor = 'red'> <tr><td>bi</td></tr><td>ncv</td></tr>/</table>";
+			div1.innerHTML = tab;
+		 </script>
+
+7、其他知识点： 
+   ** 表格的提交方式
+	      --  <form>
+			<input type = "submit" value = "提交">
+		   </form>
+	      --通过按钮的方式提交
+		   <form id = "d1">
+		     <input type = "text" name = "name1">
+			 <input type = "button" value = "提交"  onclick = "send1()" >
+		 <form>
+	     <body>
+		 <script  type = "text/javascript">
+			    function send1()
+				{
+					var d1 = document.getElementById("d1");   先得到标签form
+					d1.action = "https://www.bilibili.com/video/av11887542/?p=84";    根据form属性设置
+					d1.submit();  submit方法
+				}
+			 </script>
+
+8、事件：
+   * onclick: 点击事件
+
+   * onchange: 改变事件(与select配合使用)
+
+   *onfocus: 焦点事件
+       <input id = "t1" type = "text" value = "aaaa"   onfocus = "focus1();"  onblur = "blur1();"/>
+                              function focus1()
+			{
+				var  t1 = document.getElementById("t1");
+				t1.value = "";
+			}
+   *onblur：失去焦点:
+          function blur1()
+			{
+				var  t1 = document.getElementById("t1");
+				t1.value = "aaaa";
+			}

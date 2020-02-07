@@ -1,0 +1,45 @@
+1、异常 ：父类 Throwable   子类：Exception  , Runtimexception     Error
+
+2、异常中的关键字： throw 
+     *throw 写在方法内部，抛出异常对象
+     *throw后面，必须写new对象，对象必须是异常的对象，必须是Exception或者子类。
+
+     throws写在方法声明上，表明此方法可能出现异常， 后面接 Exception.
+	       public class Eeception {
+		
+		  public static void main(String[] args) throws Exception {
+			  
+			  int arr[] = null;
+			  int b = show(arr);
+			  System.out.println(b);
+			
+		}
+		  
+		  public static int show(int[]  arr)  throws Exception
+		  {
+			   // 判断异常是否出现
+			  if(arr == null)
+			  {
+				  throw new Exception("数组为空");
+			  }
+			  int a = arr[2];
+			  return a*2;
+		  }
+
+     ---NullPointerException 指针不存在异常
+     ---ArrayIndexOutOfBoundsException 数组越界异常
+     ---NoSuchElementException 没有该元素异常
+        以上为评级异常
+    ---Exception 为以上父类 在写catch捕获时，最后捕获Exception，由于多态的原因
+
+   3、 try{}catch(){} finally{}  一套公式，而无论有无异常，finally中代码都执行。
+
+   4、父类抛出异常，子类可以不抛，也可以抛，但是抛出的异常是父类抛出异常的子类。
+         当父类不抛出异常时，子类也不能抛出异常。
+	 当子类调用异常的方法时，只能用try{}catch(){}finally{}处理
+
+5、Throwable类中的三个方法：
+      ** String getMessage() 获取到异常的详细信息
+      **  String  toString() 获取到异常的剪短信息
+      ** void printStackTrace()  获取到异常的全部信息     
+         用法： catch(Exeption ex){ ex.getMessage();}

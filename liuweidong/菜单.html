@@ -1,0 +1,81 @@
+<html>
+   <head>
+	<title> 河北工程大学 </title>
+        <style type = "text/css">
+           
+	  #m{
+		width:40%;
+		height:50%;
+		border:3px dashed orange;
+		color:red;
+                 padding-left:120px;
+                background-color:orange;
+
+            }
+          td{   color:green;}
+
+		
+        </style>
+   </head>
+   <body>
+     
+      <h2> <font color = "blue">河北工程大学欢迎您 </font></h2>
+      <div  id = "m">
+       <form>
+	<table border="1" width = "360" height = "300"  >
+		<tr>
+			<td align = "center">姓名：</td>
+			<td><input type = "text"></td>
+		</tr>
+    		<tr>
+			<td align = "center">学号：</td>
+			<td><input type = "text"></td>
+		</tr>
+		<tr>
+			<td align = "center">密码：</td>
+			<td><input type = "password"></td>
+		</tr>
+		<tr>
+			<td align = "center">专业:</td>
+			<td><input type = "text"></td>
+		</tr>
+		<tr>
+			<td align = "center">性别：</td>
+			<td><input type = "radio" name = "sex"  value = "na">男<input type = "radio" name = "sex"  value = "nv">女</td>
+		</tr>
+    		<tr>
+			<td align = "center">班级：</td>
+			<td><select  name = "class">
+			    <option value = "1"> 一 </option>
+			    <option value = "2"> 二 </option>
+			    <option value = "3"> 三 </option>
+			    <option value = "4"> 四 </option>
+			    </select>班
+			</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><img src ="yan.jpg.png"/></td>
+		</tr>
+		<tr>
+			<td align = "center">验证码：</td>
+			<td><input type= "text"/></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><input type = "image" src = "zhuce.jpg.png"/></td>
+		</tr>
+	</table>
+     </form>
+  </div>
+
+   </body>
+</html>
+
+
+请登录 ：  1、 dao层 ：根据用户名查询数据库，返回用户  
+                      service层 ： 调用dao层，查询
+					  web层 ： 对返回的用户进行校验  对参数进行校验
+					                                                    不存在，返回错误信息到页面
+					                                                    密码错误， 返回密码不正确
+         

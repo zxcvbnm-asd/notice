@@ -1,0 +1,90 @@
+1、maven的下载与安装 ：
+       在 apache下载，需要配置环境变量 与 jdk（1.7版本以上）
+       maven环境变量配置 ： MAVEN_HOME=（解压包所在文件目录）
+       path : %MAVEN_HOME%\bin;
+       检测环境变量配置成功的命令 ： mvn -v;   会显示maven的版本
+
+2、在maven中conf中的 setting.xml中配置如下 ：
+                          // 项目所需要的jar包会到本地仓库去寻找
+                <localRepository>E:\java\repository</localRepository>      
+     maven中的仓库类型 ：  本地仓库：由个人维护 
+                                         远程仓库：由公司维护
+					 中央仓库：由Apache官方维护
+3、maven固定的目录结构 ：
+      src   { main{java (存放Java代码)resource(存放配置文件)}，    Test(java(测试Java代码)， Rsource(一般不放置配置文件))}
+
+4、maven的常用命令 ：
+     *    clean ： 清除编译文件
+     *   Compile : 对主目录的文件进行编译，不对测试文件进行编译
+     *   Test  ： 对测试的Java代码进行编译并运行
+     *   Package： 对项目进行打包
+     *   install  : 把项目发布到本地仓库
+                 下方命令会重复执行上方命令，生命周期较大
+5、在想pom.xml中添加jar包时，需要建立索引，首先打开MavenProperties 仓库视图，然后对本地仓库创建索引。
+     为了解决jar包重复报错的问题 ， 需要对jar包进行 范围的管理。
+     依赖范围 ：  compile(默认的)
+                        provided ： 编译时需要 ， 测试时需要， 运行时不需要
+			Runtime: 编译时不需要，测试时需要，运行时需要，打包时需要。
+			test:  编译时不需要，测试时需要，运行时不需要。
+    当<scope>test / provided</scope> 时，打包的文件将不会包括该标签下的 jar包。
+    在配置文件中修改Tomcat版本 ： 在MAVN--》plunge-->tomcat :
+          <plugin>
+  		<groupId>org.apache.tomcat.maven</groupId>
+  		<artifactId>tomcat7-maven-plugin</artifactId>
+  		<version>2.2</version>
+  		<configuration>
+  		<port>8888</port>   //  改变端口
+  		<path>/f</path>      //访问路径
+  		</configuration>
+  	</plugin>
+
+6、解决版本依赖冲突问题 ：
+          例如 ：  struts-spring  依赖 spring-beans-3.0.5
+	               spring-context : 依赖spring-beans-4.2.4
+		      这时就会造成冲突，此时应该用高版本的jar
+        * 通过排除版本原则 ：  
+	     <dependency>
+  			<groupId>org.apache.struts</groupId>
+  			<artifactId>struts2-spring-plugin</artifactId>
+  			<version>2.3.24</version>
+  			<exclusions>                            // 通过该标签将 依赖的jar排除不用
+				  <exclusion>
+				    <groupId>org.springframework</groupId>
+				    <artifactId>spring-beans</artifactId>
+				  </exclusion>
+  			</exclusions>
+  		</dependency>
+  	  </dependencies>
+       * 路径近的优先原则 ： 直接手动添加一个 spring-beans-4.2.4jar包
+       * 锁定版本原则 ：  （有符合锁定jar才会被添加）
+               <dependencyManagement>
+		     <dependencies>
+			       <dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-beans</artifactId>
+				<version>4.2.4.RELEASE</version>
+			       </dependency>
+		     </dependencies>
+           </dependencyManagement>
+
+	 当多个jar公用一个版本时，可以声明出来 版本，直接引用：
+			    <properties>
+		                               <spring.version>4.2.4.RELEASE</spring.version>   // 声明版本
+		           </properties>
+			  <dependencyManagement>
+			     <dependencies>
+			       <dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-beans</artifactId>
+				<version>${spring.version}</version>    // 引用版本
+			       </dependency>
+			     </dependencies>
+			  </dependencyManagement>
+
+7、maven分层开发，通过建立父工程：
+    1、创建maven工程 ： 为 pom工程 ，在pom.xml中配置相关jar 包
+    2、单击父项目名新建  ： 创建 movenModul工程，此工程继承了父工程。创建好该工程后，导入相关配置文件和 Java
+
+8、私服 ：nexus
+
+		       

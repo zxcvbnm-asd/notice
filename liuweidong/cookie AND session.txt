@@ -1,0 +1,83 @@
+1、servlet  之 cookie ： 网络会话状态跟踪技术
+     
+      // 创建cookie
+		Cookie cookie1 = new Cookie("beijing", "shangahi");
+		Cookie cookie2 = new Cookie("gangzhou", "shenzhen");
+    // 可以创建set路径. 要求： 必须加上 项目名。若不进行创建，则默认为 url-partten 下的路径
+		cookie1.setPath(request.getContextPath()+"/aa/bb/cc");
+		cookie1.setPath(request.getContextPath()+"/aa");
+    // 创建cookie的有效期并且存储到本地硬盘
+		cookie1.setMaxAge(60*10);   // 有效期1小时
+		cookie2.setMaxAge(60*60*2);   // 有效期 2 小时
+       // 将cookie添加到响应
+		response.addCookie(cookie1);
+		response.addCookie(cookie2);
+
+       当再次访问相同的资源路径时，请求会携带硬盘上的数据进行自动验证。
+
+       在另一个servlet中获取Cookie的值：
+		 // 方法： getCookies()  ,  获取到cookie并且封装到一个cookie数组当中。
+			Cookie []cookies = request.getCookies();
+	        // 遍历
+			for(Cookie cookie : cookies){
+				System.out.println(cookie.getName()+"      "+cookie.getValue());
+			}
+
+2、session  :同样是网络会话状态跟踪技术。
+               // 获取session 的对象
+                 HttpSession session = request.getSession();
+               // 设置session的属性域
+		session.setAttribute("username", name);
+
+		在另一个servlet中：
+		//仍然获取session对象
+		HttpSession session = request.getSession(false);
+	    // 获取session的属性值
+		String username = (String) session.getAttribute("username");
+
+		session的用法总结： * 读取数据时，一般用sesssion（true）, 相当于 session();
+		                                
+						* 当获取数据时，一般用session(false).
+
+    * session的失效函数：
+          // 让session失效
+		session.invalidate();
+        
+	  在xml 中修改session 的有效期
+	      <session-config>
+		      <session-timeout>10</session-timeout>
+	      </session-config>
+	    session的有效期为10分钟
+         // 手动设置session有效期
+	     session.setMaxInactiveInterval(30 * 60);//设置单位为秒，设置为-1永不过期
+				
+
+   *  当cookie禁用后 解决重定向跟踪的问题：
+                 String uri = request.getContextPath()+"/other";
+		 uri = response.encodeRedirectURL(uri);
+		response.sendRedirect(uri);
+     但是此种方法不安全： 会在地址请求栏显示JsessionId.
+
+
+补充：
+      Session是另一种记录客户状态的机制，不同的是Cookie保存在客户端浏览器中，而Session保存在服务器上。客户端浏览器访问服务器的时候，
+      服务器把客户端信息以某种形式记录。
+      
+ 2、 session的创建：
+  当程序需要为某个客户端的请求创建一个session时，服务器首先检查这个客户端的请求里是否已包含了sessionId，如果已包含则说明以前已经为
+  此客户端创建过session，服务器就按照sessionId把这个session检索出来使用（检索不到，会新建一个），如果客户端请求不包含sessionId，
+   则为此客户端创建一个session并且生成一个与此session相关联的sessionId，sessionId的值是一个既不会重复，又不容易被找到规律以仿造的 
+   字符串，这个sessionId将被在本次响应中返回给客户端保存。
+
+3、 禁用cookie：
+
+如果客户端禁用了cookie，通常有两种方法实现session而不依赖cookie。
+
+1）URL重写，就是把sessionId直接附加在URL路径的后面。
+
+2）表单隐藏字段。就是服务器会自动修改表单，添加一个隐藏字段，以便在表单提交时能够把session id传递回服务器。比如： 
+
+<form name="testform" action="/xxx"> 
+<input type="hidden" name="jsessionid" value="ByOK3vjFD75aPnrF7C2HmdnV6QZcEbzWoWiBYEnLerjQ99zWpBng!-145788764"> 
+<input type="text"> 
+</form> 

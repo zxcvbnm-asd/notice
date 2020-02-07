@@ -1,0 +1,88 @@
+1、junit单元测试： 
+     测试对象： 类中的某个方法
+     单元测试方法的时候，命名规则是 ： public void 方法名（）{}   // 不能是静态的
+     junit不是java中的类，需要倒入jar包
+
+     操作： 新建一个soucreFloder与src处于同一目录
+                在新建一个包，要求与北侧的方法的包名相同
+
+		@org.junit.Test
+			public  void testGet()
+			{
+				GetSum g = new GetSum();
+				g.getSum(5, 3);
+			}
+
+	      测试方式 ： run as---- junit
+        
+	@Ignore 表示不对此方法进行检测
+
+2、 范型用在方法上：
+        格式 ： 再返回值前加<T>  T 代表变量的类型 ， 必须是包装类才有范型。
+	   
+	 @Test
+	 public void show()
+	 {
+          Integer []arr = {1,2,3,4};
+          
+          String []str = {"hfdfui","vjv","hyfh"};
+          
+          show(str);
+		 
+	 }
+	 
+	 public static <T>void show(T[]  arr)
+	 {
+		 for(T a : arr)
+		 {
+             System.out.println(a);
+			 
+		 }
+	 }
+
+	通配符模式 ？ ： List<Object>  List<String>   可以用List<?>进行代替
+	进行限制的方式： <? extends T >  :只能为 T类以及其子类
+	                          <?   super   T >  : 只能是T类以及其父类
+
+3、枚举 enum{}; 
+     三种方法 * ordinal() // 得到枚举的下标
+                   * name() // 得到枚举的名称
+		   *values() //  得到枚举数组
+		   * valuesOf("名称")  // 得到枚举中元素
+
+	// 通过名称得到下标
+		 public static void get2()
+		 {
+			 String name = "BULE";
+			 
+			 Color color = Color.valueOf(name);
+			 
+			 int idex = color.ordinal();
+			 
+			 System.out.println(idex);
+			 
+		 }
+		
+		// 通过下标得到名称
+		public static void get1()
+		{
+			int idex = 1;
+			Color []color = Color.values();
+			String name = color[idex].name();
+			System.out.println(name);
+		}
+		// 得到枚举的下标及名称
+		public static void gett()
+		{
+			Color color = Color.RED;
+			
+			String name = color.name();
+			
+			int a = color.ordinal();
+			
+			System.out.println(name+ "  "+a);
+		}
+		
+		enum Color{
+			RED, YELLOW, BULE;
+		}

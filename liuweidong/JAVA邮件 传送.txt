@@ -1,0 +1,80 @@
+1、邮件协议：
+     SMTP ： 邮件发送协议   ， 服务器端口号： 25     服务器名称 ： smtp.XXX.XX
+     POP3 ： 邮件接收协议   ， 服务器端口号 ： 110   服务器名称 ： pop3.XXX.XX
+
+         需要进行授权
+              /*
+		 *  得到Session
+		 *  
+		 */
+		
+		Properties pro = new Properties();
+		pro.setProperty("mail.host", "smtp.qq.com");
+		pro.setProperty("mail.smtp.auth", "true");
+		pro.setProperty("mail.smtp.port", "25"); 
+		
+		Authenticator auth = new Authenticator() {
+			@Override
+			protected PasswordAuthentication getPasswordAuthentication() {
+			
+				return new PasswordAuthentication("liuweidong584521", "liuweidong584521");
+			}
+		};
+		
+		Session session = Session.getInstance(pro, auth);
+		System.out.println(session);
+		
+		/*
+		 * 创建MimeMessage
+		 */
+		MimeMessage message = new MimeMessage(session);
+		message.setFrom(new InternetAddress("liuweidong584521@163.com")); // 设置发件人
+		//message.setRecipients(RecipientType.CC,"liuweidong584521@126.com");
+		message.setRecipients(RecipientType.TO, "1198423961@qq.com");
+		
+		message.setSubject("List");
+		message.setContent("你好，你在哪呢，明天去哪里玩", "text/html;charset=UTF-8");
+		
+		/*
+		 * 发邮件
+		 */
+		Transport.send(message);
+	}
+
+	// 带附件发送邮件
+		   public static void sendFile() throws AddressException, MessagingException, IOException{
+			Properties pro = new Properties();
+			// 配置信息
+			pro.setProperty("mail.host", "smtp.163.com");
+			pro.setProperty("mail.smtp.auth", "true");
+		         pro.setProperty("mail.smtp.port", "25"); 
+			
+		    Authenticator auth = new Authenticator() {
+			   @Override
+			protected PasswordAuthentication getPasswordAuthentication() {
+				// TODO Auto-generated method stub
+				//自己邮箱的名字以及密码
+				return new PasswordAuthentication("liuweidong584521", "liuweidong584521");
+			}
+		 };
+		    // 获取session
+		 Session session = Session.getInstance(pro, auth);
+		  // 的到MImeMessage 对象
+		 MimeMessage message = new MimeMessage(session);
+		 message.setFrom(new InternetAddress("liuweidong584521@163.com"));    // 设置发送人
+		 message.setRecipients(RecipientType.TO, "liuweidong584521@126.com");   // 设置设置接收人
+
+		 
+		 message.setSubject("图片利拉德");                                     // 设置邮件标题
+		 MimeMultipart list = new MimeMultipart();                          // 得到邮件体
+		 MimeBodyPart part1 = new MimeBodyPart();                      //  设置邮件第一部分的内容
+		 part1.setContent("利拉德图片", "text/html");
+		 list.addBodyPart(part1);                                                    // 添加到主体中
+		 
+		 MimeBodyPart part2 = new  MimeBodyPart();                            // 将邮件第二部分设置成带附件的
+		 part2.attachFile(new File("D://我的资料库//Pictures/3.jpg"));            // 选择需要发送的邮件
+		 part2.setFileName(MimeUtility.encodeText("利拉德.jpg"));               // 设置附件的名字
+ 		 list.addBodyPart(part2);                                                                // 将第二部分添加到主题中
+		 message.setContent(list);                                                            // 将主体添加到消息中
+		 Transport.send(message);                                                         //发送消息
+		}

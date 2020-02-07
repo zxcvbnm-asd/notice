@@ -1,0 +1,132 @@
+Filter ： Servlet 的三大组件之一， 对请求与响应进行处理
+  
+    实现接口Filter
+
+  1、Filter过滤器工作原理：* 过滤器会拦截客户端发送的请求，进行处理后传递给下一个资源，最后到服务器
+                                        * 服务器的响应会在被过滤器器拦截，处理后客户端才会接收到响应。
+
+					public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+							throws IOException, ServletException {
+					      
+						  System.out.println("成功拦截");         请求被过滤器拦截
+						  chain.doFilter(request, response);      传递给下一个资源
+						  System.out.println("响应成功");           响应被过滤器拦截，执行完后，客户端才能接受到
+					}
+
+2、Filter的生命周期： * Filter是在启动时被创建和初始化的
+                                 *  Filter是单例多线程，为保证其安全性，应该定义变量时应该不能进行修改
+				 * dofilter() 无论哪个线程访问，该方法都会执行
+				 *  Filter 在应用程序结束时会被销毁 destory()
+
+3、 Filter 中 Filterconfig 的方法与servlet中心相同
+
+4、Filter的<url-pattern> 下的全路径只为 “ /* ”;
+     <url-pattern> 可以变成 <servlet-name></servlet-name>   : 对指定servlet进行拦截
+      配置：	   <filter-mapping>
+			    <filter-name>filters</filter-name>
+			    <url-pattern>/*</url-pattern>
+			    <dispatcher>REQUEST</dispatcher>
+		  </filter-mapping>
+
+        <dispatcher>REQUEST</dispatcher>    有四个属性： INCLUDE 、FORWARD、REQUEST、ERROR
+
+	* REQUEST: 拦截一切普通的请求
+	* FORWARD ：  只拦截用于请求转发的请求
+	* INCLUDE :  只拦截用于请求转发的 include 的请求
+	* ERROR : 拦截跳转到指定错误页面的请求
+
+5、通过 Filter 可以修改 请求或响应中的值。 （标准输出流不用关流，系统会自动关闭）。
+    
+    当有多个 Filter 时，执行顺序 按照注册Filter的顺序执行。
+
+
+ 6、通过Filter 解决表单提交与响应中的乱码问题。
+          
+         	request.setCharacterEncoding("UTF-8");        //  请求代码
+		response.setContentType("text/html; charset=UTF-8");    // 响应
+		chain.doFilter(request, response);
+   
+              万能方法：（通过装饰者模式设计万能方法）
+			       public class CustomRequest extends HttpServletRequestWrapper {
+
+			public CustomRequest(HttpServletRequest request) {
+				super(request);
+				// TODO Auto-generated constructor stub
+			}
+			
+			@Override
+			public Map<String, String[]> getParameterMap() {
+				// 自定义一个ParamterMap 
+				Map<String, String[]> newMap = new HashMap<>();
+				// 系统中的Map
+				Map<String,String[]> oldMap = super.getParameterMap();
+				// 遍历系统中的Map
+				try {
+					for(String key : oldMap.keySet()){
+						String[] values = oldMap.get(key);
+						// []values中含有乱码，需对values 中的乱码进行解决
+						for(int i = 0; i < values.length; i++){
+							// 进行编码
+							byte[] bytes = values[i].getBytes("ISO-8859-1");
+							// 进行解码
+						    values[i] = new String(bytes, "UTF-8");
+						}
+						// 将解码后的字符数组存入新建的Map中
+						newMap.put(key, values);
+					}
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
+				
+				return newMap;
+			}
+			
+			@Override
+			public String[] getParameterValues(String name) {
+				Map<String, String[]> map = this.getParameterMap();
+				return map.get(name);
+			}
+			@Override
+			public Enumeration<String> getParameterNames() {
+				Map<String, String[]> map = this.getParameterMap();
+				Set<String> keySet = map.keySet();
+				Vector keys = (Vector)keySet;
+				return keys.elements();
+			}
+			
+			@Override
+			public String getParameter(String name) {
+				Map<String, String[]> map = this.getParameterMap();
+				
+				return map.get(name)[0];
+			}
+
+		}
+                  // 过滤器中的方法
+		request = new CustomRequest((HttpServletRequest)request);
+		response.setContentType("text/html; charset=UTF-8");
+		
+		chain.doFilter(request, response);       
+
+
+ 7、	权限过滤器 核心代码：
+	   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+		HttpServletRequest req = (HttpServletRequest)request;
+		HttpSession session = req.getSession(false);
+        if(req.getServletPath().startsWith("/user")){
+        	if(session != null){
+        		String name = (String) session.getAttribute("name");
+        		if(name == null){
+        			request.getRequestDispatcher("/user/login.jsp").forward(request, response)
+        			return;
+        		}else{
+        			chain.doFilter(request, response);
+        		}
+        	}else{
+        		request.getRequestDispatcher("/user/login.jsp").forward(request, response);
+    			return;
+        	}
+        }else{
+        	chain.doFilter(request, response);
+        }
+        

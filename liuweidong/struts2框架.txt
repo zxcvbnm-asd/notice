@@ -1,0 +1,574 @@
+1、struts2 框架环境搭建 ：
+     * 导入jar包。
+     * 在 WEB_INF 下xml文件中 注册 启动项 
+        <filter>
+		     <filter-name>struts2</filter-name>
+		     <filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter</filter-class>
+       </filter>
+       <filter-mapping>
+		      <filter-name>struts2</filter-name>
+		      <url-pattern>/*</url-pattern>
+       </filter-mapping>
+
+    * 在  src 下创建 struts.xml 文件。 并且引入约束。 约束文件在 jar 包下找。配置成功后图标会发生变化
+       
+2、struts2 开发流程 ：
+       * 编写页面
+       * 定义action 类  ：  action类中的方法必须是  execute(); 方法
+       * 注册action类    ：
+               <!-- 包名 ： 自定义   命名空间 ： 自定义   继承类 ： struts核心包  -->
+		<package name="xxxx" namespace="/test" extends="struts-default">
+		   <action name="login" class="cn.hegongda.actions.LoginAction">
+			result name="success">/show1.jsp</result>
+		   </action>
+	    </package>
+       * 编写页面
+     
+3、struts2 配置文件详解  ：
+      *  struts-default.xml  : 放置 各种 类、拦截器以及视图。
+      * default-properties:
+      * struts.properties :   手动配置文件， 用于修改 default-properties 的相关参数  ： 
+           修改拓展名  ：  struts.action.extension=do     //  请求参数以 .do 结尾 。
+4、标签详解 ：
+
+      1）、 <package  name="book-servlet"    namespace="/book/servlet"   extends=" struts-default "  abstract="">
+	        name 和 namespace 基本相同，  namespace 可以为 “/”
+
+      2）、	 <action name="" class="">   当用于跳转页面时，不需要属性，也不需要什么方法，但是为了实现 MVC 设计模式，在配置
+	          文件中，不用写 class， 框架会去掉用 默认类，默认类返回信息 为 ： success 。
+
+		  注意 : 在action中还有一个属性 ： method，表示该类中的方法。 是方法层级的标签。 一个标签针对一个类中的方法。
+			    <action name="login" class="cn.hegongda.actions.LoginAction" method="login">
+			               <result name="success">/index.jsp</result>
+			   </action>
+			   <action name="get" class="cn.hegongda.actions.LoginAction" method="get">
+			                <result name="fail">/register.jsp</result>
+			   </action>
+
+      3）、<reslut name=""></name>     注意 ：  当方法返回值 为 success时，name属性可以省略不写。
+               其中有type 属性  : 请求转发 ： dispatcher      重定向 ： redirect 。
+
+	 *    当传递参数时，需要按照以下格式进行配置 ：
+	          <result type="redirect">
+		       <param name="location">/show1.jsp</param>     //  重定向路径
+		       <param name="uname">${name}</param>       // 传递参数
+		       <param name="uage">${age}</param>
+	       </result>
+
+	   *   从一个Action  重定向 转移到另一个 Action  配制方法如下 ：
+	            <action name="login" class="cn.hegongda.actions.LoginAction">
+		    <result name=""  type="redirectAction">
+		       <param name="actionName">one</param>       ///指定action 名字
+		       <param name="uname">${name}</param>
+		       <param name="uage">${age}</param>
+		    </result>
+		   </action>
+		   <action name="one"  class="cn.hegongda.actions.OneAction">
+			<result>/show1.jsp</result>
+		   </action>
+    
+            *  从一个Action 请求转发 转移到另一个 Action  
+	            <action name="login" class="cn.hegongda.actions.LoginAction" method="login">
+		          <result name="success" type="chain">one</result>            // type ="chain"
+		   </action>
+		   <action name="one"  class="cn.hegongda.actions.LoginAction" method="sent">
+			     <result name="success">/show1.jsp</result>
+		   </action>
+
+	   *  包范围内全局视图 <global-results >  </global-results>, 
+	         在一个包范围内，有多个返回值相同且跳转页面相同时，为了避免冗余，则将这些result 放在 全局视图内。
+	               <global-results>
+		             <result name="A">/A.jsp</result>
+		             <result name="B">/B.jsp</result>
+		      </global-results>
+          
+	          位置  ： 在所有Action 的上面。
+
+5、便利化设置 ：
+      在不同的包内有相同的返回值，这时可以定义一个 base 包，专门存放全局视图， 其他包则继承 base 包，由于此时bas包内无 action，
+        所以 namespace 属性可以不写，  设置 abstract=“true” ，这时，再向改包中 设置 action 则无效。
+			   <package name="base" extends="struts-default"  abstract="true">
+					     <global-results>
+						     <result name="A">/A.jsp</result>
+						      <result name="B">/B.jsp</result>
+					  </global-results>
+					  
+			</package>
+			<package name="most"  namespace="/most"  extends="base">
+					     <action name="login" class="cn.hegongda.actions.LoginAction" method="login">
+							 <result name="success">/index.jsp</result>
+					   </action>
+
+					   <action name="one"  class="cn.hegongda.actions.LoginAction" method="sent">
+								<result name="success">/show1.jsp</result>
+					   </action>
+			</package>
+
+         由于写项目时需要多个 Action ，所以可以 分模块 写 Action，
+	     <include file="struts-base.xml"></include>
+	    <include file="struts-actions.xml"></include> 
+	                             上下等效
+	    <include file="resource/struts-*.xml"></include>
+
+6、获取 servlet API 
+           *   方式一不是获取的正真servletAPI
+	         ActionContext.getContext().put("hus", 1);                                          //  request
+		 ActionContext.getContext().getSession().put("vk", 2);                         // session  
+		 ActionContext.getContext().getApplication().put("ds", 3);                   //  application 
+            
+           *  方式二 ： 真正的servlet API
+	   
+              // 获取request 
+		HttpServletRequest request = ServletActionContext.getRequest();                 /// 获取 request
+		HttpServletResponse response = ServletActionContext.getResponse();          // 获取 response
+		
+		request.setAttribute("liu", "liu");
+		HttpSession session = request.getSession();
+		session.setAttribute("wei", "wei");
+		
+		ServletActionContext.getServletContext().setAttribute("dong", "dong");        // 针对 域属性  ： application
+
+7、ognl 与 值栈：
+       获取值栈对象 ：  *   方式一
+                                   // 获取 key值
+					String key = ServletActionContext.STRUTS_VALUESTACK_KEY;
+					HttpServletRequest request = ServletActionContext.getRequest();
+					HttpServletResponse response = ServletActionContext.getResponse();
+					
+				    //  获取值栈
+				        ValueStack vs = (ValueStack) request.getAttribute(key);
+                             
+			         *  方式二  ：
+				       ValueStack vs1 = ActionContext.getContext().getValueStack();
+
+	 值栈操作数据  ：
+               *  向root 中入显示数据。 （能够清楚知道数据放入到什么位置）
+			   1)、   向root属性中放入无名对象 ：（ 首先获取栈值对象，在获取root，创建实体对象，由于其是 ArrayList 类型，其中存放的是属性）
+				      ValueStack vs = (ValueStack) request.getAttribute(key);
+				      // 向root属性中放入无名对象
+				      Student student = new Student("liu",25);
+				      // 将无名对象压栈。
+				     vs.getRoot().push(student);
+
+				 在jsp页面获取数据时，会获取栈顶的数据。 vs.push(student);       // 同样向root属性中存放无名对对象
+				       <s:debug/>       // 可以查看root中存放的数据
+				      <s:property value="name"/>        // root根属性，不需要 “#”
+				      <s:property value="age"/>            
+				  需要引入标签库 ：<%@ taglib prefix="S" uri="/struts-tags" %>    
+			  
+			  2）、 向root属性中放入 有名对象 ，先将实体 放到map中，再将map放入到 root属性中。
+				    // 向root中放入有名对象 
+					Student student3 = new Student("王五",25);
+					Map<String,Student> map = new HashMap<String , Student>();
+					map.put("student3" , student3);
+				
+				// 向root属性中放入有名对象
+					Student student4 = new Student("赵六",36);
+					vs.set("student4", student4);
+			     
+				  以上两种效果相同。  
+
+			   3）、由于root 本质为 ArrayList ,所以可以通过 add 方法，添加数据。但是其所在位置将会在栈底。
+			              vs.getRoot().add(student);
+
+		*向root中放入隐式数据 ：
+		       原理  ： 在付出请求后，会出创建 相关Action 和 ValueStack ，然后将 Action 放入栈值中，Action中的属性就会
+		                    隐式放入栈值中。 通过 ognl 表达式将属性提取出来。
+
+		* 向 context 中直接放入数据 ：
+			      Context 中包含 session， request、application 、attr等
+					  ActionContext.getContext().put("name","liu");        // 与session等并列
+					  ActionContext.getContext().getSession().put("age", 25);        // 存放在session中
+					 ActionContext.getContext().getApplication().put("school", "hegongda");      // 存放在application中
+			      Jsp页面中 ：
+				       name=<s:property value="#name"/>
+				       age=<s:property value="#session.age"/>
+				       school=<s:property value="#application.school"/>
+				       
+				       attr=<s:property value="#attr.name"/>    // 他会向 session、request、application 中寻找。
+
+		 * 向Context 中放入隐式数据 ：（Context 下的 parameters  和 action ）
+		        parameters :  接收的是请求参数，不是属值。其中存放的是String 数组，用于复选框中的 一个参数对应多个 属性值。
+			                      其底层结构相当于 ：  request.getParameter("");
+			Action ： 在请求发送时，会创建 action对象，该对象既存放于 root中，也存放于 action 中。
+
+	             注意 ：  requset 的特殊性 ，其继承了httpservletRequset,并且通过 struts进一步包装。其查找数据的先后顺序：
+		                     request  、 root、action
+				     
+		* 创建和遍历list集合 ：  
+		             <s:set name="num" value="{1,2,3}"></s:set>      //set 标签定义的结合均放在 Context 下
+			      <s:iterator value="#num">             //  将迭代对象放到值栈栈顶
+				 <s:property/>                               // 输出值栈栈顶远元素
+			      </s:iterator>
+		  对map的操作 ：
+		         <s:set name="map" value="#{'name':'liuweidong','age':25 }"/>     //json格式
+			 <s:iterator  value="#map">
+			     <s:property value="key"/>  =  <s:property value="value"/>
+			 </s:iterator>
+                   判断集合中是否存在该元素   in       not in
+		        	 <s:property value="'liuweidong'  in #map "/>	
+				  <s:property value="'liuweidong' not in #map "/>
+                
+		   集合投影  ：
+		             <s:bean name="cn.hegongda.pojo.Person" id="person1">
+					 <s:param name="name" value="'zhangsan'"/>
+					 <s:param name="age" value="25"/>
+			      </s:bean>
+			      <s:bean name="cn.hegongda.pojo.Person" id="person2">
+					 <s:param name="name" value="'lisi'"/>
+					 <s:param name="age" value="26"/>
+			      </s:bean>
+			      
+			      <s:set name="persons"  value="{#person1,#person2}"/>
+			      <s:set name="names" value="#persons.{age}"/>                       // 将persons中的name 取出来放到一个新的集合。.{  }
+			      <s:iterator value="#persons">
+				<s:property/>
+			      </s:iterator>
+
+		  集合元素判断 ：
+		          <s:iterator value="#persons.{?#this.age>25}">      // 判断 年龄大于25的所有人
+				<s:property/>
+			      </s:iterator>
+			      <s:iterator value="#persons.{^#this.age>25}">    // 判断年龄大于25的第一个人
+			      <s:iterator value="#persons.{$#this.age>25}">    // 判断年龄大于25的最后一个人
+
+8、动态方法调用 ：
+       方式 一 ： 将struts.properties文件中的 动态方法调用（struts.enable.DynamicMethodInvocation）属性改为 true 在struts xml文件中。
+                       <constant name="struts.enable.DynamicMethodInvocation" value="true"/>
+			<package name="xxxx" namespace="/test" extends="struts-default">
+			   <action name="some" class="cn.hegongda.actions.LoginAction">
+			    <result name="success">/show1.jsp</result>
+			   </action>
+			</package>
+
+			已知在 LoginAction类中 有多个方法，此时开启动态调用，之定义一个 action ，在发送请求时将会发生变化。
+			   127.0.0.1:8080/Struts2_7/test/some!doFirst.action         请求路径后加 ！方法名.action 
+
+	方式二 ：通配符调用动态方法 ：
+	               <action name="some_*" class="cn.hegongda.actions.LoginAction" method="{1}">
+		       * : 写类中的方法名，写什么方法，method就是什么方法。
+		           请求写法 ：  127.0.0.1:8080/Struts2_7/test/some_doFirst.action 
+
+9、struts2 接收请求参数  ：
+       * 属性驱动方式 ： 在类中定义相关属性，get set 方法 进行对数据的处理。
+
+       * 域驱动方式  ：先定义一个实体类，在action类中 get set 该 bean，通过传递参数  bean.name    bean.age，使其成为属性
+                               在页面获取  ： bean.name   bean.age
+			    
+       * 模型驱动方式 ：  Action类 实现 modalDriven 接口 ， 该类中不需要写get  set 方法。
+		                                 public class LoginAction  implements ModelDriven<Person>{
+							private Person person;
+							public String execute(){	
+								return "success";
+							}
+							// 需要在从写方法中 对实体类进行判断
+							public Person getModel() {
+								if( person == null){
+									person = new Person();
+								}
+								return person;
+							}
+
+10、类型转换器 ：
+       自定义类型转换器   ： 全局类型转换器  、  局部类型转换器
+          * 注册局部类型转换器 ： 只针对某各类中的具体属性，在 该类所在的包下 创建一个以 （必须是Action类名）-conversion.properties 结尾的文件
+	        birthday=cn.hegongda.convert.MyDateConvert
+
+          * 日期转换器的编写 ：liuweidong / DateConverter 中有源码
+	  * OGNL 中存在 表单的标签 ：
+		     <s:form action="test/login.action">
+		       <s:textfield name="birthday"  label="生日"></s:textfield>
+		       <s:textfield  name="age" label="年龄"></s:textfield>
+		       <s:submit  vlaue="登录"></s:submit>
+		   </s:form>
+  
+          * 相关 Action  extends  ActionSupport , 在xml文件中 action中 加 <result name="input">/index.jsp</result>，当页面数据发生错误时，
+	     会返回到 index.jsp 页面，并且保留元数据。
+          *  表单中数据提示  ：在Action下配置 Action.properties
+	         格式为 ： invalid.fieldvalue.属性名 = 提示信息
+		  invalid.fieldvalue.birthday=\u751F\u65E5\u683C\u5F0F\u6570\u4E0D\u6B63\u786E  （您生日输入的格式不正确）
+
+11、struts2 数据验证 ：
+          手写 ：
+		      *  Action 类继承 ActionSupport   重写方法 ： public void validate(){ } 对表单数据进行判断 。
+			  在执行actiion 之前 先 执行  validate 方法。
+
+			       public void validate() {
+				ActionContext.getContext().put("age", age);
+				ActionContext.getContext().put("moblie", mobile);
+		      
+				if(age == null){
+					this.addFieldError("age","年龄不能为空");
+					//ActionContext.getContext().put("error", "请输入年龄");              
+				}
+				
+				if(mobile == null || "".equals(mobile.trim())){
+					this.addFieldError("mobile", "电话号码不能为空");
+				}else if(!Pattern.matches("^1[35678]\\d{9}$", mobile)){
+					this.addFieldError("mobile", "电话号码输入格式不正确");
+				}
+			
+			   注意 ： 在xml 文件中  ： <result  name="input" > index.jsp  </>     当发生错误时，会自动转回原页。
+			   在 原页中  ： 引入 struts 标签  <s:filederror/>     // 自动显示错误信息
+
+		   * 对指定action进行验证  ：
+			 在一个类中可能有多个 action ，这时在对指定action进行验证时， 只需要在 将重写方法名 后加上指定 action 名。
+			  public void validateDoSecond() {  }
+		   
+          基于xml配置文件方式对数据进行验证 ：
+	   *    对所有action执行之前都进行验证
+		      1、Action类同样也继承 extends 类，用于回显错误
+		      2、在Action类下， 引入 类名-validation.xml文件
+			    <field name="mobile">
+			    <field-validator type="requiredstring">
+			      <message>电话号码输入不能为空</message>
+			    </field-validator>
+			    <field-validator type="regex">
+			      <param name="regex"><![CDATA[^1{378}\d{9}$]]></param>
+			      <message>电话号码输入不能为空</message>
+			    </field-validator>
+			  </field>
+			  <field name="age">
+			    <field-validator type="requiredstring">
+			      <message>年龄不能为空</message>
+			    </field-validator>
+			  </field>
+		  
+		    3、需要约束文件，约束文件 在 xwork 包下的  /xwork-validator-1.0.3.dtd中。 
+			引入相关的验证器 ： 在 xwork 下 default.xml文件中。
+			requeststring :  验证数据不为空 
+			regex :  正则表达式 。  数据表达式 CDATA 格式   <![CDATA[........]]>
+					     
+	  *  对指定action进行验证 ：
+	         只需要将xml文件名改成  类名-方法名-validation.xml
+		       LoginAction-login_doFirst-validation.xml
+
+	        验证器的类型 ：
+		requiredstring  : 只针对字符串校验
+		int   ： 对于整数的校验  ：
+		             <field-validator type="int">
+			      <param name="min">1</param>
+			       <param name="max">150</param>
+			       <message>年龄必须在1~150之间</message>
+			    </field-validator>
+	                short、double、long,  与int属于同一级别
+		 stringlength :  字符串长度验证器    
+		              <field-validator type="stringlength">
+				      <param name="minLength">1</param>
+				       <param name="maxLength">15</param>
+				         <param name="trim">true</param>
+				       <message>字符串长度必须在2~15之间</message>
+			    </field-validator>
+		  email ： 邮箱验证 ：
+		              <field-validator type="email">
+				       <message>邮箱地址无效</message>
+			    </field-validator>
+
+           Action 中的执行顺序 ：  先数据转换---->get、set------->数据验证---------->action方法
+
+
+12、struts2 拦截器
+       定义类 继承 AbstractInterceptor 类，重写方法  ：
+		 @Override
+		public String intercept(ActionInvocation invocation) throws Exception {
+
+		 System.out.println("===========");
+			 invocation.invoke();
+			return null;
+		}
+
+         注册拦截器  ： 在struts.xml 注册拦截器 。
+	        <interceptors>
+			   <interceptor name="permission" class="cn.hegongda.interceptor.PermissionInterceptor"/>
+		 </interceptors>
+
+		 在相关 action中 引入拦截器。
+		   <action name="login_*" class="cn.hegongda.actions.LoginAction" method="{1}">
+		    <interceptor-ref name="permissionStack"></interceptor-ref>
+		   </action>
+
+	注册拦截器栈 ： 将所有拦截器写在栈里，然后只需要在 action 中引入该拦截器栈
+	      <interceptors>
+		   <interceptor name="permission" class="cn.hegongda.interceptor.PermissionInterceptor"/>
+		   <interceptor-stack name="permissionStack">
+		       <interceptor-ref name="permission"></interceptor-ref>
+		       <interceptor-ref name="defaultStack"></interceptor-ref>
+		    </interceptor-stack>
+	     </interceptors>
+
+	  默认拦截器 ： 当有多个action同时需要某些拦截器时，此时则需要 写一个默认拦截器，该拦截器对多个action同时起作用。
+	                       当一个action 再引入 其他拦截器时，则该默认拦截器讲失效。
+			       <default-interceptor-ref name="permissionStack"/> 在action上边
+
+	  对指定action设置拦截器 ：
+	       定义类继承  MethodFilterInterceptor 重写其方法  doInterceptor{};  
+	       在struts.xml的配置信息你：
+	         <interceptor name="permission" class="cn.hegongda.interceptor.PermissionInterceptor">
+	                         <param name="includeMethods">doFirst，doSecond</param>
+	          </interceptor>  
+                   
+                 属性  ： includeMethods (只包括要拦截的action)    excludeMethods(指定不需要拦截的Action，其余的全部拦截)
+		 
+13、国际化 ：
+        1)、需要在 src 下写 资源文件 ：
+	       文件名格式 ： 名_en_US.properties(英文配置文件 )         名_zh_CN.properties（中文配置文件）
+	                            myBaseName_en_US.properties               myBaseName_zh_CN.properties
+                                     内容 ： form.head=login at right            form.age=\u5E74\u9F84（年龄）
+	       将页面中出现的文字用struts2标签表示 ：<s:text  name="key"/>
+	       在action 中出现的文字：  该类需要继承 ActionSupport 类。 在action方法中 ： String name = this.getText(key); 
+         2)、在struts.xml中注册  i18n  国际化文件 ：  name 中的常量需要在default.xml中去找， 资源文件路径，后边省略即可
+	           <constant name="struts.custom.i18n.resources" value="myBaseName"/>
+	 3)、在第一次访问页面时，浏览器会默认语言打开页面，不会被i18n 拦截器拦截，就不会改变语言。所以需要在struts.xml中配置、
+	        一个action, action中不做任何事情，执行完该action反回到当前页面，这时候就会背 i18n拦截器拦截，页面语言就会发生变化。
+         4）、在访问上述action时，请求方式为 ： （设置属性 request_locale）
+	             href="test/language.action?request_locale=zh_CN"    中文
+		      href="test/language.action?request_locale=en_US"    英文
+
+         5）、动态为国际化资源文件 赋动态参数值 ：通过占位符的方式。
+	                    //  在action中的操作
+			  show.message=welcome game {0}!  
+			            String []args = {mobile};
+				    String message = this.getText("show.message", args);
+				    ActionContext.getContext().getSession().put("message", message);
+                            在jsp页面的操作 ：
+                          show.message1=welcome {0} game!
+			        <s:text name="show.message1">
+				        <s:param> <s:property value="mobile"/> </s:param>   // 从root中取出值给到占位符
+				  </s:text>
+               
+	  6）、在包下实现国际化，只对该包下的action有效。 包下实现国际化，有固定的命名 方式properties 文件名必须是 ：
+	            package_en_US.properties ，  此时，不用对该文件注册。
+		   
+		   对指定action进行国际化，文件命名方式为 ：LoginAction_en_US.properties  , 该文件也无需注册
+		   指定 jsp 页面国际化 ：   
+					   <s:i18n name="cn/hegongda/actions/LoginAction">
+						    <s:text name="show.message1">
+						      <s:param> <s:property value="mobile"/> </s:param>
+						    </s:text>
+					   </s:i18n> 
+
+14、struts2 文件上传  ：  文件通过fileUpload拦截器生成临时文件，然后执行action，将文件放到指定位置。
+       * 表单需要 ： enctype="multipart/form-data"
+       * 在action类中   :  定义属性 
+	                 private File img;                 //  他已经成为了临时文件
+	                 private String imgFileName;    // 后缀必须是   FileName ,这样才能获取文件的名字
+
+           需要加上get 和 set 方法
+       
+	* 当没有上传文件时，就点击登录或者上传按钮时，服务器会报500 错误。抛出空指针异常
+	   此时 需要对 img进行判断 。 
+	               if(img!=null){
+				try {
+				String path = ServletActionContext.getServletContext().getRealPath("/images");
+				File destfile = new File(path, imgFileName);
+					FileUtils.copyFile(img, destfile);
+					return "success";
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			  }
+				return "fail";
+			}
+         * 文件上传大小的限制 ： 默认是 2M,  若要上传大文件，需要配置常量。
+	      <constant name="struts.multipart.maxSize" value="20971520"></constant>
+         
+	 * 文件上传格式限制  ：    在action中修改 fileUpload类中的属性：
+	       <interceptor-ref name="defaultStack">
+			      <param name="fileUpload.allowedExtensions">jpg,png</param>
+			    </interceptor-ref>
+	       </action>
+
+	 *  多个文件同时上传 ： 在表单中文件名要一致，在Action类中：
+	                   private File  []imgs;                 
+	                   private String [] imgsFileName;    //  文件名不发生改变。
+
+	   同样，在不上传文件时，imgs数组一样为空。
+
+15、文件下载 ：
+      *   在Action类中，定义 inputStream 输出流以及 文件名。
+	      private InputStream is;
+              private String fileName;   
+
+       *    在struts.xml文件中 配置相关信息 ：
+	                 <action name="download" class="cn.hegongda.actions.DownloadFile">
+			   <result type="stream">        //  type类型 ：  stream
+			                    //    改变请求头，为复件形式，正常为 inline 在线形式
+			       <param name="contentDisposition">attachment</param>
+			                   //  指明输入流
+			       <param name="inputName">is</param>
+			   </result>
+		   </action>
+               
+	  *   若要使文件名与原文件名一致 ，则只需要在 action类中赋值。
+                <param name="contentDisposition">attachment；filename=${fileName}</param>
+
+				 private InputStream is;
+				private String fileName;
+				
+				public InputStream getIs() {
+					try {
+						is = new FileInputStream(new File("C:\\Users\\Administrator\\Pictures\\2.jpg"));
+						System.out.println(is);
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					return is;
+				}
+
+				public void setIs(InputStream is) {
+					this.is = is;
+				}
+
+				public String getFileName() {
+					return fileName;
+				}
+
+				public void setFileName(String fileName) {
+					this.fileName = fileName;
+				}
+
+				public String load(){
+					System.out.println(fileName);
+					return "success";
+				}
+	    struts.xm文件中 ：
+	           <action name="load" class="cn.hegongda.actions.LoadAction" method="load">
+			    <result  name="success" type="stream">
+				 <param name="contentDisposition">attachment;filename=${fileName}</param>
+				 <param name="inputName">is</param>
+			    </result>
+                    </action>
+		    其中的文件名是通过请求留路径传过去的。
+	          
+
+16、防止表单重复提交 ： （token）令牌机制 ：会在表单中生成一个长字符串，服务器也会生成一个长的字符串，与其匹配。
+                                       当第一次提交之后，服务器的字符串会发生改变，以至于第二次表单再次发送请求时，字符串匹配不上，
+				       这样就防止了表单重复提交。
+                                * 在表单中加入 <s:token>标签
+				        <form action="${pageContext.request.contextPath }/test/login.action" method="post">
+						     <s:token/>
+						       <input type="submit" value="登录"/>
+						     </form>
+                                *  在xml中需要声明token拦截器 ：
+				       <interceptor-ref name="token"></interceptor-ref>
+	                               <interceptor-ref name="defaultStack"></interceptor-ref>
+				* 当重复提交后，跳转到另一个页面提示用户信息正在处理中：
+				      <result name="invalid.token">/message.jsp</result>
+
+17、注解开发 
+      再类上面 ： 
+          @Namespace("/")                                                      //  相当于定义路径
+          @ParentPackage("struts-default")                                // 引入struts的核心包    
+	  public class LoginAction();	
+	  
+        @Action(value="second",results={@Result(name="success",type="dispatcher",location="/show1.jsp")})   //  action名，以及视图下的参数
+	public String execute(){
+
+	对于重定向 ：
+	    @Action(value="login",results={@Result(name="success",type="redirectAction",location="second",
+	                                                                                                    params={"uname","%{name}","uage","%{age}"})})
+	    public String execute()
+           
+	   在传递参数时，注意格式。
+	  

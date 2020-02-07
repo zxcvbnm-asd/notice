@@ -1,0 +1,137 @@
+1、文件上传：
+     ** 表单文件上传格式必须为以下格式：
+         <form  action="${pageContext.request.contextPath }/registerServlet" method="POST" enctype="multipart/form-data">
+	       姓名：<input type="text" name="name">
+	       年龄：<input type="text" name="age"><br>
+	       文件名：<input type="file" name="photo"><br>
+	       <input type="submit" value="注册">
+	    </form>
+
+	 需要添加表单属性 ： enctype="multipart/form-data"
+	 提交方式 ： 必须死 POST 提交，因为其携带数据大小不受限制
+	 有文件标签 ： <input type="file" name="">
+
+2、文件上传并保存到服务器： （需要 fileupload 和 comment 2.2 以上的jar包）
+       protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// 判断是否为multipart的可以上传的表单文件
+		if(!ServletFileUpload.isMultipartContent(request)){
+			// 不是则抛出异常
+			throw new RuntimeException("失败");
+		}
+		try {
+			// 创建一个FileItlem工厂
+			DiskFileItemFactory factory = new DiskFileItemFactory();
+			factory.setSizeThreshold(1024*1024*1);
+			factory.setRepository(new File(this.getServletContext().getRealPath("/temp")));
+			
+			// 创建文件上传核心组件
+			ServletFileUpload upload = new ServletFileUpload(factory);
+			// 设置每个item头部字符编码，解决了文件名是中文乱码的问题
+			upload.setHeaderEncoding("UTF-8");
+			// 设置单个文件最大字节数，超出这个值，则失败
+			upload.setFileSizeMax(1024 * 1024 * 1);
+			// 当有多个保单文件项时,总文件加起来大小不超过5M
+			upload.setSizeMax(1024 * 1024 *5);
+			
+			// 获取到表单的item 装在一个list集合中
+			List<FileItem> items = upload.parseRequest(request);
+			// 遍历
+			for(FileItem item : items){
+				// 判断是否为普通表单项
+				if(item.isFormField()){
+					// 获取name，和value
+					String fieldName = item.getFieldName();
+					String fileValue = item.getString("UTF-8");
+					System.out.println(fieldName+"  "+fileValue);
+				}else{
+					// 若是文件，获得上传文件的名字
+					String fileName = item.getName();
+					System.out.println(fileName);
+					// 设置文件存储在服务器的路径
+					String path = this.getServletContext().getRealPath("/image");
+					
+					Calendar date = Calendar.getInstance();
+					int year = date.get(Calendar.YEAR);
+					int month = date.get(Calendar.MONTH)+1;
+					int day = date.get(Calendar.DAY_OF_MONTH);
+					
+					path = path+"/"+year+"/"+month+"/"+day;
+					File directory = new File(path);
+					if(!directory.exists()){
+						directory.mkdirs();
+					}
+					
+					File file = new File(path, fileName);
+					// 获取字节输入流
+					InputStream in = item.getInputStream();
+					// 获取字节输出流
+					OutputStream os = new FileOutputStream(file);
+					// 开始读写文件
+					int len = -1;
+					byte []bytes = new byte[1024];
+					while((len = in.read(bytes))!= -1){
+						os.write(bytes, 0, len);
+					}
+					os.close();
+					in.close();
+                                          // 删除临时文件
+					item.delete();
+
+  由于上传文件时。一个文件被分解为多个数据包，么每个数据包到达服务器的时间没有一定顺序，所以可以先创建一个临时文件
+                        // 设置使用临时文件的边界值， 当大于1M时，先写入临时文件，在写入内存，当小于临时文件，直接写入内存
+                        factory.setSizeThreshold(1024*1024*1);
+			// 创建临时文件
+			factory.setRepository(new File(this.getServletContext().getRealPath("/temp")));
+
+                        // 当文件写完后，删除临时文件
+			                os.close();
+					in.close();
+					item.delete();
+   
+     解决文件名上传的问题 ：// 设置每个item头部字符编码，解决了文件名是中文乱码的问题
+			                  upload.setHeaderEncoding("UTF-8");
+
+     解决上传文件大小问题：
+                                       // 设置单个文件最大字节数，超出这个值，则失败
+					upload.setFileSizeMax(1024 * 1024 * 1);
+					// 当有多个保单文件项时,总文件加起来大小不超过5M
+					upload.setSizeMax(1024 * 1024 *5);
+
+     解决文件重名覆盖问题：  filename = System.currentTime+filename;    (加上毫秒值)
+
+     由于每个目录下文件数量是有限的，因此需要多级目录
+                            String path = this.getServletContext().getRealPath("/image");
+					
+					Calendar date = Calendar.getInstance();
+					int year = date.get(Calendar.YEAR);
+					int month = date.get(Calendar.MONTH)+1;
+					int day = date.get(Calendar.DAY_OF_MONTH);
+					
+					path = path+"/"+year+"/"+month+"/"+day;
+					File directory = new File(path);
+			 // 判断文件价是否存在，若不存在进行创建
+					if(!directory.exists()){
+						directory.mkdirs();
+					}
+
+2、 文件下载：
+                                       protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+					String filename = "3.jpg";
+					// 解决下载资源名称问题
+					byte[] byte0 = filename.getBytes("UTF-8");
+					filename = new String(byte0, "ISO-8859-1");
+					// 修改响应头部属性 content-disposition   attachment
+					response.setHeader("content-disposition", "attachment;filename="+filename);
+					// 获取服务端资源文件输入流
+					InputStream is = this.getServletContext().getResourceAsStream("/resource/3.jpg");
+					// 获取响应输出流
+					    ServletOutputStream os = response.getOutputStream();
+					    int len = -1;
+					    byte []bytes = new byte[1024];
+					    while((len = is.read(bytes)) != -1){
+						os.write(bytes, 0, len);
+					    }
+					    os.close();
+					    is.close();
+		

@@ -1,0 +1,405 @@
+                                                            MongDB ： 非关系型数据库
+1、安装 ：配置环境变量，用 cmd-->mongod 命令检查是否安装好了数据库  
+     位置 ：D:\Program Files (x86)\mongodb-win32-x86_64-3.4.19-7-g55583d2bfe\bin
+		     在C盘根目录下创建data，在data文件夹下创建 db,然后 mongod 启动mongoDB服务器
+		     在打开一个cmd，输入命令 mongo, l连接到服务器
+		     更改数据库所在位置 ： 启动服务器时输入 mongod --dbpath D:\data\db --port 123 端口号也已经改了
+     win7创建后台启动 ：以管理员身份打开命令行
+                     mongod --logpath "F:\data\log\mongodb.log" --logappend -dbpath "F:\data\db" --serviceName "mongodbService" --install
+
+2、linux下安装mongodb :
+		 wget https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-rhel70-3.4.5.tgz
+		 tar zxf mongodb-linux-x86_64-rhel70-3.4.5.tgz
+		 mv mongodb-linux-x86_64-rhel70-3.4.5 /usr/local/mongodb
+		3.创建目录data和logs：mkdir data logs。并在logs下创建mongodb.log文件
+		4.cd bin
+		5.vim mongodb.conf.内容为： 
+			 storage:
+			 dbPath: "/usr/local/mongoDB/mongodb-linux-x86_64-rhel70-3.4.10/data"
+			systemLog:
+			 destination: file
+			 path: "/usr/local/mongoDB/mongodb-linux-x86_64-rhel70-3.4.10/logs/mongodb.log"
+			net:
+			 port: 27022
+			 http:
+			  RESTInterfaceEnabled: true
+			processManagement:
+			 fork: false
+		6.启动：./mongod -f mongodb.conf &
+		7.用shell脚本启动：
+			vim start-mongodb.sh。内容： nohup ./mongod -f mongodb.conf &
+		8 .连接mongodb客户端：./mongo localhost:27022。
+   
+2、概念 ：
+          * 数据库（database）:数据量是一个仓库，可以存放多个集合
+	  * 集合 （collection） : 相当于数组，可以存放文档
+	  * 文档 （document）: 数据库中最小的单位，我们操作和存储的内容都是文档。
+
+3、基本命令 
+      --- 查看数据库个数 ：show dbs    /  show datbases
+      --- 进入数据库 ： use 数据库名 
+      ---查看当前所在的数据库 ： db 
+      --- 查看数据库中的集合 ： show collections
+    数据库的CURD ：
+      --- 查询集合中所有文档 ： * db.stu.find(); =  db.stu.find({})                                  // 返回的是数组
+						     find : 用来查询所有符合条件的文档
+						     可以在find中添加条件进行查询    db.stu.find({name:"zhaoliu"});
+					     * db.collection.findOne() ;  查询数据中符合条件的第一个文档                                          
+                                                       db.stu.findOne({age:"36"})                               // 返回的是一个对象
+		 			     * 查询文档的个数 ： db.stu.find().count()   
+      --- 插入文档  ： 向数据库中插入文档 ：  db.stu.insert({name:"liuweidong",age:18,sex:"male"});   //创建了集合 stu,同时也创建了数据库
+                              不用刻意去创建数据库和集合
+                             db.<collection>.insert() ;  向集合中插入一个或多个文档。
+                               db.stu.insert({name:"zhangsan",age:"36"})      // 插入一个文档
+			       插入多个文档 ：
+			        db.stu.insert([
+				   {name:"lisi",age:"24"},
+				   {name:"wangwu",age:"50"},
+				   {name:"zhaoliu",age:"78"}
+				])
+				db.<collection>.insertOne() ;  // 插入一条数据
+				db.<collection>.insertMany();   // 插入多条数据
+                              当我们向数据库中添加文档时，如果没有设置相关的_id属性值，数据库会自动添加Id属性，作为文档的唯一标识
+			      _id属性可以自己指定，自己指定也要确保 其唯一。不建议自己指定
+
+       --- 修改文档 ：db.collection.update(条件， 新对象);
+                             db.stu.update({name:"lisi"},{age:99})   // 此时新的对象将会代替就的对象，旧的对象中一些属性将会被替换掉
+			   *     用  $set （修改操作符） 符号修改文档中指定的属性 
+			          db.stu.update({ "_id" : ObjectId("5c6f5ae09d1e9002411140d9")},
+					 {   
+					      $set:{
+						     age:"58"     // 可以指定修改多个属性
+						  }
+					 }
+					 )
+                            *  $unset 删除指定属性的操作符 ：
+			         db.stu.update({ "_id" : ObjectId("5c6f5ae09d1e9002411140d9")},
+					 {   
+					      $unset:{
+						     gender :1                        //  将gender的属性删除
+						  }
+					 }
+					 )
+                            *  update 可以实现修改一个，也可以实现修改多个，当修改多个时，需要接一个参数 multi : true
+			       updateOne 只修改一个
+			       updateMany 修改多个 
+			           db.stu.updateMany({name:"lisi"},{
+				       $set:{
+					     address:"handan"
+					   }
+				     })
+
+			    * replaceOne 替换一个文档
+
+	 --- 删除文档  ：  db.stu.remove({name:"gongliu"})         // 删除一个文档（默认情况下删除多个）
+	                             db.stu.remove({name:"gongliu"，true})    // 只删除一个
+				       db.stu.remove({})                            // 删除集合中所有的文档
+	                           db.stu.deleteOne({name:"tom"})         // 删除一个文档 
+                                   db.stu.deleteMany({name:"lisi"})         // 删除多个文档
+				   db.stu.drop();                                     // 删除集合，全部删除，性能高于remove，remove是逐条删除
+
+	 --- 内嵌文档 ：*  一个文档的属性值也可以是一个文档 
+						db.user.update({name:"zhangfei"},{$set:{
+							 hobby:{food:["大米","小米"],movie:["shentan","zhizhuxia"]}
+						}})
+			      * 	查询爱看电影为“shentan”的用户 ：
+			         	   db.user.find({'hobby.movie':"shentan"})         // 通过内嵌查询，属性需要加上双引号
+				  
+			      * 	 特殊符号 $push : 向数组中添加一个新的元素 ，不考虑元素冲突问题，即使元素相同元素也会被添加进去
+				               $addToSet : 也表示向数组中添加一个新的元素，如果是重复的元素，则会被覆盖
+						  向电影数组中在添加一个电影 ：  
+						    db.user.update({name:"zhangfei"},{$push:{
+							'hobby.movie':"xiyangyang"
+						    }})
+                              * 向 number 集合中插入两万条数据 
+			              for(var i = 1; i <= 20000; i++){
+					    db.number.insert({num:i});
+					}
+                                 将插入的数据封装到一个数组中，然后在添加到集合中，会大大提高执行效率
+				    var arr = [];
+					for(var i = 1; i <= 20000; i++){
+					   arr.push({num:i});
+					}
+				   db.number.insert(arr);
+			      *  查询特殊操作符  $gt 大于   $lt 小于   $gte 大于等于   $lte 小于等于
+			           查询大于500的数据  ：db.number.find({num:{$gt:500}})
+				   查询小于30的数据 ： db.number.find({num:{$lt:30}})
+				   查询大于30小于50：  db.number.find({num:{$gt:30, $lt:50}});
+				   查询函数 ： limit()  : 查询前10条数据 ; db.number.find().limit(10);
+				   分页查询 ： skip()  :   查询11条到20条之间的数据 ：
+				                    db.number.find().skip(10).limit(10)             // 跳过了前 10 条数据
+			     * 查询大于2000或小于1000的员工的信息
+			         db.emp.find( {$or: [{sal:{$lt:1000}},{sal:{$gt:2000}]  })
+			     * 将所有低于1000的员工增加400
+			       db.emp.updateMany({sal:{$lt : 1000}},{sal:{$inc:400}})          //  相当于 sal =sal + 400;
+
+4、文档之间的关系 
+      *  一对一 ： 通过内嵌的方式进行构造（人 ---- 身份证）
+                    db.PersonAndCard.insert([
+		       {
+			name:"zhangsan",
+			Card:{
+			    name:"65432"               // 内嵌文档
+			    }
+			},
+			{
+			name:"wangwu",
+			Card:{
+			    name:"12346"
+			    }
+			}
+		    ])
+	* 一对多 ： 商品和用户 ，通过向商品的文档中添加 user 的ID属性，相当于外键，即可实现多表关联
+	             查询用户的订单信息：
+	                 var user_id = db.user.findOne({name:"liu"})._id;
+                         db.order.find({user_id:user_id})
+	 
+	 * 多对多 ： 只需要引入的ID设置为数组类型即可
+	         db.teachers.insert([{name:"刘老师"},{name:"李老师"},{name:"赵老师"}])
+		   tea_ids:[ObjectId("5c70a673bedeeff60bd9ced6"),ObjectId("5c70a673bedeeff60bd9ced7")]}])
+    
+5、MongoDB的排序 ：
+      在默认查询时，mongoDB是按照_id 的大小进行升序排列的
+	      可以用sort函数进行排序 ：db.user.find().sort({sal:1})     // sort({根据那一个属性进行排序：1})   1 ：代表升序    -1：代表降序
+	      注意：limit、skip、sort可以任意放置，默认先调用 sort，在调用 skip，最后调用limit
+      投影 ：查看某字段下的数据
+                   db.user.find({},{name:1,_id:0,sal:1})     // 在第二个参数加相关字段的名， 1 ：显示  0 ：不显示
+     查询集合的状态 ： db.collecton.stats()
+
+
+6、聚合框架进行查询 ：
+     格式 ： db.collections.aggregate(条件1，条件2，条件3)
+     例子 ： 查询学生成绩大于80以上课程门数最多的三个学生
+               db.score.aggregate({$match:{"score":{$gte:80}}},{$project:{"stuId":1}},
+                                            {$group:{"_id":"$stuId","count":{$sum:1}}},{$sort:{"count":-1}},{$limit:3})
+	        带$的符号为管道操作符 ：
+		$match ：筛选  
+		      * 放在最前面 ：快速降不需要的文档进行过滤、减少后续数据的操作量
+		      * 在投影和分组之前进行筛选，乐意使用索引
+		$project :   投影          用来从文档中提取字段，可以指定包含和排除字段，也可以重命名字段
+						  可以进行数学表达式的运算
+						  db.score.aggregate({$project:{"sid":"$stuId","score":1}})    //  将学生id重命名，并且显示score
+						  db.score.aggregate({$project:{"stuId":1,"_id":0,"newScore":{$add:["$score",20]}}})    // 将学生成绩增加20分
+				 数学表达式 ： $add      +
+						      $multiply:  *
+						      $divice:    /
+						      $substract: -
+						      $mod: %
+				 可以操作日期 ：$year   moth  week  minute  second  dayOfmMonth  dayOfYear dayOfWeek
+				                         {$project:{"tiem":{"$dayOfWeek","$datetime"}}}            datetime是表格中的字段
+				 字符串的操作 ：$concat :添加    $concat:["$stuId","liuweidong"]}}}) 
+				                            db.score.aggregate({$project:{"stuId":{$concat:["$stuId","liuweidong"]}}})
+				                         $substr: 截取 $substr:["$stuId",0,1]}
+							    db.score.aggregate({$project:{"stuId":{$substr:["$stuId",0,1]}}})
+                                                         $toLower: 小写
+							     db.score.aggregate({$project:{"stuId":{"$toUpper":"$stuId"}}})
+							 $toUpper 大写
+		$group ：分组 ，分组后有一些操作符 $avg     $max  $min  $sum
+		                db.score.aggregate({$group:{"_id":"$stuId","avgscore":{$avg:"$score"}}},
+				db.score.aggregate({$group:{"_id":"$stuId","avgscore":{$avg:"$score"}}}              
+		$sum : 有一个就加1  
+		$sort: 排序 -1 : 降序
+		$limit : 返回条数
+
+7、MapReduce, 使用javascripte语言进行查询。
+
+8、索引 ： 
+      * 查看是否有索引   db.user.getIndexs();
+           db.user.getIndexes()       // 查看已经创建的索引
+      * 删除索引 dropIndex()
+          db.user.dropIndex("name_1")
+      * 查看语句执行计划 .explain
+        db.user.find({"name":"liu50000"}).explain("executionStats")
+	  explain有三种模式:
+		1.queryPlanner：查询计划的选择器，首先进行查询分析，最终选择一个winningPlan，是explain返回的默认层面。
+
+		2.executionStats：为执行统计层面，返回winningPlan的统计结果
+
+		3.allPlansExecution：为返回所有执行计划的统计，包括rejectedPlan
+
+		所以：我们在查询优化的时候，只需要关注queryPlanner， executionStats即可，因为queryPlanner为我们选择出了winningPlan，
+		         而executionStats为我们统计了winningPlan的所有关键数据。
+       * 创建索引 ensureIndex({})   -1表示降序  1 表示升序
+             db.user.ensureIndex({"name":1})
+	     b.user.ensureIndex({"name":1},{"name":"myIndex"})    // 指定索引的名字
+	  创建复合索引 ：
+	     db.user.ensureIndex({"userId":1,"name":1},{"name":"myIndex"})
+	     必须包含前编索引，可以不使用后边索引查询
+           hint("索引名") ： 强制使用某一索引
+	         db.user.find({"userId":"8"}).hint("idIndex").explain("executionStats")
+           hint({$natural:1})    : 必须走全表扫描
+	       db.user.find({"userId":"8"}).hint({"$natural":1}).explain("executionStats")
+          唯一索引 ： {unique:true}, 添加唯一索引后，不能在插入重复值，
+	    索引保存的数据必须小于1M
+	   创建稀疏索引 ，允许健值为null, 理由如下 ：（sparse : true）
+	      db.student.ensureIndex({"name":1},{"unique":true,"sparse":true})
+	        插入两条数据 ：
+		   db.student.insert({"sex":"nv"})
+		   db.student.insert({"sex":"nan"})
+		 当不设置稀疏索引时，会报错，第二条数据插入不进去。因为null重复，设置了稀疏索引，将允许 key 为null,可以插入进去
+
+9、capped集合 ： 大小固定，性能较好，当空间用完之后，新的对象会覆盖旧的对象。Capped集合会自动进行维护。
+      创建 ： db、createCollection("集合名"，{"capped":true,"size":"10"})    // size大小指的是 kb
+                  db.createCollection("person",{"capped":true,"size":10}) 
+     可以指定 max ，来限制最大对象的个数。当容量没有满时，按照max进行淘汰。
+              db.createCollection("person",{"capped":true,"size":10,"max":2})
+	      最多插入两条数据，在插入将会覆盖第一条数据
+      将普通集合转换为capped集合： （不允许删除数据）
+               db.runCommand({"convertToCapped":"student","size":20, "max":10})
+     capped集合不用时，只能用drop进行删除。
+     capped集合不会再任何键上创建索引，如果要在主键上创建索引 ，需要创建集合时加上autoIndexId：true
+               db.runCommand({"convertToCapped":"student","size":20, "max":10,"autoIndexId":true})
+
+9、GridFS存储大型二进制文件的一种存储机制。适用于存储一些大型不变，经常访问的文件
+       缺点 ：性能较低，不如直接访问其他文件系统快
+                  不能对存储的文件进行修改，只能先删除在添加
+       存储原理 ：会将大文件分割成多个比较大块，每个块作为独立的文档进行存储，另外用一个文档讲这些块组织到一起，并存储该文件的
+                 元信息。
+	  
+10、mongoDB的主从复制 （副本集）：
+       在同一个服务器上开启三个 mongdb ： 命令如下 
+        ./mongod --dbpath ../data2 --logpath ../logs2/mongodb.log --port 20002 --fork           --replSet clus 
+	./mongod --dbpath ../data3  --logpath ../logs3/mongodb.log --port 20003 --fork           --replSet clus 
+	                   数据库路径                            日志路径                      端口             后台启动      副本集名称
+        启动好后链接一台客户端服务器 ：
+	      ./mongo localhost:20001
+	 通过如下命令查看副本集状态 ：
+	     rs.status();        rs.help();
+	 需要初始化副本集，通过 rs.initiate()实现 ：
+	   rs.initiate({"_id":"myrep",members:[{"_id":0,"host":"192.168.1.108:20001"},
+	                                                    {"_id":1,"host":"192.168.1.108:20002"},
+							    {"_id":2,"host":"192.168.1.108:20003"}]})
+rs.initiate({"_id":"myrep",members:[{"_id":0,"host":"192.168.1.108:20001"}, {"_id":1,"host":"192.168.1.108:20002"},{"_id":2,"host":"192.168.1.108:20003"}]})
+         初始化好副本集后，可以通过rs.status(); 查看主次
+	 db.printReplicationInfo() 、rs.config() 也可以进行查看
+	 通过 db.getMongo().setSlaveOk(); 该命令可以对从服务器进行读取。
+	 从副本集中删除成员 ：
+	          rs.remove("192.168.1.108:20001")     
+         从副本集中添加成员 
+	          rs.add("192.168.1.108:20001")
+         副本集的主节点确定机制 ：
+	        通过选举机制，
+
+11、设置副本集的一些相关信息 ：
+       通过rs.config() 和 rs.reconfig()进行相关的设置 ：
+            var config = rs.config();          // 获取副本集配置
+	    config.members[0].host="newHost:port"     // 设置端口号
+	    config.members[0].priority="0"    // 优先级
+             config.members[0].hidden=true    // 选择隐藏
+	    rs.reconfig(config);       // 更新配置
+	     
+	将主节点变为备份节点 ：
+	     使用stepDown()函数，可以指定持续退化的时间 。 re.stepDown() 或者 rs.stepDown(10),主节点将变成其他节点
+	阻止选举 ： 在每个备份节点上执行 rs.freeze()命令， 将该节点进行冻结，不进行选举，，可以用于维护主节点
+	       在备份节点执行 ： rs.freeze(1000)           // 秒为单位
+	       在主节点执行 ： rs.stepDown(3),      // 该节点会被释放，但其他备份节点已经被冻结，所以在3秒后会再次成为主节点
+	不作为复制源： 将备份节点 参数 allowChaining 设置为 false, 这样只能在主节点上进行数据备份
+
+12、mongodb分片 ：
+     * 支持自动分片
+     * mongos : 用来处理客户端访问集群数据的路由，他维护了一个内容列表，记录了每个分片包含的数据，应用程序链接上他，就跟操作单台
+                       服务器一样
+     * 数据库分片 ：
+          需要明确指定数据库 和 分片集合，mongodb才会对数据库自行分片。
+	  对数据库启用分片 ： sh.enableSharding("数据库名")
+	  指定集合 并在集合的某一健上指定索引 ： sh.shardCollection("数据库名. 集合名",{"userId":1})  // 为该字段创建索引
+
+     搭建分片 ： 准备路由服务器 、3台副本集服务器、3台分片服务器。 建好相关的文件夹
+        * 启动分片  服务器  
+              ./mongod --dbpath   ../shard/db1  --logpath  ../log/1.log  --fork --smallfiles --port 40001--shardsvr
+	* 启动副本集服务器 ：
+              ./mongod --dbpath   ../shard/db4  --logpath  ../log/4.log  --fork --smallfiles --port 40004 --replSet  rs1 --configsvr
+	      随意进如一台服务器，进行副本集初始化
+	      rs.initiate({"_id":"rs1",members:[{"_id":0,"host":"192.168.1.108:40004"},{"_id":1,"host":"192.168.1.108:40005"},
+	              {"_id":2,"host":"192.168.1.108:40006"}]})
+	 *启动路由服务器
+               ./mongos  --logpath  ../log/7.log --port 40007  --fork  
+	                       --configdb rs1/192.168.1.108:27020,192.168.1.108:27021,192.168.1.108:27022  --chunkSize 200 
+	  *进入路由服务器 ：./mongo --port 40007
+	       进行分片 ： 
+	                      sh.addShard("ip:27017")
+
+			      sh.addShard("ip:27018")
+
+			     sh.addShard("ip:27019")
+		 指定分片数据库和指定分片的集合。
+
+14、mongodb的用户身份验证 ：
+      
+
+13、 mongodb与spring整合， java 代码进行操作：
+          通过注入mongodbTemplate 来进行面向对象编程
+                 @Autowired
+		    private MongoTemplate mongoTemplate;                  // 注入的template
+		    private final String COLL_NAME = "user";                   // 指定要操作的集合
+		    @Test
+		    public void test01(){
+		       // 查询成绩大于 10 小于50的人
+			Criteria c = new Criteria().andOperator(new Criteria("score").gt(10),
+				new Criteria("score").lt(50)
+				);
+			List<User> users = mongoTemplate.find(new Query(c), User.class, COLL_NAME);     // 当query中没有参数时，默认查询所有
+			for (User user : users) {
+			    System.out.println(user.getName());
+			}
+		    }
+
+		    // 新增文档
+		    @Test
+		    public void test02(){
+			Criteria c = new Criteria("name").is("liuweidong99");
+			mongoTemplate.remove(new Query(c),COLL_NAME);
+		    }
+
+		    @Test
+		    public void test04(){
+			DBCollection user = mongoTemplate.getDb().getCollection("user");
+			BasicDBObject object = new BasicDBObject();
+			object.append("score",-1);
+			Iterator<DBObject> iterator = user.find().sort(object).iterator();
+			while (iterator.hasNext()){
+			    System.out.println(iterator.next().toString());
+			}
+		    }
+
+14、Springboot与mongodb进行整合 ：（相当于springData）
+        所需要的依赖 ：
+	     <dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-data-mongodb</artifactId>
+            </dependency>
+
+	 在Dao层的开发 ： // 其中封装了一些方法，不需要加注解，启动时会自动扫描。
+		    public interface CmsPageDao  extends MongoRepository<CmsPage,String>{
+	        
+		    }
+	    
+          也可以在Dao层中自定义实现方法，自己实现，但是需要有一定的命名规则。
+	      按照findByXXX，findByXXXAndYYY、countByXXXAndYYY等规则定义方法，实现查询操作。
+              //  通过页面和别名进行查找
+	        public CmsPage findByPageNameAndPageAliase(String pageName,String pageAliase);
+              // 通过别名和分页的形式进行查找
+	       public List<CmsPage> findByPageAliase(String pageAliase, Pageable pageable);
+              // 通过地址路径和页名进行删除
+	       public void deleteByDataUrlAndPageName(String dateUrl,String pageName);g
+
+	    springboot 操作mongodb的GridDFS() :
+	       需要注入 ： GridFsTemplate;
+
+	                         File file = new File("E://index_banner.ftl");
+				FileInputStream inputStream = new FileInputStream(file) ;
+				GridFSFile store = gridFsTemplate.store(inputStream, "banner.html");   /存储文件
+				Object storeId = store.getId();
+
+				// 查询文件
+				 GridFSDBFile gridFSDBFile = gridFsTemplate.
+					findOne(Query.query(Criteria.where("_id").is("5d18b56fe0c0880d60afd232")));
+				InputStream inputStream = gridFSDBFile.getInputStream();    // 获取文件输入流
+
+				也可以删除
+
+			   
+	   
+	        
+
+		                         

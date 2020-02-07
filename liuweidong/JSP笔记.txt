@@ -1,0 +1,447 @@
+1、注释问题：
+	 *Jsp的注释：
+	      <%--  --%> 
+	  * html的注释：
+	      <!--  -->  html注释会被Jsp翻译引擎翻译到servlet的out.write()中
+
+2、Jsp中的Java代码块： <%   java语句    %>
+      注意： * 声明变量不能添加权限控制访问符
+                 *  不能定义方法
+		 * 不能写静态代码块
+		 被翻译到了servlet 中 service 方法中
+
+        声明代码块 <%!    java语句  %>
+	        *  可以添加权限访问符
+		* 可声明静态方法，普通方法
+		* 可以写静态代码块
+		被翻译到了servlet的类中
+
+        语句表达式块 <%=  cout %>    : 将count 的值写到out.write 中，打印在客户端浏览器上
+	E:\mywork\.metadata\.plugins\org.eclipse.wst.server.core\tmp0\work\Catalina\localhost\Jsp1\org\apache\jsp
+
+		四大域属性空间： request-->seesion-->servlertContext--->pageContext    范围从小到大
+		通过pageContext 可以获取其他8个内置对象
+		out    jsp.write   out.println();  标准输出流
+
+3、jsp的指令：
+      *    格式; <%@page  指令名 = 属性值 %>  contentType="text/html; charset=UTF-8"    import="导入相关的包" 
+             导入包可以连续导入：import="java.util.*,java.text.*"
+
+     *   错误跳转指令 <%@ page errorPage="/error.jsp" %>
+          错误异常显示指令：<%@ page isErrorPage="true" %>   
+	      <%=exception.getMessage() %>>   //显示出异常信息
+    
+      * session 失效指令：<%@ page session="false" %>   
+        但是可以通过另一种方式接受 session
+	   HttpSession session = request.getSession(false);
+	    Object obj =  session.getAttribute("username");
+
+       *静态联编
+       include 的指令： 用于将另一jsp界面插入该部分（静态联编），可以是某一区域内平面进行改变。减少重复代码
+              先前看：<br>
+	      <%@ include file="/7.jsp" %>
+	      向后阿看<br>    
+
+	      include的指令可以在任意位置，在另一个jsp界面可以定义变量，该jsp界面仍然可以使用。
+
+	 *动态联编  （jsp动作指令）  属性： page
+	    
+             forward ： 在目标页面开启标准输出流
+	                     <jsp:forward page="/2.jsp"></jsp:forward>
+
+	      include: 在当前页面开启标准输出流，与静态联编相同
+	                  <jsp:include page="/2.jsp"></jsp:include>
+
+	     注意： 在静态联编和动态联编均可以使用时，一般使用静态联编。此时程序运行时，只执行一个servlet，耗费资源较少，且效率高
+	               两个文件需要一个共同的变量，则需要使用静态联编
+		       两个文件使用两个变量，则需要动态联编
+
+4、EL语句表达式： 只能获取静态资源的数据，不能获取动态资源的 数据， 只能在四大域中获取数据
+                           pageContext-->request-->session--> application  范围有小到大
+
+     * EL语句表达式： 
+			   <% 
+			 request.setAttribute("name","zhasan");
+			 pageContext.setAttribute("name", "lisi");
+		           %>
+		       name=${name};  // 会输出 lisi
+
+		       若要输出request 中的name，则需要加上范围： name2=${requestScope.name};  其他标签同样加上Scope。
+
+       *EL语句访问Bean：
+                先创建一个JavaBean类： 
+		       <%
+			 request.setAttribute("student", new Student("zhangdn",4));
+		       %>
+		       
+		       name=${student.name};<br>
+		       age=${student.age};                     // 访问单个属性需要 .属性
+
+        * EL语句访问数组
+	                 <%
+			   Student []student = new Student[2]; 
+			   student[0] = new Student("zhang",36);
+			   student[1] = new Student("lisi",45);
+			   
+			   pageContext.setAttribute("students", student);
+			%>
+			
+			student1 = ${students[0].name};
+	
+	  * EL访问List集合：（与数组相同，通过索引进行查找，但是不能访问set）
+	              <%
+			  ArrayList<String> arr = new ArrayList<String>();
+			  arr.add("liu");
+			  arr.add("wei");
+			  arr.add("dong"); 
+			  
+			  pageContext.setAttribute("name", arr);
+			%>
+			
+			${name[1]};
+
+	  * EL访问map：
+	                <%
+			  Map<String,String> map = new HashMap<String,String>();
+			  map.put("student", "liuweidong");
+			  map.put("person","lisiguang");
+			  pageContext.setAttribute("maps", map);
+			%>
+			
+			map1 =${maps.student}
+
+	   * EL访问运算符：+ - * /    以及 empty
+	             判断变量是否为空
+		        name = ${empty name}
+			<br>
+			str = ${empty str }
+			<br>
+			arr = ${empty arr }
+                 结果均为true
+
+	    * EL内置对象 ：
+
+	    <form action="${pageContext.request.contextPath}/show.jsp" method="POST">
+                姓名：<input type="text" name="name">
+                年龄：<input type="text"  age="age">
+            <input type="submit" value="提交">
+            爱好：
+            <input type="checkbox" name="hobby" value="swimming">水
+            <input type="checkbox" name="hobby" value="reading">shu
+           </form>
+
+	        ---pageContext:   用于表单提交的路径配置    ${pageContext.request.contextPath}/servlet
+		     <form action="${pageContext.request.contextPath}/servlet" method="POST">
+				姓名：<input type="text">
+				年龄：<input type="text">
+			    <input type="submit" value="提交">
+		      </form>
+
+		 ---- param   其底层结构为  request.getParameter()
+		        name = ${param.name}      //  name = 姓名的值
+	  
+	         ----- paramValues  转门针对复选框，
+		        hobby = ${paramValues.hobby[0]}<br>
+
+		 ----initParam 针对全局化初始变量
+		       zhangsan = ${initParam.zhangsan}    // 通过<param-name> 获取 <param-value>
+
+  5、EL自定义函数：
+          步骤： * 创建一个类，类中创建静态方法。
+	            * 进行xml文件配置，在WEB-INF下，文件以tld结尾（tag library d）
+		       --先对文件进行约束：
+				   <taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+				    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+				    version="2.0">
+
+		       -- 对文件进行配置：
+					    <tlib-version>1.0</tlib-version>
+					    <short-name>sum</short-name>         // 标签名，一般与该文件名相同
+					    <uri>http://www.hrgongda.cn</uri>    // 地址随便写
+
+		       -- 对类进行配置：
+				 <function>
+					<name>getSum</name>            // 方法名
+					<function-class>cn.hegongda.co.Sum</function-class>        // 全类名
+					<function-signature>java.lang.Integer getSum( java.lang.Integer,java.lang.Integer )</function-signature>
+				    </function>
+
+				    <function-signature>返回值类型 方法名( 参数1,参数2 )</function-signature>
+			
+			--Jsp中EL语句调用：
+			        （1）、需要添加Jsp指令 ：
+				             <%@ taglib uri="http://www.hrgongda.cn" prefix="sum" %>  （路径名，标签名）
+                                 （2）、调用：
+				              ${sum:getSum(4,5) }
+			        
+				          快捷键： Alt+?   自动显示出相关路径，以及函数方法
+
+				 JSp 指令： error 、session 、 include/foward(随意写)   、taglib
+
+6、JSTL函数库： 需要引入 jstl和 standar jar包 （fn）
+                         需要配置taglib指令
+                        ${fn:substring("abjcd",0,2) }           
+   IPv4 地址: 192.168.1.102
+
+7、自定义标签：
+      创建一个类继承SimpleTagSupport,（SimpleTagSupport 是 SimpleTag 接口的实现类）javax.servlet.jsp.tagext  在这个包中
+        
+	      @Override    重写方法
+	    // 定义标签处理器，获取客户端IP
+	    public void doTag() throws JspException, IOException {
+		PageContext pc =  (PageContext)this.getJspContext();
+		ServletRequest request = pc.getRequest();
+		String address = request.getRemoteAddr();
+		JspWriter out = pc.getOut();
+		out.write(address);
+	    }	 
+
+      注册标签：  
+	        <taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+		    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee 
+		    http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+		    version="2.0">
+		    <tlib-version>1.0</tlib-version>
+		    <short-name>cl</short-name>
+		    <uri>http://www.hegongda.jsp.cn</uri>
+		    
+		   <!--  注册标签 -->
+		   
+		   <tag>
+			<name>client</name>
+			<tag-class>cn.hegongda.co.Client</tag-class>
+			<body-content>empty</body-content>        // 空体标签
+		    </tag>
+		</taglib>
+
+       jsp页面调用： （引入taglib 配置指令）
+        
+	        <cl:client/>
+
+8、自定义带标签体的标签： 
+
+                @Override
+    public void doTag() throws JspException, IOException {
+       // 该类可以实现将写入缓冲区的内容变成字符串
+		StringWriter sw = new StringWriter();
+	// 获取标签体中的内容
+		JspFragment jf = this.getJspBody();
+	// 将标签体重的内容写入字符缓冲流
+		jf.invoke(sw);
+	//以字符串的形式返回该缓冲区的当前值。
+		String content = sw.toString();
+	// 对标签体内容进行操作并写出
+		this.getJspContext().getOut().write(content.toUpperCase());
+		  
+   注册标签：
+					     
+	<body-content>empty</body-content>         可以写 empty 、scriptless(执行java代码块，jsp语句、el)、tagdependent（原样输出）	
+
+   调用：
+          <cl:change>abc</cl:change>
+9、自定义带有属性的标签
+      // 创建属性类，定义注册器
+            public class Attribute extends SimpleTagSupport{
+	
+		private boolean test;
+
+		public void setTest(boolean test) {           // 通过set 方法，将其变成属性值
+			this.test = test;
+		}
+		
+		@Override
+		public void doTag() throws JspException, IOException {
+			if(test){
+				this.getJspBody().invoke(null);
+			}
+		}
+
+      // 注册标签， 前两步相同，<tag>部分有所不同
+             <tag>
+		<name>if</name>
+		<tag-class>cn.hegongda.com.Attribute</tag-class>
+		<body-content>tagdependent</body-content>
+		<attribute>
+		   <name>test </name>     // 属性的名字
+		   <required>true</required>        //   值是否是必须写得
+		   <rtexprvalue>true</rtexprvalue>           //  true 则表示支持Jsp以及EL表达式
+		</attribute>
+	    </tag>
+
+      // 调用：
+               <%
+		boolean b =true;
+		pageContext.setAttribute("bool", b);
+	     %>
+     
+           <cl:if test="${bool }">男</cl:if>
+
+10、遍历各种集合和数组：
+
+		public class ForEachTag extends SimpleTagSupport {
+		
+		private Object item;
+		private String var;
+		public void setItem(Object item) {
+			this.item = item;
+		}
+		public void setVar(String var) {
+			this.var = var;
+		}
+		
+		public Collection getColl(){
+			if(item instanceof List){
+				return (List)item;
+			}else if(item instanceof Set){
+				return (Set)item;
+			}else if(item instanceof Map){
+				return ((Map) item).entrySet();
+			}else if(item instanceof Object[]){
+				return Arrays.asList((Object[])item);
+			}
+			return null;
+		}
+		
+		@Override
+		public void doTag() throws JspException, IOException {
+			for(Object obj : getColl()){
+				this.getJspContext().setAttribute(var, obj);
+				this.getJspBody().invoke(null);
+			}
+		}
+
+        注意： 对于几基本数据类型： 需要将其装进一个数组当中去
+
+	        else if(item instanceof int[]){
+			List<Object> list = new ArrayList<Object>();
+			for(int num : (int[])item){
+				list.add(num);
+			}
+			return list;
+
+        避免以上写法，用下面方法，简单：（其中Array是用到了 反射技术）
+	     else if(item.getClass().isArray()){
+			List<Object> list = new ArrayList<Object>();
+			for(int i= 0; i < Array.getLength(item); i++){
+				list.add(Array.get(item, i));
+			}
+			return list;
+
+			 Array.getLength(item)  // 判断该数据类型的本质是否为数组
+
+11、将自定义标签打包发行方式：
+       导出该类的Jar包，并且复制一份 tld 文件到 jar包的WEB-INF 下
+
+12、jstl函数库的使用：
+        * set标签：    
+	     ----    默认为page域属性
+	             <c:set value="zhasnan" var="name"/>
+                     ${name}<br>
+
+             ----- 给Bean赋值（person中有两个属性）
+		     <%
+			    Person person = new Person();
+			   pageContext.setAttribute("person", person);
+		     %>
+		 <c:set value="zhansan" property="name" target="${pageScope.person }"></c:set>
+		 <c:set value="45" property="age" target="${pageScope.person }"></c:set> 
+		    ${person}
+
+            ------给Map赋值：（value代表键值，property代表 key）
+	           <%
+		     Map<String, Object> map = new HashMap<String,Object>();
+		     pageContext.setAttribute("map", map);
+		  %>
+		   <c:set value="lisi" property="1" target="${pageScope.map }"></c:set>
+		  ${map}
+			   
+      * remove 删除域中的属性值
+                <c:remove value="nan" var="sex" scope="session"/>
+
+		注意： 当不加scope时，删除所有该属性
+		           当加上scope时，删除指定域中的属性
+
+      * catch ： 捕获异常标签
+              <c:catch var="ex">
+		  <%
+		      int i = 3/0;
+		   %>
+	     </c:catch>
+		ex = ${ex }   //java.lang.ArithmeticException: / by zero 
+        
+	重点： <c:if> 用于判断
+
+	          <c:set var="name" value="zhangsan"/>
+		       ${name }
+		       <c:if test="${name=='zhangsan'}">
+			  <a href="#">跳转</a>
+		       </c:if>
+	          若if判断成立，则执行if内部代码，不执行	
+
+		<c:chose>  用于选择 ， 可用页码的跳转
+		       <c:choose>
+			     <c:when  test="${page=='1'}">
+				  <div>niaho</div>
+			     </c:when>
+			     <c:otherwise>
+			       <div>lii</div>
+			     </c:otherwise>    
+		       </c:choose>
+
+		    可以有多个when
+
+
+        ----forEach()
+	     <c:forEach items="${persons }" var="person" begin="0" end="3" step="2">
+		   ${person }<br>
+	      </c:forEach>
+
+	      begin: 从下标为0的数组开始
+	      end : 结束的位置
+	      step : 每隔两步读一个
+
+	----- 高级用法
+
+	     <table border="1" bordercolor="red">
+		   <th> 序号 </th>
+		   <th> 姓名 </th>
+		   <th> 年龄 </th>
+		      <c:forEach items="${persons }" var="person" varStatus="vs">
+		  <tr>
+			 <td>${vs.count }</td>
+			 <td>${person.name }</td>
+			 <td>${person.age }</td>
+		      </c:forEach>
+		  </tr>
+	      </table>
+
+	      序号  姓名  年龄  
+		1 张三 25 
+		2 李四 18 
+		3 王五 41 
+		4 赵六 26 
+	   可以将集合中的数据转换成表格。  varStatus 可以编写序号.     vs.index   vs.frist  vs.last
+
+   ---------- 将日期格式化：
+              <%
+		   Date date = new Date();
+		   pageContext.setAttribute("date", date);
+	      %>
+	      <fmt:formatDate value="${date }" pattern="yyyy-MM-dd"/>
+	      <fmt:formatDate value="${date }" pattern="yyyy-MM-dd" var="dt"/>    // 将日期设置到变量dt中
+	      生日：<input type="text" value="${dt }"> 
+
+
+补充 ：
+内置对象名                            类型
+request	                  HttpServletRequest
+response                    HttpServletResponse
+config                         ServletConfig
+application                  ServletContext
+session                        HttpSession
+exception                     Throwable
+page                            Object(this)
+out                            JspWriter
+pageContext              PageContext 

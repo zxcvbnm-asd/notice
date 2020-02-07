@@ -1,0 +1,131 @@
+1、页面参数请求发送 ：
+     function findByName(){
+	    window.location="Customer_findByName.action?cust_name="+$("#sChannel2").val();
+       }
+
+2、 hql 模糊查询语句方式： 
+          String sql = "select count(*) from Customer where cust_name like:name";
+	  Number number = (Number)session.createQuery(sql).setParameter("name", "%"+cust_name+"%").uniqueResult();
+3、分页查询类的设计 ：
+         public PageBean(Integer currentPage, Integer pageSize, Integer totalCount) {    // 创建代参构造参数
+		this.currentPage = currentPage;
+		this.pageSize = pageSize;
+		this.totalCount = totalCount;
+		// 如果没传入当前页数或当前页数小于零，则设置当前页数为第一页
+		if(this.currentPage == null || this.currentPage < 0 || this.currentPage == 0){
+			this.currentPage = 1;
+		}
+		if(this.pageSize == null){
+			this.pageSize = 3;
+		}
+	// 得到总页数
+		if(this.totalPage == null){
+			this.totalPage = (this.totalCount + this.pageSize - 1)/this.pageSize;
+		}
+		// 判断当前页数是否大于总页数，若传入页数大于总页数，则当前页数等于 最大页
+		if(this.currentPage > this.totalPage){
+			this.currentPage = this.totalPage;
+		}
+	}
+
+4、BaseDao 数据库设计，当多个类型的 dao 有相同类型的 增删查改 时，为了避免在每一个dao 中都写方法，可以将这希写方法都写在一个BaseDao
+    中，其实现类实现其中的方法。 二具体 dao 的接口继承 IBaseDao, 具体实现类 继承 BaseDaoImpl.
+      在BaseDaoImpl类中，需要 判断运行时泛型的类型
+
+		 private Class clazz;   // 用于接收运行时泛型的类型
+		 public BaseDaoImpl(){
+			 // 获得当前类带有泛型的父类
+			 ParameterizedType ptClass= (ParameterizedType) this.getClass().getGenericSuperclass();
+			 // 获得运行时期泛型类型
+			 clazz = (Class) ptClass.getActualTypeArguments()[0];
+		 }
+
+5、数据字典：建立一张数据表，其与主表之间的关系为  多对一，主表中的某些属性与该表的编码 成主外键关系。
+            
+		      $(function(){
+				       loadDict("005", "cust_level.dict_id", "level");
+				       loadDict("002", "cust_source.dict_id", "source");
+				       loadDict("001", "cust_industry.dict_id", "industry");
+				   })
+				   // 1、数据表中的类型  /2、select的name属性，对应相关表字段  3、js页面任意位置标签id      4、用于回显  
+				   function loadDict(typeCode,selectName,positionId,selectId){   
+				       // 先创建下拉选择对象
+					 var $select = $("<select name="+selectName+"></select>");
+				       // 创建提示信息
+					 $select.append($("<option value=''>---请选择---<option>"));
+				       // ajax发送异步请求
+					$.ajax({
+						       url :"dict.action",
+						       data:{dict_type_code:typeCode},
+						       type:"POST",
+						       dataType:"json",                                           
+						       async:true,                                                 
+						       cache:false,
+						       success : function(result){
+							  for(var i=0; i<result.length; i++){
+							    var $option = $("<option value='"+result[i].dict_id+"'>"+result[i].dict_item_name+"</option>");
+							    // 判断是否回显
+							    if(result[i].dict_id == selectId ){
+							      $option.attr("selected","selected");
+							    }
+							    $select.append($option);
+							  }
+						       }
+						  })
+						
+					 
+				       // 将下拉选择框放到任意位置
+				       $("#"+positionId).append($select);
+				   }
+
+6、在一个窗口弹出另一个窗口，dom方法 ： window.open（路径，，长，宽）
+
+     function selectName(id,name){
+	     var doc = window.opener.document;       // 获取原窗口的 documenta对象
+	     doc.getElementById("cust_id").value=id;                 // 在原窗口的页面给 cust_id 标签 附上 填出窗口某个值。
+	     doc.getElementById("cust_name").value=name;
+	     window.close();                                         // 关闭弹出窗口
+	} 
+	 <input type="button" value="选择" onclick="selectName('${customer.cust_id}','${customer.cust_name}')">
+
+	 当访问路径带有相关参数时，在js页面中获取的方法：
+	   onclick="window.open('${pageContext.request.contextPath}/Customer_list.action?select=true','','width=700,height=200')"
+	   获取select参数方法 ：<c:when test="${param.select eq 'true' }">
+
+7、异常处理机制 ：
+       方式1：
+              // 在 struts.xml 中配置
+			<exception-mapping result="error" exception="java.lang.RuntimeException"></exception-mapping>
+			 <action name="User_*" class="userAction" method="{1}">
+			    <result name="error">/login.jsp</result>
+			</action>
+	      // 在前端页面 显示异常信息 ：<s:property value="exception.message" />
+	         <TD style="HEIGHT: 18px" colspan="2" ><font color="red" ><s:property value="exception.message" /> </font></TD>
+
+       方式2：
+            通过 try---catch ，  通过将 e.getMessage() 放入域属性中  return "errror";  在 struts.xml中配置 相关 result。
+
+8、style="cursor:pointer;"   当鼠标点上去会显示 小手状态           
+      onclick="window.location='${pageContext.request.contextPath}/register.jsp'     // 直接跳转到相关页面
+
+9、MD5加密工具： Md5Util是不可逆加密工具，只能加密，不能解密。可以将一个字节或 1G的数据加密成 一个十六进制的字节。
+                             MD5Utils.md5(user.getUser_password()；  放入字符串然后在转化为一个 32 位字符串。
+
+10、日期控件  ：使用方式  <INPUT  id="visit_time" type="text" 	 name="visit_time" readonly="readonly">
+                    注意： readonly 该属性表示该文本框不能写，只能通过点击弹出弹框，选出相应时间。而不能进行手写
+                       <!-- 使用日期控件步骤1: 导入js和css -->
+		<script type="text/javascript" src="${pageContext.request.contextPath }/js/jquery-1.4.4.min.js"></script>
+		<link rel="stylesheet" href="${pageContext.request.contextPath }/js/datepicker/jquery.datepick.css" type="text/css">
+		<script type="text/javascript" src="${pageContext.request.contextPath }/js/datepicker/jquery.datepick.js"></script>
+		<script type="text/javascript" src="${pageContext.request.contextPath }/js/datepicker/jquery.datepick-zh-CN.js"></script>
+			<script type="text/javascript">
+				$(document).ready(function(){
+				// yy 已经代表了4位的年份   // mm 代表月份  // dd 代表日期
+					$('#visit_time').datepick({dateFormat: 'yy-mm-dd'}); 
+					$('#visit_nexttime').datepick({dateFormat: 'yy-mm-dd'}); 
+				});
+			</script>
+                          
+
+
+

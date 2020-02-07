@@ -1,0 +1,395 @@
+1、启动jQuery的三种方式：
+      第一种：
+	       $(function(){
+		   alert("laaaaa哈 ");
+		 });
+      第二种：
+		 jQuery(function(){
+		    alert("老奶奶 ");
+		 });
+      第三种： 
+		 window.jQuery(function(){
+		   alert("list");
+		 });
+    
+       注意： $等价于jQuery, 其实jQuery库中定义的一个全局变量。
+
+2、Dom对象与jQuery对象的相互转化
+         Dom对象转化为jQuery对象
+			 var j_query = $(name);
+			 alert(j_query.val());
+
+         jQuery对象转化为Dom对象
+	                 // 根据id获取的jQuery对象其实是一个数组，数组里面封装了许多个dom对象，根据ID只能获取到一个对象。
+		    var jq = $("#name");
+		    var name1 = jq[0];
+		    alert(name1.value);
+
+3、选择器： id, class, element
+          * 通过id获取标签：    $("#id1")      注意： 在jQuery中，ID不能重复，若重复，jQuery则会选中第一次出现的标签
+    
+	  *   class :  $(".class")      注意： class标签选择器可以重复，其返回的是dom数组，同样会获取到第一次出现的标签。
+	       若想获取额外的标签属性值， 则需要：
+	       alert($($(".name")[2]).val());
+               alert($(dom对象).val());
+
+	  *  element  : $("div")
+
+	  * parent > child : 获取父标签下的所有子标签：  var arr = $("div > input");
+
+	  * pre + next  :  匹配所有紧接在 prev 元素后的 next 元素 :  alert($("div + input").length);
+
+	  *prev ~ siblings : 匹配 prev 元素之后的所有 siblings 元素   :    alert($("div ~ input").length);
+
+	  * 通过属性获取标签：  
+			 alert($("[value]").length);
+			 alert($(".name[value]").length);  // 将class为name并且带有value的标签获取
+
+4、对属性值的操作：
+     * value （表单和下拉选择框中存在该属性）
+         --- .val();    获取该标签的属性值
+
+	--- val(value); 对于 下拉选择框： 选中下拉状态。   对于其他标签而言： 改变value属性值
+	      $("#sel").val("3");
+   
+    * 对于普通标签：  html() text();  html(参数)  text(参数)
+       
+        对于html() 与text() : 都是输出纯文本内容
+
+	而html(参数) ： 参数中的html代码会被只执行
+	    text(参数)  ： 参数中的所有内容都当做纯文本进行添加。
+
+    *  class 属性：
+
+            <style type="text/css">
+	       .div1{
+		 background-color:red;
+	       }
+	       .div2{
+		   color:orange;
+	       }
+	    </style>
+           
+	   <div id="div1">hffhf</div>
+            
+	    //  移出class属性
+           $("#div1").removeClass("div1");
+	   //  添加class属性
+            $("#div1").addClass("div2");
+
+  ******** 重要属性： attr()
+
+        alert($("img").attr("src"));    // 获取图片的属性
+       
+       $("#img").attr("src","images/a.jpg");   // 替换图片
+
+ 5、文档操作：
+   
+     * 插入：$("#div1").append("算账");   // 内部后置插入
+		  $("#div1").prepend("咱们");   // 内部前置插入
+		  
+		  $("#div1").after("你大爷");   // 外部后置插入
+		  $("#div1").before("你妹");   // 外部前置插入
+        
+        注意： $("#id1").append("<option> haha</option>");
+
+	创建标签：  var option = $("<option>");  / / 代表创建了一个标签元素
+   
+      *  删除：  
+        $("#id1").remove();      // 移出这个元素
+        $("#id1").empty();        // 清空这个元素中的内容，这个元素还存。
+                
+
+     两个鼠标悬停函数：  onmouseover="over()"   onmouseout="out()"
+
+ 6、 事件：
+
+*  事件的触发：
+			 <form  action="www.baidu.com">
+			<input type="text" name="name"> <br>
+			<input type="submit"  value="提交" id="id1"/><br>
+			<input type="button" value="新提交方式" id="id2">
+			</form>
+
+		     // 绑定点击事件,点击按钮就会提交
+			  $("#id2").click(function(){
+			    $("#id1").click();
+			  });
+		      //阻止系统默认提交
+			  $("#id1").click(function(){
+			    alert("提交");
+			    return false;
+			  }); 
+* slideToggle : 点击一次显示，再点击一次隐藏
+
+* 绑定事件 bind:（可以绑定多个事件）
+
+     <script type="text/javascript" src="js/jquery.js"></script>
+
+	     var href = $("#id1").attr("href");
+	   
+	   // 事件绑定： 两个参数 bind（事件名称， 回调函数）
+	      $("#id1").bind("click",function(){  
+		if(href == "http://www.baidu.cm"){
+		   alert("跳转成功");
+		}else{
+		  alert("跳转失败");
+		  return false;
+		}
+	      });
+
+          $("#btns").bind({
+            click:function () {
+                $("#picture").slideToggle();
+            },
+            mouseover:function () {
+                $("#picture")[0].style.color="red";
+            },
+            mouseout:function () {
+                $("#picture")[0].style.color="black";
+            }
+        })
+
+* unbind 移除绑定事件 
+   将某一个标签绑定了某一事件，可以通过如下进行解绑 ：
+      $("selector").unbind();
+
+* live 事件：
+      --live事件可以被阻止冒泡
+      -- 点击生成的p依然据有同样的功能。
+      
+       $("div").live("click",function(){
+         $(this).after("<div>lail</div>");
+      })
+
+* hover悬停事件：
+      hover(over，out):  
+        
+        $("#id1").hover(function(){
+           $("#id1").removeClass("img1");
+           $(this).addClass("img2");
+         },
+         function(){
+           $(this).removeClass("img2");
+           $(this).addClass("img1");
+         });
+
+* toggle多次触发事件：
+* keypress : 指的是鼠标按下
+  keydown : 鼠标按下瞬间
+  keyup : 鼠标松开瞬间
+
+   $("#id").toggle(function(事件1){}，function(事件2){}，'''''');
+   每次点击后都会执行一个新的事件，循环执行。
+
+ 7、JSON文件格式：  ( 导入JSON jar包 )
+      { key : value, key : value, key : value}
+     
+       key值一般为字符串。
+
+       *  将Map 键值队变成 JSON 格式：
+                Map<String, String> map = new HashMap<String, String>();
+		map.put("hv", "vk");
+		map.put("max", "min");
+		JSONObject ob = new JSONObject( map );
+		System.out.println( ob );
+
+        * 将JavaBean 变成JSON格式          JavaBean :  是指普通类对象： Person
+   
+               关键语句： JSONObject ob = new JSONObject( Person );
+	        Person p = new Person();
+		 p.setName("zhangsan");
+		 p.setAge(25);
+		 JSONObject  json = new JSONObject(p);
+		 System.out.println(json);
+
+         * 将字符串转换成 JSON格式：   字符串必须满足相应的格式。
+	         String str = "{'name':'zhangsan','age':25}";
+		 JSONObject  json = new JSONObject(str);
+		 System.out.println(json);
+
+          * 生成JSON文件：
+	        Map<String , Person> map = new HashMap<String , Person>();
+		 map.put("1", new Person("张三",25));
+		 map.put("2", new Person("李四",35));
+		 
+		 JSONObject json = new JSONObject( map );
+		 Writer write = new FileWriter("E:\\cbgh");
+		 json.write( write );
+		 write.close();
+	
+	   * 将字符串生成JSON数组：
+
+	       String str ="[{'name':'zhasan','age':30},{'name':'lisi','age':69}]";     外面大括号为 【】
+	      JSONArray arry = new JSONArray(str);
+	       System.out.println(arry)
+
+	       将map转化成JSON数组：(  需要导入 json lib 库)
+	         Map<String, String> map = new HashMap<>();
+		map.put("zhasn", "中国");
+		map.put("key", "value");
+		
+		 // System.out.println(map);
+			net.sf.json.JSONArray json = new net.sf.json.JSONArray();     // 由于报名重复，需要加上前缀
+			json =  json.fromObject(map);                // 通过方法 .fromObject();  添加成数组。
+		   System.out.println( json.fromObject(map));
+  
+               将JSON转化成Map:
+	          
+      String str = "[{'name':'zhangsan','age':25},{'name':'lisi','age':35}]";
+
+			// 定义Map接收数据
+			Map<String, Object> map = new HashMap<>();
+			net.sf.json.JSONArray jarr = new JSONArray();
+			jarr = jarr.fromObject(str);
+			System.out.println(jarr.size());
+			System.out.println(jarr);
+			// 遍历json数组
+			for( int i = 0; i < jarr.size(); i++){
+			Object obj = jarr.get(i);
+			net.sf.json.JSONObject jarry = (net.sf.json.JSONObject)obj;
+			
+			Set<String> set = jarry.keySet();
+			for(String key : set){
+				Object value = jarry.get(key);
+		     	System.out.println(key + "  "+value);
+				map.put(key, value);
+			}
+
+8、Jquery 的 ajax 的请求： 
+      $(function(){
+         $("#id1").bind("blur",function(){					// 将请求内容绑定一个事件
+            $.ajax({                                                                         // 引入ajax   注意： 必须是（.ajax）
+              type:"POST",                                                               // 请求方式
+              url:"login",                                                                   // 路径
+              data:"name="+$(this).val(),                                         // 传输数据
+              dataType:"json",                                                          // 返回值类型 : json 类型
+              success:function(data){                                                // 回调函数
+                if(!data){
+                  $("#id2").text("该用户名已经注册");
+                }else{
+                  $("#id2").text("注册成功");
+                }
+
+9、jquery的post 和 get 请求：
+
+   $.get/post(){
+        url:
+	data:
+	function(){}
+	type:
+   }
+
+  10、 jquery的动画效果：
+
+          1、show()  与 hide()  加上参数 毫秒值；  渐渐显示和隐藏
+	  2、 上下滑动
+		  $("#idl1").hover(function(){
+			 $(this).slideUp(2000);
+		      },function(){
+			 $(this).slideDown(2000);
+		      })
+
+           3、图片的淡入淡出效果：
+                方法：fadeIn("fast",function(){
+
+	       $("#id2").bind("click",function(){
+              $("#id1").fadeOut(1000);
+		});
+		$("#id3").bind("click",function(){
+		  $("#id1").attr("src","images/a.jpg").fadeIn(1000);
+		});
+
+11、 表单提交验证：
+         
+	 <body>
+		   <form action="add" method="post">
+		      账号：<input type="text" maxlength=12 id="id1"><br>
+		      密码：<input type="text" maxlength=6 id="id2"><br>
+		      确认密码：<input type="text" id="id3"><br>
+		      <input type="submit" value="提交" id="id4">
+	 </body>
+
+        <script type="text/javascript">
+		      $(function(){
+		       $("#id4").bind("click",function(){
+			var zhanghao = $("#id1").val();
+			if($.trim(zhanghao)=="" || $.trim(zhanghao).length < 6){
+			  alert("错误");
+			  return false;
+			}
+			var password = $("#id2").val();
+			if($.trim(password)=="" || $.trim(password).length<3){
+			  alert("密码必须大于3位");
+			  return false;
+			}
+			var psd = $("#id3").val();
+			if($.trim(psd) != $.trim(password)){
+			   alert("密码不正确");
+			   return false;
+		
+              注意： $.trim(str)  去电字符串的前后空格
+	                 表单中的属性： maxlength:  代表输入的最大字符位数
+			 在执行script语句时，要注意绑定事件，否则将使  ： 有方法，没有调用
+
+
+12、可以实现面板的折叠效果 ：
+        $(function(){
+        $(".panel>.panel-body").hide();   // 获取父类下的所有 panel-body 标签并隐藏
+        $(".panel>.panel-body").first().show();     // 获取父类下所有该标签并显示第一个
+        $(".panel-title").click(function(){
+        
+            $(this).parent().next().slideDown(1000);
+            $(".panel-title").not($(this)).parent().next().slideUp(500);
+        })
+     })
+
+     slideDown()  实现手风琴式显示
+     slideUp()  实现手风琴式关闭
+
+13、opacity: 0.5;     // 透明度
+
+14、 圆圈特效总结 ：
+         获取浏览器的宽度和高度  ：  var docH = $(window).height();
+	                                                  docW=$(window).width();
+
+	在 jquery 中添加 css属性 ：  img.css({
+	                                                height: 1px,
+	                                                 width: 2px
+						    })
+
+	 动态改变标签属性 ：(function可以写 可以不写)
+	                                   $("img").animate({
+					        width:'0',
+						height:'0'
+					   },1500, function(){ $(this).remove()})
+
+15、select 选中 option 的内容 ：
+         <select name="pageSize" id="so" onchange="changePageSize($('#so option:selected').val())" id="so">
+		<option value="3" <c:if test="${pb.pageSize==1 }">selected</c:if>>3</option>
+		<option value="5" <c:if test="${pb.pageSize==5 }">selected</c:if>>5</option>
+	</select>
+
+16、 对复选框的操作 ：
+            $(function(){
+	      $("[name=chose]").click(function(){
+		  var checked = $("[name=chose]")[0].checked;           // 判断复选框是否被选中    返回值： true  | false
+		  if(checked){
+		     $("[type=checkbox]").attr("checked",true);              // 全选复选框选中，则其他复选框也选中
+		  }else{
+		     $("[type=checkbox]").attr("checked",false)
+		  }
+	      })
+	      
+	      $("[name=hobby]").click(function(){
+		 var legth = $("input:checkbox:checked").length;              // 
+		 if(legth == 2){
+		    $("[name=chose]").attr("checked",true);                      
+		 }      
+		 })
+	    })
+   
+
+
+
+	     

@@ -1,0 +1,64 @@
+67）Java 中怎么创建 ByteBuffer？
+
+ByteBuffer bb = ByteBuffer.wrap(new byte[12]);
+
+ByteBuffer buf = ByteBuffer.allocateDirect(10) ;、
+
+68）Java 中，怎么读写 ByteBuffer ？
+
+put,get
+
+71）Java 中，直接缓冲区与非直接缓冲器有什么区别？(答案)
+
+非直接缓冲区：通过allocate()分配缓冲区，将缓冲区建立在JVM的内存中
+直接缓冲区：通过allocateDirect()分配直接缓冲区，将缓冲区建立在物理内存中，可以提高效率。
+
+72）Java 中的内存映射缓存区是什么？(answer答案)
+
+内存映射文件和之前说的 标准IO操作最大的不同之处就在于它虽然最终也是要从磁盘读取数据，但是它并不需要将数据读取到OS内核缓冲区，
+而是直接将进程的用户私有地址空间中的一部分区域与文件对象建立起映射关系，就好像直接从内存中读、写文件一样，速度当然快了。
+
+ java中提供了3种内存映射模式，即：只读(readonly)、读写(read_write)、专用(private) 。
+
+ nio 与传统io相比，nio是面向缓冲区。而缓冲区适用于存储数据的，缓冲区的底层就是数组，用于存储不同的数据类型
+	 * 提供了不同类型的缓冲区 ：
+	 *    ByteBuffer
+	 *    ShotBuffer
+	 *    IntegerBuffer
+	 *    FloatBuffe
+	 *    DoubleBuffer
+	 *    LongBuffer
+	 *    CharBuffer
+	 *    注意 ： 没有booleanbuffer
+	 *    
+	 *    通过aollcate（）获取缓冲区
+	 *    
+	 *    buffer的四个重要的属性：
+	 *      * position :开始写数据或者读取数据的位置
+	 *      * capacity ： 缓冲区的容量，一旦指定，就不能进行更改
+	 *      * limit : limit代表的可读取数据的大小，其后边的位置将不能进行数据读取
+	 *      * mark : 用于标记当前position的位置，可以通过reset（），恢复position的位置
+	 *      
+	 *      0 <= mark <= position <= limit <= capicity
+	 *      
+	 *   直接缓冲区与非直接缓冲区的区别 ：
+	 *      * 非直接缓冲区 ： allocate()分配缓冲区 ; 缓冲区是建立在jvm上的内存中
+	 *      * 直接缓冲区 ： allocateDirect()分配缓冲区，将缓冲区建立在物理内存中,可以提高效率
+	 *      
+	 *   分散读取和聚集写入
+	 *     * 分散读取 ： 将通道中的数据写到多个缓冲区中（Scatter Reads）
+	 *     * 聚集写入 ：将多个缓冲区中的数据写到通道中 （Gather Writes）
+
+
+15. java 中 IO 流分为几种？
+
+	按功能来分：输入流（input）、输出流（output）。
+
+	按类型来分：字节流和字符流。
+
+	字节流和字符流的区别是：字节流按 8 位传输以字节为单位输入输出数据，字符流按 16 位传输以字符为单位输入输出数据。
+
+16. BIO、NIO、AIO 有什么区别？
+	BIO：Block IO 同步阻塞式 IO，就是我们平常使用的传统 IO，它的特点是模式简单使用方便，并发处理能力低。
+	NIO：New IO 同步非阻塞 IO，是传统 IO 的升级，客户端和服务器端通过 Channel（通道）通讯，实现了多路复用。
+	AIO：Asynchronous IO 是 NIO 的升级，也叫 NIO2，实现了异步非堵塞 IO ，异步 IO 的操作基于事件和回调机制。

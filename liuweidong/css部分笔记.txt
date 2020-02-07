@@ -1,0 +1,218 @@
+css
+
+1、 html 与 css 结合的四种方式：
+	
+	* 每个标签上有一个属性， style, 将css与html结合在一起
+	    
+		<div style = "background-color: yellow; color : blue;"> 望着分局和局地方剧哦对局， 和好里的吃饱撑的 </div>
+
+	* 使用html的一个标签实现， 在head 里面写<style type = "text / csss"> </style>
+
+				<head>
+		    <style  type = "text/css">
+			    
+				div   {                                                      // div不加<>;
+						background-color : blue;
+						color : red;
+				       }
+
+			</style>
+		 </head>
+		 <body>
+		      <div> 望着分局和局地方剧哦对局， 和好里的吃饱撑的 </div>
+		 </body>
+
+	* 使用头标签 link, 引入外部文件css
+	 
+	    <link  rel = "stylesheet"  type = "text/css"   href = "div.css"/>
+         
+	* 在style里面，使用语句；
+	    
+	      @import url(css 路径);
+
+		<head>
+		   <style  type = "text/css">
+		      @import url(div.css);
+		   </style>
+		 </head>
+   
+         **** 注意： 一般使用第三种 link.
+
+2、 三种选择器： 标签选择器、  class 选择器 、 ID 选择器
+  
+			<head>
+		   <style  type = "text/css">
+			
+		       标签：  div   {
+				       background-color : red;
+				}
+
+			class:div.a
+				{
+				    background-color : yellow;
+				}
+		      
+			id:	div#heh
+				{
+					background-color : white;
+					color: red;
+				}
+
+		   </style>
+		 </head>
+		 <body>
+		     <div> 地址是福建自身份证 </div>
+			  <div  class = "a"> 地址是福建自身份证 </div>
+			  <div  ID = "heh"> 你看着你好吗寄单据 </div>
+		 </body>
+			********** 注意
+			  有多个class重名时 ：  .名{}
+			  有多个id重名时 ： #名{}
+
+	  *优先级：  id > class > 标签
+
+3、 拓展选择器： 
+   
+     * 关联选择器：(嵌套内<p></p> 中内容改变)
+		   <style  type = "text/css">
+		   div p{
+				background-color : red;
+			   }
+	   
+		 </style>
+              <div><p>没地方叫师傅好vzsihuvhxhv<p></div>
+	      <p> 女健康祝福vkvnk</p>
+
+	    注： div  p 之间空格
+
+    * 组合选择器：
+             <style  type = "text/css">
+		   div, p{
+				background-color : red;
+			   }
+	   
+		 </style>
+              <div>没地方叫师傅好vzsihuvhxhv</div>
+	      <p> 女健康祝福vkvnk</p>
+
+	      注：标签中内容都改变。
+
+   * 为元素选择器
+      ** 超链接状态
+         原始状态 link     鼠标放上去 hover    点击 active   点击之后 visited 
+
+		<style  type = "text/css">
+		    a:link{
+						background-color : red;
+			}
+		    a:hover{
+				       background-color : green;
+			}
+			a:avtive{
+						  background-color : black;
+			}
+			a:visited{
+						  background-color : yellow;
+			}
+		 </style>
+		 </head>
+		 <body>
+		     <a href = "https://www.bilibili.com/video/av11887542/?p=28">超链接 </a>
+		 </body>
+
+4、css盒子模型 ：
+         * 用<div></div>把所写内容包起来
+	 * 属性：
+	 	-- border（边框） ： 2px(边框粗细)  solid(实线)  red;(统一设置)
+		    border-top  border-buttom  border-left  border-right
+		-- padding(内边距) ： 3px(距离边框的距离)
+		    padding-top、right、left、buttom
+		--margin(外边距) ： 4px(上下边框距离）
+
+5、 漂浮模型 float
+      * 属性： left 、 right 
+      
+6、布局定位：
+      * position :(1)、absolute 拖动文件流  left  right 、bottom、top(px)  浮在一个页面上
+                       (2)、relative 不拖动文件流   left  right 、bottom、top(px)   直接定位
+
+
+7、将背景设置成图片，并且循环填充：
+    background:url(/goods/images/bg_btns.png) repeat-x 0px -132px;
+
+8、标签在鼠标悬浮时改变状态 ：
+      #div:hover{background-color : red }
+
+9、超链接再点击时不出现横线 ：
+    a：hover { text-decoration： none}
+
+10、让图片出现圆角 ：
+     img{border-radius: 3px}
+11、字体粗细：
+     font-weight: bold;
+
+12、opactity :05;  透明度
+
+13: css 的动画效果：
+     animation:  go （ 动画名称 ）  2s  （动画持续时间） linear（动画速度是匀速的  0s(开始时间) 、2（播放次数）   
+                 infinite :  可以实现无线次播放        
+     触发函数 ：
+     @keyframes got{      //  可以进行旋转
+     to{
+        transform:rotateY(360deg) rotateX(360deg);
+        background-color:yellow;
+        }
+     }
+     
+     @keyframes gos{    // 可以改变背景颜色  
+        0% {transform:translate3d(0,0,0);}
+        25% {transform:translate3d(250px,0,0);background-color:blue;}
+        50% {transform:translate3d(250px,500px,0);background-color:#CCC;}
+        75% {transform:translate3d(0px,500px,0);background-color:blue;}
+       100% {transform:translate3d(0,0,0);background-color:pink;}
+       
+     }
+
+// 设置立体效果需要设置景深 和 z 轴  在大盒子内 ：
+
+      景深 ： perspective : 1000;      // 通常 是在800 到 100
+      设置 Z轴 ： transform-style:  preserve-3d;
+      
+      可以通过圆角画曲线 ：
+       border-radius: 50% 50% 50% /  0  0  0   最多可以写八个参数  用于控制个边的情况 
+
+      对图片在平面内进行旋转：
+        transform: rotate(44deg);
+    
+      图片旋转位置 ：
+       transform-origin: 50% 50% 25px;   Z轴只能是具体数值 
+
+       translate3d(25px,25px, 25px) :    代表沿 X 轴，Y轴，Z轴，各移动  25 px;\
+
+       transistion : transform  3s ease-in        立体空间中实现 图形变化的 平滑过渡。
+
+
+14、flex 实现经典布局：
+           
+	   <div class="container">
+			<router-view name="left"> </router-view>
+			<router-view name="right"> </router-view>
+          </div>
+
+               flex属性将屏幕划分为10列，进行分配
+	      .container{
+		    display: flex;
+		    height: 800px;
+		}
+
+		.left{
+		    background-color: #8f0008;
+		    flex: 2;
+		}
+
+		.right{
+		    background-color: blue;
+		    flex: 8;
+		}
+
+15、z-index属性： 当有多层页面重叠时，设置z-index:1; 会使页面在最外层，不会隐藏

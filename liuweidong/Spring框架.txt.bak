@@ -1,0 +1,664 @@
+                                                                 spring  :  对象管理器，一站式框架
+1、spring 配置文件名任意，位置任意。 但是一般文件名为 ： applicationContext.xml     存放位置 ： src 文件下
+
+2、spring 与 IOc(控制反转)
+     Ioc是一种概念，一种思想，实现方式主要有两种，一种是 ：依赖注入 。一种是 依赖查找。依赖注入方式更加广泛，并且是目前最优秀的解耦
+     方式。
+
+     配置applicationContext.xml 文件  ：（需要引入约束文件）
+        <beans xmlns="http://www.springframework.org/schema/beans"
+		    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		    xsi:schemaLocation="
+			http://www.springframework.org/schema/beans 
+			http://www.springframework.org/schema/beans/spring-beans.xsd">
+                  
+		  //   相当于   SomeServiceImpl myService = new SomeServiceImpl();  // 创建了一个对象
+		  <bean id="myService" class="cn.hegongda.service.SomeServiceImpl"/>
+		  
+       </beans>
+ 3、   在Java代码中获取对象方式  ：
+         *方式一  通过创建applicationContext 容器 获取对象：   
+                                 //  加载配置文件， 在类路径下获取配置文件。
+              ApplicationContext ac = new ClassPathXmlApplicationContext("applicationContext.xml");
+                               //  通过项目跟路径下获取配置文件 , 也可以将配置文件放到 别的盘符之下。
+	      ApplicationContext ac = new  FileSystemXmlApplicationContext("D:/applictionContext.xml");
+	                       //   获取对象 
+	      ISomeService service = (ISomeService) ac.getBean("myService");
+	      service.fun();
+	    
+         * 方式二 ： 通过BeanFactory容器 获取对象 
+	         BeanFactory bf = new XmlBeanFactory(new ClassPathResource("applicationContext.xml"));
+	         ISomeService service = (ISomeService) bf.getBean("myService");
+	         service.fun();
+
+	    上述两种容器的区别 ：bean的创建时机不同，相当于 hibernate的懒加载。
+	      1）、applicationContext : 在容器初始化 时就会将素有  bean  对象创建 
+	               优点 ： 响应速度块
+		       缺点 ： 占用资源多，cpu 内存
+	      2）、BeanFactory  : 该容器中的对象在初始化时，并不会创其中对象，而是在获取对象时才会创建出 该对象。
+	               优点： 占用资源少
+		       缺点：响应速度慢
+
+4、Ioc-Bean 的装配 ：
+    *  默认方式装配 ： 定义有参构造器的同时，必须定义无参构造器。
+    * 通过动态工厂的方式装配 ： 定义一个工厂类，获取服务层的对象，通过xml配置文件注册工厂，可以进一步降低耦合度。
+                       <!-- 注册静态工厂 -->
+		  <bean id="factory" class="cn.hegongda.factory.FactoryBean"/>
+		  <bean id="myService"  factory-bean="factory"  factory-method="getSomeServiceImpl"/>
+                factory-method :  是指动态工厂中获取对象的方法
+    * 通过静态工厂的方式装配 ：将里面的方法改为静态方法，在xml中配置方式 ：
+           <bean id="myService"  factory-bean="factory"  factory-method="getSomeServiceImpl"/>
+	   此时，不需要注册工厂。
+
+5、bean的作用域：
+        <bean id="myService" class="cn.hegongda.service.SomeServiceImpl" scope="prototype"/>
+	     
+	 scope="prototype" : 在 spring容器初始化的时候，对象不会创建，用到的时候才会创建。相当于 BeanFactory 容器使用方法。
+	 scope="singleton"  : 在spring容器初始化时就已经创建了bean对象，为默认值。
+
+6、bean后处理器 ：(与filter相似)   作用 ： 增强目标类，jdk动态代理
+     1）、先定义一个类继承 BeanPostProcessor 
+		public class MyBeanPostProcessor implements BeanPostProcessor {
+		public Object postProcessBeforeInitialization(Object bean, String beanName)
+				throws BeansException {
+			System.out.println("前");
+			return bean;                                           // 注意 ： 要有返回值 bean,否则将会空指针异常。
+		}
+		public Object postProcessAfterInitialization(Object bean, String beanName)
+				throws BeansException {
+			System.out.println("后");
+			return bean;
+		}
+       2）、	在xml中配置处理器 ：所有的对象都会经过  该处理器。
+                     <bean class="cn.hegongda.service.MyBeanPostProcessor"/>
+       3）、	在后一个方法中进行增强  ：
+			      public Object postProcessAfterInitialization(final Object bean, String beanName)
+					throws BeansException {
+				if ("myService".equals(beanName)) {                                              //  只对 myService 处理器进行增强。
+					Object objs = Proxy.newProxyInstance(bean.getClass()
+							.getClassLoader(), bean.getClass().getInterfaces(),
+							new InvocationHandler() {3
+								public Object invoke(Object obj, Method method,
+										Object[] args) throws Throwable {
+									String name = method.getName();
+									Object result = method.invoke(bean, args);
+									if (name.equals("fun")) {                                 //  只对myService 类中 fun 方法进行增强。
+										return ((String) result).toUpperCase();
+									}
+									return result;
+								}
+							}
+					);
+					return objs;
+				}
+				return bean;
+			}
+
+7、bean 的生命起始 ：
+      bean的开启 ： 在容器初始化之前，在构造方法之后，初始方法自动执行
+      bean的结束 ： 手动销毁 applicationContext 之后，销毁方法自动执行
+      在 xml 中配置 起始方法 ：   init-method        destroy-method
+          <bean id="myService" class="cn.hegongda.service.SomeServiceImpl" scope="singleton"
+                               init-method="get"  destroy-method="give"/>
+      bean 有11个可控阶段。
+      xml 中属性 name与ID性质是一样的。
+
+8、DI注入 ：
+     * 设值注入  ： 一个pojo 类，有name, age, school 引用属性，则只需要写set方法，在xml 中进行注入。
+		  <bean id="grade" class="cn.hegongda.service.Grade">
+		           <property name="name" value="九年级"/>
+		   </bean>
+		   <bean id="student" class="cn.hegongda.service.Student">
+			      <property name="name" value="liuweidong"/>
+			      <property name="age" value="25"/>
+			      <property name="grade" ref="grade"/>
+		    </bean>
+
+     * 构造注入，通带参构造器的方式进行注入。 在xml中的配置方式 ：
+              <bean id="student" class="cn.hegongda.service.Student">
+		       <constructor-arg name="name" value="liuweidong"/>
+		       <constructor-arg name="age" value="25"/>
+		       <constructor-arg name="grade" ref="grade"/>
+	    </bean>
+
+      *  p 空间命名注入  和  c命名空间注入  （了解）
+      *  集合注入  ：
+          //  数组注入
+			     <property name="strs">
+			  <array>
+			      <value>zhongguo</value>
+			      <value>riben</value>
+			  </array>
+		       </property>
+	   //  list集合注入
+		       <property name="grades">
+			  <list>
+			      <ref bean="grade"/>
+			      <ref bean="grade1"/>
+			  </list>
+		       </property>
+	  //set 注入
+		       <property name="sets">
+			 <set>
+			    <value>left</value>
+			    <value>right</value>
+			 </set>
+		       </property>
+		       <property name="maps">
+          // map 注入
+			  <map>
+			      <entry key="beizi" value="size"/>
+			      <entry key="jiu"  value="mac"/>
+			  </map>
+		       </property>
+		      
+            数组可以简写  ：    <property name="strs"  value="zhongguo,riben"/>
+	    list集合简写  ：      <property name="lists" value="left,right"/>
+	    set集合简写  ：      <property name="sets" value="left,right"/>
+	    当集合中类型 为其他类的引用类型时，涉及 ref = "" ,不能简写
+  
+   *  域属性自动注入 ：增加属性 autowire=“byName” 此时student 类中的 域属性 必须与注册 bean的ID相同。
+         <bean id="student" class="cn.hegongda.service.Student"   autowire="byName">
+			<property name="name" value="zhangsan"/>
+			<property name="age"  value="23"/>
+         </bean> 
+
+	 autowire="byType" 方式 ：会自动在容器中寻找 与实体类域属性 类型相同的 具有 is-a 关系的bean，自动注入域属性，当有多个
+	                                           bean匹配时，则会发生报错
+				
+   * spel 表达式注入 ：
+      可以调用一些方法 ： <property name="age"  value="#{T(java.lang.Math).random()*30}"/>    让年龄随机生成
+      调用其他类的属性 ：<property name="name" value="#{person.name}"/>                              persson为 bean的ID
+      调用其他类的方法 ：<property name="name" value="#{person.getNames()}"/>
+       
+    *  指定多个配置文件为平等关系。 当项目足够大的时候，不可能将所有的bean都放在同一个 配置文件这时需要分模块写配置文件。
+        如：    spring-book-service.xml
+	          spring-book-dao.xml
+            在加载配置文件时，由于他们是平等关系，所以-*需要同时加载，这时可以用通配符的方式 ：
+	         ApplicationContext   ac = ClassPathXmlApplicationContext("spring-book-*.xml");
+
+    * 指定多个配置文件为包含关系。
+          如 ：  spring-base.xml
+	            spring-bean.xml
+		 总配置文件  ：
+		    applicationCotext.xml:
+		           <import resource="classpath:cn/hegongda/Web/spring-base.xml"/>
+                           <import resource="classpath:cn/hegongda/Web/spring-bean.xml"/>
+		   也可以写成 通配符 ：<import resource="classpath:cn/hegongda/Web/spring-*.xml"/>
+		   在加载配置文件时，直接 加载 application.xml 即可。
+
+     * 基于注解的DI注入 ：
+           @scope("prototype")   // 默认singletol  
+           @Component(value="grade")   // 表示该类由spring容器管理
+                 public class Grade {
+		  @Value("八年级")            // 注值
+		private String name;
+
+        域属性注解 ：
+		1）、       @Autowired                          // 默认byType  
+				 private Grade grade;
+
+				 @Resource
+
+		2）、   @Autowired                         // btName 与 autowired 连用 
+			   @Qualifier("grade")
+			   private Grade grade;
+
+			     @Resource(name="grade")
+        
+
+         通过注解的方式需要引入Context 的schema约束文件和 aop jar （到html.configuration.xsd下找 ）。注册扫组件 （扫描哪个包下的类）：
+	     <context:component-scan base-package="cn.hegongda.service"/>
+           
+	      注意：  base-package="cn.hegongda"    // 扫描这个包及其子包
+	                  base-package="cn.hegongda.*"    // 扫描这个包的子包
+
+     * 与 @component注解功能相同，但是意义不同的还有三个 
+         1）、 @repository  ： 注解dao实现类上
+	 2）、 @service  :  注解service实现类上
+	 3）、 @Controller  ： 注解在springMVC的处理器上。
+
+9、基于spring Test 测试 ：（test jar包）
+        @RunWith(SpringJUnit4ClassRunner.class)
+	@ContextConfiguration(locations="classpath:applicationContext.xml")    // 加载配置文件
+	public class Test1 {
+	   @Autowired
+		private Student student;    // 定义变量，设置 autowired属性
+	   @Test
+	   public void fun3(){
+		   System.out.println(student);
+
+10、xml配置文件优先级高于 注解。
+
+11、AOP编程术语  ： 
+              切面编程（Aspect） ： 泛指交叉业务逻辑。实际是对主业务逻主业务逻辑的一种增强。常用的切面有通知和顾问。
+	      织入（Weaving） : 将切面代码插入到主业务的过程。
+	      连接点 ： 主业务接口中的方法。
+	      通知 （Advice）: 是切面的一种实现，可以实现简单的织入。 指定增强代码切入的时间点。
+	      顾问 （Advisor） : 是切面的另一种实现方式，可以切入指定时间，等
+
+       * 通知 ：（其底层用了 jdk 动态代理 和 cglib 动态代理）
+         1）、前置通知 ：
+	           定义一个类 实现  MethodBeforeAdvice
+		      public class MethodBefore implements MethodBeforeAdvice {
+				/**
+				 * 该方法在目标方法执行之前执行
+				 * method : 目标方法
+				 * args : 目标参数列表
+				 * target ： 目标对象   
+				 */
+				@Override
+				public void before(Method method, Object[] args, Object target)
+						throws Throwable {
+					System.out.println("执行了前置方法");
+				}
+	 
+	             在xml中的配置信息 ：
+		            <bean id="some" class="cn.hegongda.service.SomeServiceImpl"/>
+			     <bean id="advice" class="cn.hegongda.advice.MethodBefore"/>                               // 注册通知类
+			     <!-- 生成代理对象 -->
+			     <bean id="proxy" class="org.springframework.aop.framework.ProxyFactoryBean">    // 注册动态代理类，
+			       <!-- 指定目标对象 -->
+				<property name="target" ref="some"/>
+			       <!-- 指定切面 -->
+				<property name="interceptorNames" value="advice"/> 
+			     </bean>
+				   
+	2）、后置通知 ：定义一个类  实现  AfterReturningAdvice  
+	                       public class MethodAfter implements AfterReturningAdvice {
+				@Override
+				public void afterReturning(Object returnValue, Method method,
+						Object[] args, Object target) throws Throwable {
+				 System.out.println("你已经执行了后置方法"+returnValue);
+				}
+	   
+	       注意 ： 后置方法相对于前置方法 多了一个参数  ： returnValue，是目标方法执行后返回的结果，但是无法改变目标方法的结果。
+	       
+	 3）、环绕通知  ： 定义一个类实现 MethodInterceptor 
+	                         public class MethodBack implements MethodInterceptor {
+					@Override
+					public Object invoke(MethodInvocation invocation) throws Throwable {
+						System.out.println("执行前");                     
+						Object result = invocation.proceed();     //执行目标方法
+						System.out.println("执行后");
+						if ( result!= null) {
+							return ((String) result).toUpperCase();                  // 判断是否有返回值，有返回值，则可以对其进行更改
+						}
+						return result;
+					}
+	              
+		      注意 ：  该种通知可以修改目标方法的返回值
+
+	 4）、异常通知  ： 定义一个类 实现 ThrowsAdvice 
+	                           public class Throws implements ThrowsAdvice {
+					public void afterThrowing(Exception ex){
+					System.out.println("异常执行方法已经就绪");
+					}
+
+		注意 ： 当目标方法中出现异常时，回执行该方法。
+
+		**  捕获自定义异常  ：  
+		     public class Throws implements ThrowsAdvice {
+			public void afterThrowing(PasswordException ex){
+				System.out.println("密码输入不正确");
+			}
+			public void afterThrowing(NameException ex){
+				System.out.println("用户名输入不正确");
+			}
+			public void afterThrowing(Exception ex){
+				System.out.println(ex.getMessage());
+			}
+		}
+   
+         5）、一个目标方法中可以定义多个 通知
+	           *   <!--  <property name="interceptorNames" value="advice,before"/>  -->    // 定义一个前置方法，定义一个后置方法
+       
+		   *    <property name="interceptorNames">
+				 <array>
+				     <value>advice</value>
+				     <value>before</value>
+				 </array>
+		        </property>
+
+	 6）、框架底层会根据是否有接口，来自动选择用 jdk动态代理，还是 cglib 动态代理
+	          强制使用 cglib 动态代理 ：
+					<property name="interceptorNames" value="advice"/> 
+					<property name="proxyTargetClass" value="true"></property>   // 增加属性  proxyTargetClass
+					或者  ： <property name="optimize" value="true"></property> 
+
+    * 顾问（Adisor): 时spring提供的另一种切面，可以完成更加复杂的织入功能。顾问将通知进行了包装，会根据不同类型的通知，在不同的时间点
+                               将切面织入不同的切入点。PointcutAdvisor 是顾问的一种
+			        该接口较为常用的实现类  ：   NameMatchMethodPointcutAdvisor   名称匹配方法切入点顾问
+				                                            RegexMethodPointcutAdvisor   正则表达式匹配方法切入点顾问 
+						
+	 1)、名称匹配方法切入点顾问 ：
+	      在配置通知的基础上进行配置 ：
+	          <!--   注册顾问 -->
+		     <bean id="advisor" class="org.springframework.aop.support.NameMatchMethodPointcutAdvisor">
+				 <property name="advice" ref="advice"></property>                         // 引入通知
+				  <property name="mappedName" value="doFirst"></property>        // 指定方法
+		     </bean> 
+		 注意 ： 指定方法的value 可以写成通配符     value="do*"
+		             mappedName : 匹配的是简单的方法名
+		 在代理中 
+		      <bean id="proxy" class="org.springframework.aop.framework.ProxyFactoryBean">
+			       <!-- 指定目标对象 -->
+				<property name="target" ref="some"/>
+			       <!-- 指定切面 -->
+				<property name="interceptorNames" value="advisor"/>      // 引入顾问
+			</bean>
+  
+	  2）、正则表达式匹配方法切入点顾问
+	           <bean id="advisor" class="org.springframework.aop.support.RegexpMethodPointcutAdvisor">
+				 <property name="advice" ref="advice"></property>
+				  <property name="patterns" value=".*doFirst,.*doSecond"></property>   
+		    </bean>
+
+		    parttern : 其匹配的对象时类中方法权限名 。 
+		                  <property name="patterns" value=".*doFirst"></property>      // 指定单个切入点
+
+	 3）、自动代理器生成 
+	            当有多个目标类需要增强时，用传统的方式则会出现一个目标类就会出现一个代理配置proxy,这样会造成配置文件过于
+		    庞大，另一方面，用户所调用的目标对象是代理对象，而最为理想的因该是直接调用 目标对象，这时可以自动代理器
+		    解决上述问题。
+		    自动代理器的配置 ：
+		           <bean id="some" class="cn.hegongda.service.SomeServiceImpl"/>
+			     <bean id="some1" class="cn.hegongda.service.SomeServiceImpl"/>     // 目标对象1
+			     <bean id="advice" class="cn.hegongda.advice.MethodBefore"/>         // 目标对象2
+			   <!--   注册顾问 -->
+			     <bean id="advisor" class="org.springframework.aop.support.RegexpMethodPointcutAdvisor">
+				 <property name="advice" ref="advice"></property>
+				  <property name="pattern" value=".*doFirst"></property>
+			     </bean>
+			  <bean  class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"/>    // 自动代理器
+
+		   存在的问题 ：
+		        1）、不能选择目标对象，所有目标对象均被执行
+			2）、不能选择切面类型，只能是 advisor, 所有advisor均将 作为切面 织入到目标方法中。
+
+	         Bean自动代理生成器  ：
+		       <bean id="advisor" class="org.springframework.aop.support.RegexpMethodPointcutAdvisor">
+			 <property name="advice" ref="advice"></property>
+			  <property name="pattern" value=".*doFirst"></property>
+		     </bean>
+		     
+		     <bean id="advisor1" class="org.springframework.aop.support.RegexpMethodPointcutAdvisor">
+			 <property name="advice" ref="advice"></property>
+			  <property name="pattern" value=".*doSecond"></property>
+		     </bean>
+		     
+		     <!-- 注册bean 自动代理生成器 -->
+		     <bean class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator">
+			 <property name="beanNames" value="some"></property>                             //   能选择目标对象
+			 <property name="interceptorNames" value="advisor"></property>                 //    能选择切面类型  ： advice  , advisor  
+		     </bean>
+
+12、aspectJ面向AOP编程 ：
+           aspectJ、spring、aop 之间的关系 ： aspectJ与spring没有任何关系，aspectJ是一个小型框架，可以实现aop编程，而spring相对来说是
+	                                                          一个重量型框架，引入aspectJ框架。
+          1）、基于注解aspectJ编程 ：
+	             搭建环境  ： 引入aspectJ jar, spring-aspects-jar, 配置文件中引入 aop约束。
+		        @Aspect       // 切面
+			public class MyAspect {
+			    @Before("execution(* *..ISomeService.doFirst(..))")  
+				public void before(){
+					System.out.println("你应经执行了前置方法");
+				}
+			    
+			    @Before("execution(* *..ISomeService.doFirst(..))")
+			    public void before(JoinPoint jp){           // 参数 JoinPoint   jp :jp=execution(void cn.hegongda.service.ISomeService.doFirst())
+				System.out.println("jp="+jp);
+			    }
+		
+                "execution(* *..ISomeService.doFirst(..))  // 返回值  包..ISomeService(类).方法（参数）
+		在xml中的配置 ：
+                            <!-- 注册切面 -->
+			     <bean id="myAspect" class="cn.hegongda.advice.MyAspect"></bean>  
+			     <!-- 注册目标文件 -->
+			     <bean id="service1" class="cn.hegongda.service.SomeServiceImpl"></bean>
+			     <!-- 注册aspectJ代理生成器 -->
+			     <aop:aspectj-autoproxy/>     
+        
+	      后置通知 ： @AfterReturning("execution(* *..ISomeService.doFirst(..))")
+	                        @AfterReturning(value="execution(* *..ISomeService.doSecond(..))",returning="result")   // 若有返回值，则多加一个参数
+
+	      环绕通知 ：  @Around("execution(* *..ISomeService.doSecond(..))")   
+				    public Object myAround(ProceedingJoinPoint pjp) throws Throwable{      // 必须加该参数
+					System.out.println("前环绕");
+					Object result = pjp.proceed();                                                             // 执行目标中的方法
+					System.out.println(result);
+					return result;
+				  }
+
+	       异常通知 ： @AfterThrowing("execution(* *..ISomeService.doSecond(..))")
+	                         @AfterThrowing(value="execution(* *..ISomeService.doSecond(..))",throwing="ex")   // 指定异常
+
+		最终通知 ： @After("execution(* *..ISomeService.doSecond(..))")
+
+		为了减少重复  "execution(* *..ISomeService.doSecond(..))，可以自定义切点
+				   @Before("doSecondPointcut()")
+				   public void before(){
+						System.out.println("你应经执行了前置方法");
+					}
+				    @AfterReturning("doSecondPointcut()")
+				    public void after(){
+					  System.out.println("你应经执行了后置方法"); 
+				     }
+
+				      // 自定义切点
+				    @Pointcut("execution(* *..ISomeService.doSecond(..))")
+				    public void doSecondPointcut(){}
+
+	  2)、基于xml配置aspectJ  :
+	         定义一个切面的类 ：
+		       public class MyAspect {
+			public void before(){
+				System.out.println("你应经执行了前置方法");
+			}
+		    public void after(){
+			  System.out.println("你应经执行了后置方法"); 
+		     }
+                    在xml中的配置  ：
+				 <!-- 注册切面 -->
+				     <bean id="myAspect" class="cn.hegongda.advice.MyAspect"></bean>  
+				     <!-- 注册目标文件 -->
+				     <bean id="service1" class="cn.hegongda.service.SomeServiceImpl"></bean>
+				  <!-- 注册组件 -->
+				     <aop:config>
+				       <aop:aspect ref="myAspect">    //  引入切面
+				   <aop:before method="before" pointcut="execution(* *..ISomeService.doFirst(..))"/>   // 引入切面中的方法  和 目标类中的方法
+				       </aop:aspect>
+				     </aop:config> 
+				
+				为了避免写过多的   ：  execution(* *..ISomeService.doFirst(..))，可以如下配置
+				     <aop:pointcut expression="execution(* *..ISomeService.doFirst(..))" id="doFirst"/>     // 先定义一个总的
+				       <aop:aspect ref="myAspect">
+					  <aop:before method="before" pointcut-ref="doFirst"/>
+				       </aop:aspect>
+			       当有两个前置方法时，一个有参数，一个没有参数则需要 ：
+				      <aop:before method="before" pointcut-ref="doFirst"/>
+				     <aop:before method="before(org.aspectj.lang.JoinPoint)" pointcut-ref="doFirst"/>   // 指明参数类型
+
+		     后置方法 ：
+		                   <aop:after-returning method="after(java.lang.Object)" pointcut-ref="doSecond" returning="result"/>
+				   后置方法有返回值问题，此时需要加上 returning参数，与切面方法中的参数相同
+		      
+		      环绕通知 ：
+		                     <aop:around method="myAround" pointcut-ref="doSecond"/> 
+		      异常通知 ：
+		                     <aop:after-throwing method="exception(java.lang.Exception)" pointcut-ref="doSecond" throwing="ex"/>
+		      最终通知 ：
+		                     <aop:after method="myAfter" pointcut-ref="doSecond" />
+
+13、spring 与 Dao 数据库
+        1）、在service层中给 dao添加 get / set 方法。进而在xml中配置 ：
+	        <!-- 注册c3p0连接池 -->
+    
+		    <bean name="myDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"  >
+		      <property name="driverClass"  value="${jdbc.driver}"></property>
+		      <property name="user" value="${jdbc.user}"/>
+		       <property name="password" value="${jdbc.pass}"/>
+		       <property name="jdbcUrl" value="${jdbc.url}"/>
+		    </bean>
+		   
+		    <!-- 配置连接池参数文件 -->  在src下 ： jdbc.properties 的配置
+		   <context:property-placeholder location="classpath:jdbc.properties"/> 
+		   
+		   <bean name="myJdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		      <property name="dataSource" ref="myDataSource"/>        //jdbc中有属性  数据源  dataSource
+		   </bean> 
+
+		  <!-- 注册dao 层-->
+		   <bean name="studentDao" class="cn.hegongda.dao.StudentDaoImpl">
+		       <property name="jdbcTemplate" ref="myJdbcTemplate"></property>     // dao层中有属性 jdbcTemplate
+		   </bean>
+		   <!-- 注册service层 -->
+		   <bean id="studentService" class="cn.hegongda.service.StudentServiceImpl">
+		     <property name="dao" ref="studentDao"></property>       // service中有属性 dao
+		   </bean> 
+
+		   三种连接池 ：  ComboPooledDataSource                   c3p0连接池
+		                         BasicDataSource                                  jdbc连接池
+					 DriverManagerDataSource                   spring默认连接池
+
+  
+	2）、dao层要继承 JdbcDaoSupport类，该类中有jdbcTemplate
+	        向数据库中增删改只需要 ：getJdbcTemplate().update(sql , args);
+		当查询数据时 ： getJdbcTemplate().query(sql , T.class)   // 返回值为T类型
+		                         queryForObject(); /  queryForList()等
+
+		在查询时，若返回对象，则需要定义一个类实现数据的封装。
+		  @Override
+			public Student findStudentById(int id) {
+				String sql = "select id,name,age from student where id=?";
+				Student student = (Student) this.getJdbcTemplate()
+						.queryForObject(sql, new MyRowMapper(), 3);
+				return student;
+			}
+
+	        定义MyRowMapprt类对查询数据封装成对象。
+		  public class MyRowMapper implements RowMapper<Student> {
+			@Override
+                         // 参数 rs： 当查询出总的结果集后，框架会自动遍历这个结果集，每次遍历一行数据，都会封装到rs中，
+			                     rs代表一行数据，并非是查询出结果
+
+			public Student mapRow(ResultSet rs, int rowNum) throws SQLException {
+				Student s = new Student();
+				s.setId(rs.getInt("id"));
+				s.setName(rs.getString("name"));
+				s.setAge(rs.getInt("age"));
+				return s;
+			}
+
+	  注意： 在JdbcDaoSupport 中，有datasource 属性，其会自动检测是否有 JdbcTemplate,若有。则不会创建。若没有，
+	             则会自动创建。所以在xml中的配置会发生变化。直接在 dao 层引入dataSource,而不是JdbcTemplate
+		         <bean name="studentDao" class="cn.hegongda.dao.StudentDaoImpl">
+			       <property name="dataSource" ref="myDataSource"></property>
+		      </bean>
+		      <bean name="myDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"  >
+		      <property name="driverClass"  value="${jdbc.driver}"></property>
+		      <property name="user" value="${jdbc.user}"/>
+		       <property name="password" value="${jdbc.pass}"/>
+		       <property name="jdbcUrl" value="${jdbc.url}"/>
+		    </bean>
+
+         注意 ： jdbc模板是多多例的，针对每一个线程（方法）执行时，都需要 getTemplate,当方法火线程结束时，JdbcTemplate就会被
+	            释放，所以 每次执行方法时，都需要 getJdbcTemplate().
+
+14、spring 事务管理 :
+          *** spring 默认事务回滚方式 ： 发生运行异常时回滚，发生受查异常时 提交。对于受查异常时，可以手工进行回滚。
+		 方式一： 在 xml 中的配置方式 ：
+					在配置完相关的 bean ,dao ， target 后，配置 AOP的相关 设置：
+					     <!-- 注册事务管理器 -->  
+						   <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+							<property name="dataSource" ref="myDataSource"></property>     // 与数据源相连接
+						   </bean>
+					注册事务管理工厂 ： 
+					  <bean id="serviceProxy" class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+					       <property name="transactionManager" ref="transactionManager"></property>      // 引入注册管理器，相当于切面
+					       <property name="target" ref="buyStockService"></property>                                 //  引入目标对象
+					       <property name="transactionAttributes">                                                                 // 设置事物属性
+						 <props>
+						   <prop key="buyStock">ISOLATION_DEFAULT,PROPAGATION_REQUIRED,-MyException</prop>  // 对具体方法进行设置
+						   <prop key="open*">PROPAGATION_REQUIRED</prop>
+						   <prop key="examin*">PROPAGATION_REQUIRED</prop>
+						 </props>
+					       </property> 
+					    </bean> 
+							   
+					   注意 ： ISOLATION_DEFAULT   : 事物隔离特性
+						       PROPAGATION_REQUIRED  ： 事物的传播特性
+						       -MyException  : 表示发生指定异常后回滚，这时的异常通常是受查异常
+						       +MyException : 表示发生指定异常后提交，这时的异常通常是运行异常
+
+		方式二 ： 通过注解的方式进行配置 ：
+		                1）、引入tx约束  
+				2）、同样 注册事物管理
+				3）、进行注解驱动 ， 引入事物管理器
+				         <tx:annotation-driven  transaction-manager="transactionManager"/>
+
+			        在service 层加注解 ：（隔离、传播、异常）
+				     	@Transactional(isolation=Isolation.DEFAULT,propagation=Propagation.REQUIRED,rollbackFor=MyException.class)
+	                                  public void buyStock(String aname, int money, String sname, int count) throws MyException {
+
+				
+               方式三 ： 重点AOP的配置 ： 引入aop  jar包
+	                      <!-- 注册事务管理器 -->
+			   <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+				<property name="dataSource" ref="myDataSource"></property>
+			   </bean>
+			   //  注册事物通知
+			   <tx:advice id="advice1" transaction-manager="transactionManager">
+			      <tx:attributes>
+				 <tx:method name="buyStock" isolation="DEFAULT" propagation="REQUIRED" rollback-for="MyException"/>
+			      </tx:attributes>
+			   </tx:advice>
+			   // AOP配制
+			  <aop:config>
+			      //  指定切入点
+			    <aop:pointcut expression="execution(* *..service.*.*(..))" id="myPointcut"/>
+			    <aop:advisor advice-ref="advice1" pointcut-ref="myPointcut"/>
+			  </aop:config>
+
+
+Spring 与 Web 
+       1、在servlet中，由于所有对象都由 spring容器产生的，所以需要在每个servlet 中获取spring容器，这样就会导致大量的spring容器对象被产生
+            ，因此可以通过servletContext监听器进行spring容器对象的获取和创建，这样就避免了创建大量的 spring对象。节省了内存和cpu。
+	    而spring框架已经提供了 servletContext 监听器，这样就不要自己定义
+       
+       2、在 xml中注册监听器 ：
+                       <!-- 注册servletContext监听器
+			      1）、在servletContext 创建时，创建spring容器
+			      2）、将创建好的Spring容器对象放到servletContext域中
+			   -->
+			  <listener>
+			    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+			  </listener>
+	   由于创建spring容器时，服务器会到指定位置去寻找applicationContext.xml文件，所以配置文件所在位置以便其可以放在任意位置		
+	         <context-param>
+			     <param-name>contextConfigLocation</param-name>  
+			     <param-value>classpath:applicationContext.xml</param-value>
+		  </context-param>
+
+            在servlet中获取spring容器对象 ：
+	         String acs = WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE;
+        	  ApplicationContext ac = (ApplicationContext) this.getServletContext().getAttribute(acs);
+
+	  可以通过工具类获取spring容器对象：
+	           WebApplicationContext ac = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
+
+   ContextLoaderListener监听器的作用就是启动Web容器时，自动装配ApplicationContext的配置信息。因为它实现了ServletContextListener
+   这个接口，在web.xml配置这个监听器，启动容器时，就会默认执行它实现的方法。至于ApplicationContext.xml这个配置文件部署在哪，
+   如何配置多个xml文件，书上都没怎么详细说明。现在的方法就是查看它的API文档。在ContextLoaderListener中关联了ContextLoader这个类
+   ，所以整个加载配置过程由ContextLoader来完成。看看它的API说明。
+
+      第一段说明ContextLoader可以由 ContextLoaderListener和ContextLoaderServlet生成。
+      如果查看ContextLoaderServlet的API，可以看到它也关联了ContextLoader这个类而且它实现了HttpServlet这个接口。
+
+      第二段，ContextLoader创建的是 XmlWebApplicationContext这样一个类，它实现的接口是
+      WebApplicationContext->ConfigurableWebApplicationContext->ApplicationContext->BeanFactory
+      这样一来spring中的所有bean都由这个类来创建
+
+
+
+		   

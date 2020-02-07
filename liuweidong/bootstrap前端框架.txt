@@ -1,0 +1,727 @@
+‘一、排版
+
+                                 <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/bs/css/bootstrap-theme.min.css">
+				<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/bs/css/bootstrap.min.css">
+				<script type="text/javascript" src="js/jquery.js"></script>
+				<script type="text/javascript" src="${pageContext.request.contextPath}/bs/js/jquery-1.11.2.min.js"></script>
+				<script type="text/javascript" src="${pageContext.request.contextPath}/bs/js/bootstrap.min.js"></script>
+				<script type="text/javascript" src="${pageContext.request.contextPath}/bs/js/holder.min.js"></script>
+
+	  版本 ：3.3.7
+	           <link rel="stylesheet" href="bs/css/bootstrap-theme.min.css"/>
+		    <link rel="stylesheet" href="bs/css/bootstrap.min.css"/>
+		    <script type="text/javascript" src="bs/js/jquery.js"></script>
+		    <script type="text/javascript" src="bs/js/bootstrap.min.js"></script>
+
+    标题 ： 
+          <h1 class="page-header">BootStrap</h1>     // 标题设置 ， 自动会出现下划线
+      段落 ： 字体会自动加粗
+           <p class="lead"> vfkvfovkfdkvfdpvkdpv </p>
+
+      标记 <mark><mark>
+
+      小一号字体 <small> </small>
+
+      删除线 <del> </del>
+
+      无序列表  :
+            <ul class="list-unstyled"> 
+	        <li> </li>
+	    </ul>
+
+      文本位置对齐    <div  class="text-center">  right、left  </div>
+
+      文本大小写设置 ：
+             <div class="text-lowercase"> </div>   所有大写字母都小写
+	     <div class="text-uppercase"> </div>    所有小写字母都大写
+	     <div class="text-captialize"> </div>   所有单词首字母大写
+
+二、代码 
+        
+       将字体变红：   <code> </code> 
+
+       将背景颜色设置成黑色 <kbd> </kbd>
+
+       原样输出会在字体加上圆角方框 ： <pre></pre>    
+
+三、表格
+     
+     <table class="table table-striped  table-bordered table-hover">
+	           <tr class="danger">
+	               <th>姓名</th>
+	               <th>学号</th>
+	               <th>年龄</th>
+	               <th>成绩</th>
+	           </tr>
+	           <tr class="success">
+	                <td>刘一手</td>
+	                 <td>160750113</td>
+	                 <td>45</td>
+	                 <td>55</td>
+	           </tr>
+	    </table>
+        table  ;  生生表格背景轻微颜色
+        table-striped  :   正式生成表格
+	table-hover :  有超链接的感觉
+
+      表格的5种状态颜色 ：  class="success"  active  info  warning danger
+      
+       响应式表格 ：
+           <div   class="table-responsive">
+	      <table>
+	            列要足够多
+	      </table>
+	   </div>
+
+
+四、 按钮
+      
+        btn-default       btn-primary             btn-success           btn-warning            btn-danger     btn-info   btn-link
+
+	<button  calss="btn btn-primary"> </button>
+
+	尺寸 ： btn-lg  大   btn-sm  小    btn-xs  超小
+
+	按钮独占一行  ：btn-block
+
+	可以用作按钮 ：  button  <a>  type="button"   type="submit"  type="reset"
+
+五、图片 ：
+       
+       圆角型 ： <img src=""  calss="img-rounded">
+
+       圆形 ： class="img-circle"
+
+       方框性 ：  class="img-thumbnail"
+
+       响应式图片 ： img-responsive    根据屏幕宽度自动调节图片大小
+ 
+六、文本辅助颜色：   （字的大小调节 必须用  （px 单位））
+         
+      灰色  : text-muted
+      蓝色 ：text-primary
+      青色 ：success
+      浅色： info
+      黄色 ：warning
+      红色 ：danger
+
+      背景颜色 ：  bg-primary  bg-success  bg=info  bg-warning bg-danger
+
+      关闭按钮 ：  class="close"     &times  按钮
+         <span calss="bg-info">cnskcnszl <span class="close"> &times</span> </span>    
+      
+      下三角 ： class="caret"   与按钮进行配合使用    
+       
+       浮动  ：  pull-left  right
+
+       让快标签居中 ：center-block
+       
+       显示和隐藏  ： show    hide
+
+   
+
+组件 ：
+   
+    字符图标 ： class=" glyphicon glyphicon-flash "     到库中去找
+
+    下拉选择框 ：
+          在一个人div 标签中 
+	        <div class="dropdown">
+		     <button class="btn btn-primary" data-toggle="dropdown">更多 <span class="caret"></span></button>
+		     <url class="dropdown-menu  dropdown-menu-right">
+		       <li class="dropdown-header">   </li>    // 标题
+		       <li>AAAA</li>
+		        <li>AAAA</li>
+		       <li>AAAA</li>
+		        <li class="divider"></li>    //分割线
+			 <li>AAAA</li>
+		        <li>AAAA</li>
+		       <li>AAAA</li>
+   		     </url>
+		</div> 
+       <li class="disabled">禁用标签<li>
+
+    按钮组件   .btn-group    将多个按钮连接在一起
+         <div class="btn-group">
+            <button class="btn btn-default">谷歌</button>
+            <button class="btn btn-default">谷歌</button>
+            <button class="btn btn-default">谷歌</button>
+            <button class="btn btn-default">谷歌</button>
+         </div>
+         
+        连接按钮加下拉选择框   
+	      <button class="btn btn-default">谷歌</button>
+          <div class="btn-group">
+		    <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">谷歌
+		     <span class="caret"></span>"</button>
+		     <ul class="dropdown-menu">
+			<li> dnvv</li>
+			<li> dnvv</li>
+			<li> dnvv</li>
+			<li> dnvv</li>
+		     </ul>
+           </div>
+
+       将按钮组竖直排列 ：
+                <div class="btn-group-vertical">
+       
+
+       按钮组两端对齐   
+          <div class="btn-group btn-group-justified">
+			          <div class="btn-group">
+			            <button class="btn btn-default" >谷歌</button>
+			         </div>
+			          <div class="btn-group">
+			            <button class="btn btn-default" >谷歌</button>
+			         </div>
+			          <div class="btn-group">
+			            <button class="btn btn-default" >谷歌</button>
+			         </div>
+        </div>
+
+表单 ：
+   
+      表单普通项格式： 必须有 form-control
+          <form>
+                 <div class="form-group">
+		     <label for="">密码 </label>
+		     <input type="text" class="form-control" placeholder="密码不能为中文">
+		 </div>
+	  </form>
+
+	  placeholder=""    表单提示内容
+     
+       文本域标签
+	   <div class="form-group">
+             <label class="for">说明</label>
+             <textarea rows="10" cols="30" class="form-control"></textarea>   (文本域)
+            </div>
+
+      下拉选择框
+          <select class="form-control">
+              <option>AAA</option>
+              <option>BBB</option>
+              <option>CCC</option>
+           </select>
+	  
+      单选框 ： 默认为竖行 ，  radio-inline  为横行，  <label> 中 有 <inout>
+             性别：
+           <div class="radio-inline">
+            <label>
+               <input type="radio" name="sex"> 男
+               </label>
+           </div>
+           <div class="radio-inline">
+            <label>
+               <input type="radio" name="sex"> 女
+               </label>
+           </div><br>
+      
+      复选框 ：  checkbox-inline 为横行
+           <div class="checkbox-inline">
+              <label>
+                  <input type="checkbox" value=""> 篮球
+              </label>
+           </div>
+           <div class="checkbox-inline">
+              <label>
+                  <input type="checkbox" value=""> 牌球
+              </label>
+           </div>
+              
+     控组输入框  ：   form-group 内带有  input-group， input 前为 input-group-addon, 后便也是input-group-addon
+        <div class="form-group">
+             <div class="input-group">
+              <div class="input-group-addon">$</div>
+              <input type="text" class="form-control">
+              <div class="input-group-addon">.00</div>  <!-- 控组输入框  -->
+              </div>
+           </div>
+  
+   提交按钮 ：
+      <div class="form-group">
+              <input type="submit" value="提交" class="form-control btn btn-danger">
+              <input type="reset" value="重置" class="form-control btn btn-info">
+          </div>
+ 
+  在 div 标签加入  disabled  则该标签被禁用
+
+  是表单横向 ：  class=fom-horizontal 
+        <form action="" class="form-horizontal"  >
+ 
+  区域禁用 ： 内部标签全部禁用
+	      <fieldset  disabled> 
+		   <input>
+		   <input>
+	     </fieldset>
+  
+  文本狂三种颜色 ：
+       在div 中 ：  has-error    has-warning  has-success
+
+   使文本框及文字对齐：
+        <div class="form-group has-success">
+             <label class="col-sm-2 control-label" for="">密码</label>
+             <div class="col-md-10">
+             <input type="text" class="form-control"> 
+             </div>
+          </div> 
+  
+   在该标签前空出两列 ：
+      <div class="col-md-2  col-md-offset-2">
+
+   在文本框末尾加上图标，并在文本框下 给出提示信息  ： 加图标 需要 has-feedback  ，在图标标签内加 form-control-feedback, 提示信息用help-block
+      <div class="form-group has-feedback  has-error">
+             <label class="col-sm-2 control-label" for="">密码</label>
+             <div class="col-md-10">
+             <input type="text" class="form-control"> 
+             <span class="glyphicon glyphicon-ok form-control-feedback"></span>
+             <span class="help-block">niahi</span>
+             </div>
+          </div>
+
+  静态控件 ： form-control-static  该表单后面自动出现该文本， 不能进行更改 。
+     <div class="form-group has-error">
+             <label for=""  class="col-sm-2 control-label">用户名</label>
+             <div class="col-md-10">
+             <p class="form-control-static">liuweidong </p>  <!-- 静态控件 -->
+             </div>
+          </div> 
+   
+    尺寸 ： input-lg
+
+
+输入框组：
+    
+      文本框中添加 单选或复选按钮    （ 3 层 div）
+              <div class="form-group  col-md-5">
+             <div class="input-group">
+                  <div class="input-group-addon">
+                    <input type="radio" class="">
+                    </div>
+                 <input type="text" class="form-control">
+             </div>
+         </div>
+
+	 文本框前或末尾添加按钮    input-group-btn
+	      <div class="form-group">
+            <div class="input-group">
+               <div class="input-group-btn">
+                <button class="btn btn-danger" >Go</button>
+               </div>
+             <input type="text" class="form-control">
+                </div>
+         </div>
+
+	   标签页 ： nav nav-tabs
+		<ul class="nav nav-tabs>
+		    <li class="active"> <a>a</a> </li>
+		    <li class=""> <a>a</a> </li>
+		    <li class=""> <a>a</a> </li>
+		</ul>
+
+	 胶囊式导航页标签 ： nav pills-tabs   nav-stacked  堆叠效果
+	       <ul class="nav pills-tabs  nav-stacked">
+		    <li class="active"> <a>a</a> </li>
+		    <li class=""> <a>a</a> </li>
+		    <li class=""> <a>a</a> </li>
+		</ul>
+
+         导航条 ：
+	 <div class="container">
+       <h1 class="page-header">BootStrap</h1>
+        <nav class="navbar navbar-inverse navbar-fixed-bottom" id="navbar">     
+	（navbar-inverse, default  导航条颜色 黑色和灰色 ）
+         （navbar-fixed-top 、bottom   将导航条固定在顶部或底部)  
+
+           <div class="navbar-header">
+             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#ps">
+              <span class="icon-bar"></span>    （ 设置三个横杠）
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+             </button>  
+              <a class="navbar-brand" href="#">
+                <img alt="BootStrap" src="image/3.jpg" width="30px">   （可添加名 或 logo）
+              </a>
+           </div>
+           <div class="collapse navbar-collapse" id="ps">
+              <ul class="nav navbar-nav">
+               <li class="active"><a href="#">LinDa</a></li>
+               <li><a href="#">LinDa</a></li>
+               <li><a href="#">LinDa</a></li>
+               <li><a href="#">LinDa</a></li>
+               <li><a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                java<span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                   <li><a href="">spring</a></li>
+                   <li><a href="">CSS</a></li>
+                   <li><a href="">html</a></li>
+                </ul>
+               
+               </li>
+               
+              </ul>
+                <p class="navbar-text">我叫<a class="navbar-link" href="">刘伟东</a></p>   (在导航条中加文本，和非静态连接)
+                <button class="btn btn-warning navbar-btn">Search</button>           （在导航条中加 按钮 ）
+              <ul class="nav navbar-nav navbar-right">
+                  <li><a href="">菜单</a></li>
+              </ul>
+              
+              <form action="" class="navbar-form navbar-right ">    （在导航条中家表单）
+                   <div class="form-group">
+                     <input type="text" class="form-control">
+                   </div>
+                   <!-- <input type="submit" class="btn btn-primary" value="搜索"> -->
+                   <!-- <button class="btn btn-danger">Search</button> -->
+                   <div class="form-group">
+                   <button class="btn form-control btn-primary"><span class="glyphicon glyphicon-search"></span></button>
+                   </div>
+              </form>
+           </div>
+        </nav>
+   </div>
+  
+    分页：  pagination        &laquo  ： 》  &raquo ：  《
+	       <ol class="pagination">
+		    <li > <a href="">&laquo</a>
+		    <li class="active"><a href="">1</a>
+		    <li><a href="">2</a>
+		    <li><a href="">3</a>
+		    <li><a href="">4</a>
+		     <li> <a href="">&raquo</a>
+		 </ol>
+		   
+		   尺寸 ： pagination-lg
+
+      上下页 ：
+                <ul class="pager">
+		   <li><a href="">上一页</a></li>
+		   <li><a href="">下一页</a></li>
+		 </ul>
+ 
+     标签 ：
+		 <span class="label label-primary">300</span>)</div>
+		<span class="label label-info">300</span>)</div>
+		<span class="label label-success">300</span>)</div>
+	        <span class="label label-danger">300</span>)</div>
+	        <span class="label label-warning
+		
+			
+    徽章 ：（按钮上加徽章）
+          <button class="btn btn-primary">LInux<span class="badge">30</span></button>
+
+    巨幕 ：  jumbotron ,  将标签中所有东西都放大
+        <div class="jumbotron">
+              <p>jiodjgv;gjvmvvjofjnvkjkvjianhaoovozafnzivhjiayueayufiidfowwoqqpzvourpqioriioie
+              </p>
+           </div>
+
+    缩略图 ： (图片是一个超链接)
+      <div class="row">
+             <div class="col-md-4">
+              <a href="" class="thumbnail">
+                 <img src="image/3.jpg" >
+              </a>
+           </div>
+    自定义缩略图
+         <div class="row">
+             <div class="col-md-2">
+               <div class="thumbnail">
+                 <a herf="">
+                   <img src="image/3.jpg" width="200">
+                 </a>
+                 <div class="caption">     （说明）
+                    <h2>liuweidong</h2>    （标题）
+                    <p>nvdzsvlzjvloijvozjzvizhgv
+                      vnidflhvdjgpdsguospgs</p>
+                    <button  class="btn btn-primary">OK</button>     （按钮）
+                    <button class="btn btn-danger">Cancle</button>
+                 </div>
+             </div>
+             </div>
+
+    警告框 ： 有四种颜色  danger , warning  ,info, success
+        <div class="alert alert-danger">
+               <button class="close" type="tutton" data-dismiss="alert"><span>&times</span></button>  (生成 x 按钮)（data-dismiss）可以关闭响应标签
+              <p>vkzljv;zovnvSVJLNjo;naso;ijefozkcPK"F"nvkzlhisofja;LhLfhaeoerkfnzzhcsarn;
+                  bishfhaohfnkncizofpufOOOOOOOOOOOOOOOOOOOOOOOOOJAIUcjvxvzsiufakicdlepavozxj
+                   vnk    vnzljvo   zljdvo;</p>
+           </div>
+	 警告框中的链接 ：
+	    <a href="" class="alert-link"> </a>    字体加粗
+
+    进度条 ： 5中颜色。默认为蓝色    danger、info、warning、success。  progre-bar-striped  使进度条有条纹
+        <div class="progress">   
+           <div class="progress-bar progress-bar-info  active progress-bar-striped" style="width:50%"> </div>
+        </div>
+         active 
+         
+	  动态进度条 ：
+	     <script type="text/javascript">
+	     var s = 0;
+	     var a = 10;
+	     var time1 =  setInterval(function(){
+		 s = s + a;
+		 if(s >= 100){
+			 clearInterval(time1)
+		 }
+		 $(".progress-bar").html(s+"%").css({"width":s+"%"});
+	     }, 1000)
+	  </script>
+	 
+
+ 多媒体：
+	    <div class="media">
+		 <div class="media-left">
+		     <div class="media-object  media-bottom">   图片在底部   media-middle  图片在中部
+ 			<img src="holder.js/64x64" width="200">
+		     </div>
+		 </div>
+		 <div class="media-body">
+		    <div class="media-heading">
+			<h4>liuweifogn</h4>
+			<p>jvioszjzsivuvmlkdkjvdxvovvjdp
+			jboxibiueuivID序列号三四点vifU盾和v女的垃圾哦 vjfdojv
+			</p>
+		    </div>
+		 </div>
+	      </div>
+
+	  media  media-left media-object   media-body  media-heading
+
+  连接列表组：
+      <ul class="list-group">
+          <li ><a class="list-group-item" href="">AA</a></li>
+          <li ><a class="list-group-item" href="">SS</a></li>
+          <li ><a class="list-group-item" href="">DD</a></li>
+          <li ><a class="list-group-item" href="">NN</a></li>
+       </ul>
+       列表组加上颜色 ： list-group-item-info   success  warning   danger
+
+    面板三部分 ：
+         <div class="panel panel-danger">
+         <div class="panel-heading">
+            <div class="panel-title">
+               <h1>百度新闻</h1>      （标题）
+            </div>
+         </div>
+         <div class="panel-body">
+           <h4>linux</h4>
+             nvnzxnzjoz;                     （内容）
+         </div>
+         <div class="panel-footer">   （描述）
+           dszfho
+         </div>
+      </div>
+      
+       响应式特性嵌入内容： 将别的网站引入， scrolling="no" 表示引入的网站没有滚动条， class="embed-responsive-item" 全屏网站
+            <div class="embed-responsive embed-responsive-16by9">
+                 <iframe  scrolling="no" src="https://v3.bootcss.com/components/#media"  class="embed-responsive-item">
+                 </iframe>
+             </div>
+         
+	 <div class="embed-responsive-4by3">
+		   <iframe  class="embed-responsive-item" width="800px" height="500px" frameborder="0" 
+		   src="https://v.qq.com/txp/iframe/player.html?vid=a0801l78py3" 
+		    allowFullScreen="true">
+		    </iframe>
+      </div>
+       可以引用视频，不带embed-responsive 可以手动调节视频的宽高
+
+Javascript插件
+    
+      modal弹框 ：
+
+          1、先设置一个触发按钮 
+	  2、三层标签  ：  modal 、modal-dialog modal-content
+	  3、正式部分 ： modal-header 头部   modal-body  身体  modal-footer  : 尾部说明部分
+	  4、设置弹出框的大小  ： modal-lg   modal-sm
+		    <button type="button" class="btn btn-primary btn-lg"  id="smodal"
+		 data-target="#mymodal" >立刻注册</button>
+		 <div class="modal fade"  id="mymodal">
+		   <div class="modal-dialog modal-lg" >
+		     <div class="modal-content">
+			<div class="modal-header">
+			   <button type="button" class="close" data-dismiss="modal"> <span>&times;</span></button>
+			   <h3>欢迎来到注册页面</h3>
+			   
+			</div> 
+			<div class="modal-body">
+			    liiisdhszhsiozs
+			</div>
+			<div class="modal-footer">
+			    <button id="OK" class="btn btn-primary" type="button">OK</button>
+			    <button id="close" class="btn btn-default" type="button">close</button>
+			</div>
+		     </div>
+		   </div>
+		 </div>  
+	   </div>
+	</body>
+	   <script type="text/javascript">
+	       $(function(){
+	              // 关闭按钮隐藏弹出框
+		   $("#close").click(function(){
+			   $(".modal").modal("hide");
+		   })
+		      // 点击触发按钮显示弹出框
+		   $("#smodal").click(function(){
+			   $(".modal").modal("show");
+		   })
+		     // 注册成功后隐藏弹出框
+		   $("#OK").click(function(){
+			   alert("注册成功");
+			   $(".modal").modal("hide");
+		   })
+		            
+                   shown.bs.modal  :  弹出框显示后触发事件 ： 将背景改为红色
+		   $("#mymodal").on("shown.bs.modal",function(e){
+			 
+			  $("body").css({"background-color":"red"});
+		   })
+		   
+		   $("#mymodal").on("hidden.bs.modal",function(e){
+			   $("body").css({"background-color":"yellow"});
+		   })
+	       })
+	   </script>
+
+ 监听滚动 ： 监听body ,   data-spy="scroll"   data-offset="100"   data
+     <body  data-spy="scroll" data-toggle="#mynav" data-offset="100" >
+         <div class="container">
+       
+      <nav  id="mynav" class="navbar navbar-inverse navbar-fixed-top">
+        <div class="collapse navbar-collapse">
+         <ul class="nav navbar-nav">
+            <li><a href="#java">java</a></li>
+            <li><a href="#html">html</a></li>
+            <li><a href="#css">css</a></li>
+            <li><a href="#mysql">mysql</a></li>
+         </ul>
+         </div>
+      </nav>
+      <div class="panel panel-primary">
+        <div class="panel-heading ">
+            <div class="panel-title">
+               <h2 id="java">java</h2>
+            </div>
+        </div>
+        <div class="panel-body">
+        <img src="holder.js/1011x400"><br/>
+           Java Is very much?   Java Is very much?  Java Is very much?  Java Is very much?  
+           Java Is very much?  Java Is very much?  Java Is very much?  Java Is very much?
+           Java Is very much?   Java Is very much?  Java Is very much?  Java Is very much?  
+           Java Is very much?  Java Is very much?  Java Is very much?  Java Is very much?
+           Java Is very much?   Java Is very much?  Java Is very much?  Java Is very much?  
+           Java Is very much?  Java Is very much?  Java Is very much?  Java Is very much?
+        </div>
+
+	标签页：  data-toggle="tab"   tab-content  tab-pane     fade in  /  fade
+	   <ul class="nav nav-tabs"  >
+         <li class="active"><a href="#java" data-toggle="tab">java</a></li>
+         <li><a href="#css" data-toggle="tab">css</a></li>
+		 <li><a href="#html" data-toggle="tab">html</a></li>
+	      </ul> 
+	      <div class="tab-content">
+		 <div  class="tab-pane  fade in  active" id="java">
+		 Trust fund seitan letterpress, keytar raw denim keffiyeh etsy art party before they sold out master cleanse gluten-free squid scenester freegan cosby sweater. Fanny pack portland seitan DIY, art party locavore wolf cliche high life echo park Austin. Cred vinyl keffiyeh DIY salvia PBR, banh mi before they sold out farm-to-table VHS viral locavore cosby sweater. Lomo wolf viral, mustache readymade thundercats keffiyeh craft beer marfa ethical. Wolf salvia freegan, sartorial keffiyeh echo park vegan.
+		 </div>
+		 <div class="tab-pane  fade"  id="css">
+		    Food truck fixie locavore, accusamus mcsweeney's marfa nulla single-origin coffee squid. Exercitation +1 labore velit, blog sartorial PBR leggings next level wes anderson artisan four loko farm-to-table craft beer twee. Qui photo booth letterpress, commodo enim craft beer mlkshk aliquip jean shorts ullamco ad vinyl cillum PBR. Homo nostrud organic, assumenda labore aesthetic magna delectus mollit. Keytar helvetica VHS salvia yr, vero magna velit sapiente labore stumptown. Vegan fanny pack odio cillum wes anderson 8-bit, sustainable jean shorts beard ut DIY ethical culpa terry richardson biodiesel. Art party scenester stumptown, tumblr butcher vero sint qui sapiente accusamus tattooed echo park.
+		 </div>
+		 <div class="tab-pane fade" id="html"> 
+		 Etsy mixtape wayfarers, ethical wes anderson tofu before they sold out mcsweeney's organic lomo retro fanny pack lo-fi farm-to-table readymade. Messenger bag gentrify pitchfork tattooed craft beer, iphone skateboard locavore carles etsy salvia banksy hoodie helvetica. DIY synth PBR banksy irony. Leggings gentrify squid 8-bit cred pitchfork. Williamsburg banh mi whatever gluten-free, carles pitchfork biodiesel fixie etsy retro mlkshk vice blog. Scenester cred you probably haven't heard of them, vinyl craft beer blog stumptown. Pitchfork sustainable tofu synth chambray yr.
+		 </div>
+	      </div>
+ 
+
+  幻灯片 ：
+       <div class="carousel slide" id="mycarousel" data-ride="carousel">
+               
+          //  设置三个小圆点
+
+          <ol class="carousel-indicators">
+             <li class="active" data-target="#mycarousel" data-slide-to="0"></li>
+             <li  data-target="#mycarousel" data-slide-to="1"></li>
+             <li  data-target="#mycarousel" data-slide-to="2"></li>
+          </ol>
+          
+	  //  插图三张图片 
+          <div class="carousel-inner">
+             <div class="item active">
+                 <img src="/News/image/3.jpg" width="500px" height="100px">
+
+		 // 对图片进行说明部分
+                 <div class="carousel-caption">
+                     <h3 class="h1">java</h3>
+                     <p class="p1">java shiyiemnhaoyya  nfzdnvzo;  b;lsbsd;gs;gb
+                     java shiyiemnhaoyya  nfzdnvzo;  b;lsbsd;gs;gb
+                    java shiyiemnhaoyya  nfzdnvzo;  b;lsbsd;gs;gb
+                     java shiyiemnhaoyya  nfzdnvzo;  b;lsbsd;gs;gb
+                    java shiyiemnhaoyya  nfzdnvzo;  b;lsbsd;gs;gb
+                     java shiyiemnhaoyya  nfzdnvzo;  b;lsbsd;gs;gb
+                    java shiyiemnhaoyya  nfzdnvzo;  b;lsbsd;gs;gb
+                     </p>
+                 </div>
+             </div>
+             <div class="item ">
+                 <img src="/News/image/4.jpg"  width="500px"  height="300px">
+             </div>
+             <div class="item ">
+                 <img src="/News/image/c.jpg"  width="500px"  height="300px">
+             </div>
+          </div>
+          
+          //  设置左右滑动图片
+          <a href="#mycarousel" class="left carousel-control" data-slide="prev">
+             <span class="glyphicon glyphicon-chevron-left"></span>
+          </a> 
+          <a href="#mycarousel" class="right carousel-control" data-slide="next">
+             <span class="glyphicon glyphicon-chevron-right"></span>
+          </a> 
+         
+	2、设置淡入淡出幻灯片效果 ：
+	   <div class="container">
+        <div class="window">
+            <img src="/Js2/image/3.jpg">
+            <img src="/Js2/image/b.jpg">
+		    <img src="/Js2/image/c.jpg">        
+		</div>
+	    </div>
+	</body>
+	  <script type="text/javascript">
+	  
+	  
+	      setInterval(function(){
+		var imgs = $(".window img"); 
+		$(imgs[2]).fadeOut(500, function(){
+			$(this).show().prependTo(".window");
+		}) 
+	     }, 1000); 
+	  </script> 
+
+
+ 返回顶部的 js  代码：（.top为左边按钮  的 class属性）
+     <script type="text/javascript">
+        $(window).scrollTop(function(){
+        	$(".top").show();
+        	
+        	$(".top").click(function(){
+        		$(window).scrollTop(0);
+        	})
+        	
+        })
+
+		  
+
+		
+
+	     
+		 
+	    
+
+
+		  
+
+	      
+
+            

@@ -1,0 +1,413 @@
+1、xml简介：
+     --可扩展标记型语言： html， 其中标签可以自己定义。
+     --用途：显示数据  、  主要作用是存储数据
+
+     应用：*不同系统之间数据传输
+               *表示生活中有关数据
+	       *用于配置文件
+
+2、 xml语法
+     （1）、xml文档声明：
+                 *创建一个文件，后缀 .xml
+		 *写xml，首先要有一个文档声明 <?xml version="1.0" encoding="gbk" ?>  必须写在第一行第一列
+		 *属性：
+		     --version :版本
+		     --encoding：编码: gbk  utf-8  ios8859-1
+
+
+	(2)、特殊字符： 
+	       <: &it;  > &gt;
+	
+	(3)、CDATA区：解决多个需要转义的字符：
+	       具体写法： <![CDATE[内容]]>
+	         <person>
+		<![CDATA[ <b>if( a < b && c < d && a > b){}</b>]]>
+		</person>
+
+	 （4）、PI指令： 可以设置xml样式，引入css文件，对中文标签没有作用。
+
+	 （3）、xml约束： 定义一个人的标签，只能显示name，age等信息，不能显示其他与人无关的信息，而添加一个猫的的信息，也能正常显示。
+	            因此，就需要约束。
+		     
+		    xml约束技术： dtd 和 schema 技术。
+
+		   **dtd : 创建一个dtd文件，后缀名：.dtd
+		      @  在ecipse中：先建一个项目，然后new others 找到html文件新建文件
+		          创建一个dtd文件：
+		      @   --看xml文件中有多少个元素，有几个就写多少<!ELEMENT>
+		      @ --判断元素是复杂元素还是简单元素
+			    复杂元素 <!ELEMENT 复杂元素标签 （子元素标签）>
+			    简单元素 <!ELEMENT  简单元素标签  （#PCDATA）>
+		      @在xml文件中引入dtd标签
+			   格式： <!DOCTYPE  复杂元素标签  SYSTEM  "dtd文件路径">
+	           **实例：
+		        <?xml version="1.0" encoding="UTF-8"?>
+			<!DOCTYPE person SYSTEM "1.dtd">
+			<person>
+			   <name>zhangsan</name>
+			   <age>20</age>
+			</person>
+
+			dtd文件：
+			  <!ELEMENT person (name, age)>   //有空格
+			<!ELEMENT name (#PCDATA)>
+			<!ELEMENT age (#PCDATA)>
+
+			//  <!ELEMENT person (student+)>  代表person之下有多个student
+ 	
+	    第二种结合方式：直接在文本中
+			<!DOCTYPE  person[
+			<!ELEMENT person (name,age)>
+			<!ELEMENT name (#PCDATA)>
+			<!ELEMENT  age (#PCDATA)>
+		]>
+		<person>
+		   <name>zhangsan</name>
+		   <age>20</age>
+
+	    第三种：使用网络上的dtd文件
+
+3、使用dtd定义元素：
+     <!ELEMENT  元素名称  约束>
+
+     *简单元素约束
+       ---  <!ELEMENT  name (#PCDATA)>
+	      (#PCDATA) name是字符串类型
+	--- <!ELEMENT  name  EMPTY>
+	     EMPTY：元素为空
+	---<!ELEMENT  name  ANY>
+	     ANY : 任意
+
+     * 复杂元素约束：
+       ---<!ELEMENT  person (name, age, sex)>
+            子元素只能出现一次
+	----子元素出现多次表示方法：
+	    +：表示出现一次或多次
+	    *：表示零次或者多次
+	    ？：表示零次或者一次
+	---子元素直接用逗号个隔开，表示顺序固定
+	---子元素直接使用 “|”隔开，表示元素只能出现其中任意一个。
+
+4、dtd定义元素属性
+	  **  CDATA : ID值为字符串
+
+	  <!ELEMENT name (#PCDATA)>
+		<!ATTLIST name
+			ID CDATA #REQUIRED
+		>
+		<name ID="bdj">zhangsan</name>		
+		
+	 **     （AA|BB|CC）  枚举： ID值必为其中之一
+
+	      <!ELEMENT  age (#PCDATA)>
+		   <!ATTLIST age 
+		   ID1 (AA|CC|DD) #REQUIRED
+		    >
+		  <age ID1="AA">20</age>
+
+        **     ID : ID值必须是字母或下划线
+
+	     <!ELEMENT  book (#PCDATA)>
+
+	      <!ATTLIST book
+		ID2 ID #REQUIRED
+	         >
+	      book ID2="aaa"></book>
+  
+   属性：
+        * #REQUIRED 属性必须出现
+	* #IMPLED 属性不一定出现
+	* #FIXED  属性为固定值  #FIXED "AAAA"
+	    --<!ELEMENT school ANY>
+	      <!ATTLIST school
+	      ID3 CDATA #FIXED "abc"
+	     >
+	*  直接值：
+	   <!ATTLIST name
+	       ID  CDATA "www"
+	   >
+	   当name元素不写属性时，ID默认为“www”
+	
+5、实体的定义：
+       <!ENTITY  实体名称   “实体内容”>
+       
+        引用： <age>&实体名称;</age>   实体必须写在dtd内部，
+
+6、xml解析技术： dom 和 sax
+       
+         **dom方式解析：
+	      --根据xml的层级结构在内存中分配一个树形结构，把xml的标签、属性和文本都封装成对象
+	      --缺点：如果文件过大，造成内存溢出
+	      --有点：很方便实现增删改操作
+
+	  ** sax的解析方式： 
+	     --采用事件驱动，边读边解析 ：从上到下，一行一行解析，解析到某一个对象，返回对象名称。
+	     --缺点：不能实现增删改操作
+	     --优点：如果文件过大，不会造成内存溢出，方便实现查询。
+
+ 7、jaxp 解析器： sun公司提供(document解析)
+         
+	   public static void main(String[] args) throws Exception {
+		// 创建解析器工厂
+		DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+		// 创建解析器
+		DocumentBuilder builder = builderFactory.newDocumentBuilder();
+		//解析xml返回document
+		Document document = builder.parse("src/ch/hegongda/japx/person.xml");
+		//得到name元素，返回NodeList数组
+		NodeList list = document.getElementsByTagName("name");
+		//遍历
+		for(int i = 0; i < list.getLength(); i++)
+		{   
+			//得到每一个元素
+			Node name1 = list.item(i);
+			// 得到每个元素的文本内容分
+			String s =name1.getTextContent();
+			//输出
+			System.out.println(s);
+		}
+
+	  回写文本： 
+	         TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		
+		  Transformer transformer =   transformerFactory.newTransformer();
+		
+		  transformer.transform(new DOMSource(document), new StreamResult("src/ch/hegongda/japx/person.xml"));
+
+		  创建一个标签：
+		    
+		 //创建解析器工厂
+                   DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+		// 创建解析器
+		DocumentBuilder builder = builderFactory.newDocumentBuilder();
+		// 获取文档
+		Document document = builder.parse("src/ch/hegongda/japx/person.xml");
+		// 得到标签p1的数组
+		NodeList list = document.getElementsByTagName("p1");
+		// 获取第一个标签
+		Node p = list.item(0);
+		// 创建sex标签
+		Element sex = document.createElement("sex");
+		// 创建文本内容
+		Text tex = document.createTextNode("nv");
+		// 连接文本
+		sex.appendChild(tex);
+		// 连接标签
+		p.appendChild(sex);
+		
+		// 回写xml
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		
+		Transformer transformer =   transformerFactory.newTransformer();
+		
+		transformer.transform(new DOMSource(document), new StreamResult("src/ch/hegongda/japx/person.xml"));
+	}
+
+	删除一个标签：
+	     Document document = builder.parse("src/ch/hegongda/de/Person.xml");
+		Node sex = document.getElementsByTagName("sex").item(0);
+		Node p1 =  sex.getParentNode();
+		p1.removeChild(sex); 
+		// 回写xml
+
+        遍历节点：（递归）
+
+	       private static void list1(Node node) {
+			//判断元素类型的时候，才打印
+			if(node.getNodeType()==Node.ELEMENT_NODE){          
+			    System.out.println(node.getNodeName());         
+			}
+
+			//得到一层子节点
+			NodeList list = node.getChildNodes();
+			//遍历list
+			for(int i=0;i<list.getLength();i++){
+			    //得到每一个节点
+			    Node node1 =list.item(i);
+			    //继续得到node1的子节点
+			    list1(node1);
+			}       
+	    
+8、schema约束：(schema约束文件, 后缀 xsd)
+      <?xml version="1.0" encoding="utf-8"?>
+      <schema xmlns="http://www.w3.org/2001/XMLSchema"
+      targetNamespace="http://www.hegongda.cn"   //自定义路径
+      elementFormatDefault="qualified">	    
+       <element name="person">
+         <complexType>
+	    <sequence> 
+	           字标签
+		   <element name="name" type="String"></element>
+		   <element name="age" type="int"></element>
+	     </sequence>
+	  </complexType>
+         </element>
+      </schema>
+
+      schema 引入文件：
+       <?xml version="1.0" encoding="utf-8"?>
+       <person xmlns：xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.hegongda.cn"
+       xsi:elementLocation="http://www.hegongda.cn  1.xsd(schema文件名)">   
+       ****************************myescilpse: xsi:schemaLocation="http://www.hegongda.cn  1.xsd(schema文件名)"> 是schema
+        <name>zhangsan</name>
+       <age>25</age>
+       </person>
+
+        <sequence> : 代表元素的出现顺序
+	<all> :元素只能出现一次
+	<choice> :多个子元素中只能出现一个
+	<any> : 表示任意元素
+	maxOccurs="unbounded" : 该元素可以出现多次 ：<element name="name" type="String"  maxOccurs="unbonded"></element>
+
+9、 使用jaxp的sax解析xml
+        public static void main(String[] args) throws Exception {
+		// 创建sax解析器工厂
+		SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
+		// 创建解析器
+		SAXParser saxParser = saxParserFactory.newSAXParser();
+		// 调用方法
+		saxParser.parse("src/p1.xml", new MyDefault1());     //需要传递两个参数：xml路径， 以及DefaultHandler的子类
+		}
+
+
+          class MyDefault extends DefaultHandler{
+		@Override
+		public void startElement(String uri, String localName, String qName,
+				Attributes attributes) throws SAXException {
+			System.out.print("<"+qName+">");
+		}
+		@Override
+		public void characters(char[] ch, int start, int length)
+				throws SAXException {
+			System.out.print( new String(ch, start, length));
+		}
+
+		@Override
+		public void endElement(String uri, String localName, String qName)
+				throws SAXException {
+			System.out.print("<"+qName+">");
+		}
+
+		对三个方法进行操作，自动调用。
+
+10、dom4j解析xml
+      ** 获取标签内容
+                // 创建解析器
+              SAXReader saxReader = new SAXReader();
+		 // 获取document
+		Document document = saxReader.read("src/1.xml");
+		  //得到根节点
+		Element root = document.getRootElement();
+		   // 得到下一层节点
+		List<Element> list = root.elements("p1");
+		        // 遍历
+			for(Element element : list)
+	                 {  
+			    //得到子节点 name, age
+			Element name = element.element("name");
+			Element age = element.element("age");
+			// 得到子节点中的内容
+			String s = name.getText();
+			String a = age.getText();
+			System.out.println(s+"  "+a);
+	                 }
+
+	** 添加节点：
+	      // 创建解析器
+		SAXReader saxReader = new SAXReader();
+		// 获取document
+		Document document = saxReader.read("src/1.xml");
+		// 得到根节点
+		Element root = document.getRootElement();
+		// 得到p1节点
+		Element p1 = root.element("p1");
+		//添加sex节点
+		Element sex1 = p1.addElement("sex");
+		// 设置sex中的内容
+		sex1.setText("nv");
+		// 回写xml
+		// 设置样式
+		OutputFormat format = OutputFormat.createPrettyPrint();
+		XMLWriter xmlWrite = new XMLWriter(new FileOutputStream("src/1.xml"), format); 
+		// --------------------------------------------------回写document
+		xmlWrite.write(document);
+		xmlWrite.close(); 
+		
+	** 在指定位置添加节点：
+	       SAXReader saxReader = new SAXReader();
+		Document document = saxReader.read("src/1.xml");
+		Element root = document.getRootElement();
+		Element p1 = root.element("p1");
+		List<Element>  list = p1.elements();
+		// 创建一个节点
+		Element num = DocumentHelper.createElement("num");          DocumentHlper.createElement("");
+		
+		num.setText("0102");
+		// 添加节点，利用list插入节点的方法  
+		list.add(1, num);
+		// 回写xml
+
+		/删除节点  更新节点
+		@Test
+		public void test3() throws DocumentException, IOException {
+			SAXReader reader = new SAXReader();
+			Document document = reader.read(new File("src/book1.xml"));
+			Element priceTmp =  document.getRootElement().element("书").element("打折价");
+			//删除节点
+			priceTmp.getParent().remove(priceTmp);
+			
+			Element price =  document.getRootElement().element("书").element("售价");
+			//更新节点
+			price.setText("只要998");
+										
+			OutputFormat format = OutputFormat.createPrettyPrint();
+			format.setEncoding("UTF-8");
+			XMLWriter writer = new XMLWriter(
+					new OutputStreamWriter(new FileOutputStream("src/book1.xml")), format);
+			writer.write(document);
+			writer.close();			
+-
+
+
+11、dom4j支持XPATH操作
+       可以直接获取到某一个元素 
+
+       第一种形式： 
+           /AAA/BBB/CCC  表示一层一层的 AAA下面的BBB下面的CCC
+
+	第二种形式：
+	    //BBB         只要是这个名称，都得到
+
+	第三种形式：
+	    /*       表示所有元素
+
+	第四种形式 ：
+	   BBB[1]  表示第一个BBB元素
+	   BBB[last() ]   表示最后一个元素
+
+	 第五种形式：
+	    //BBB[@id] : 表示只要BBB元素上有id属性的，都得到
+
+	 第六种： 
+	     //BBB[@id='b1']   元素名称是BBB，在BBB上面有id属性为b1的元素
+   
+
+   **** 获取某个标签中的内容：
+   // 获取document
+          Document document = tools.getDocument();
+	           // 得到所有name元素
+		List<Node> list = document.selectNodes("//name");
+		
+	    for(Node node : list)
+	    {
+	    	String name = node.getText();
+	    	
+	    	System.out.println(name);
+	    }
+
+	  // 得到某元素下的第一个值：
+	       Document document = tools.getDocument();
+		Node name = document.selectSingleNode("//p1[@id]/name");
+		
+		String s = name.getText();

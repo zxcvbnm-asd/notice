@@ -1,0 +1,356 @@
+SpringCloud 与 dubbo的区别 ：
+  * dubbo 基于 RPC 协议，springCloud 是基于RestfulAPI实现调用（Http）
+
+  Eureka 的自我保护 ：  某时刻一个微服务的信息不可用了，eureka不会立即清理掉该信息，他会对该信息进行保存
+
+  CAP原则：Consistency（强一致性）
+                  Availablility （可用行）
+		  Partiton tolerance （容错性）
+     
+    zookeeper : 保证了CP
+    eureka : 保证了AP，eureka 可以很好的应对因网络故障导致部分节点失去联系的情况，不像zookeeper那样使整个注册服务瘫痪
+                  * 当zookeeper某一个节点发生故障时，就会进行选举机制选出新的master，这个过程中可能会丢失一部分数据。并且
+		   还存在主节点选不出来的状况。
+		  * eureka中不存在选举机制，当一个节点发生故障之后，会自动转移到下一个可用的节点。当故障节点回复后，在重新
+		    加入集群之中
+		  * eureka内置了心跳服务，如果eureka在短时间内丢失了大量的心跳链接，这时，eureka就会进入自我保护模式。同时
+		    保留那些心跳死亡的注册服务信息不过期。此时eureka节点对于新的服务还能注册，对于死亡的服务信息任然进行保留。
+		    好死不如赖活着
+		  * eureka还有客户端缓存功能。当所用eureka节点都失效后，Eureka服务的消费者仍然可以通过 Eureka客户端缓存来获
+		     取现有的服务注册信息。】
+
+   微服务中注册到eureka的配置 ：
+
+     需要引入的依赖：
+        <!-- actuator监控信息完善 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+       在父工程中进行监控配置：
+            <build>
+		    <finalName>microservicecloud</finalName>
+		    <resources>
+		      <resource>
+			<directory>src/main/resources</directory>
+			<filtering>true</filtering>
+		      </resource>
+		    </resources>
+		    <plugins>
+		      <plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-resources-plugin</artifactId>
+			<configuration>
+			  <delimiters>
+			    <delimit>${*}</delimit>
+			  </delimiters>
+			</configuration>
+		      </plugin>
+		    </plugins>
+		 </build>
+
+     在微服务的application.yml中的配置
+       spring:
+	   application:
+	    name: provider-dept        // 指定微服务的名称，必须要赔
+       eureka:
+	  client:
+	    service-url:
+		  defaultZone: http://localhost:8001/eureka/  #将微服务注册到eureka，如果是集群继续写
+	  instance:
+	    instance-id: provider-7001  #自定义微服务名称
+	    prefer-ip-address: true  #访问路径显示ip地址
+	info:                                                 // 配置微服务信息
+	    info:
+	      app.name: provider-7001
+	      company.name: www.hegongda.com
+	      build.artifactId: ${project.artifactId}    // 组名
+	      build.version: ${project.version}         // 版本号
+
+
+
+
+   Eureka 的搭建 ：
+       eureka:
+	  instance:
+	    hostname: peer3  // 与hosts文件映射，
+	  client:
+	    register-with-eureka: false  // 不注册自己
+	    fetch-registry: false            // 微服务检索设置为false
+	    service-url:
+		#defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/  // 单机版的配置
+		defaultZone:  http://peer1:8001/eureka/,http://peer2:8002/eureka/  // 集群配置，注册其他节点
+
+   
+    Ribbon 客户端的负载均衡工具搭建  springboot 1.5
+         在服务调用端引入坐标依赖 ：
+	      <!-- Ribbon相关 -->
+		<dependency>
+		    <groupId>org.springframework.cloud</groupId>
+		    <artifactId>spring-cloud-starter-eureka</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>org.springframework.cloud</groupId>
+		    <artifactId>spring-cloud-starter-ribbon</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>org.springframework.cloud</groupId>
+		    <artifactId>spring-cloud-starter-config</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+          在配置文件中注册中心：
+	        eureka:
+		  client:
+		    service-url:
+		     defaultZone: http://peer1:8001/eureka/
+
+           在服务的restTemplate上加入 ：
+	            @Bean
+		    @LoadBalanced             // 自动实现负载均衡
+		    public RestTemplate getRestTemplate(){ 
+			return new RestTemplate();
+		    }
+
+	    访问路径由微服务名称组成 ，直接通过微服务名称进行相关的调用
+	             private static final String PREFIX_URL = "http://PROVIDER-DEPT";
+		      return restTemplate.getForObject(PREFIX_URL+"/list",List.class);
+
+  负载均衡算法 ：
+            负载均衡有好几种实现策略，常见的有：
+		随机 (Random)
+		轮询 (RoundRobin)
+		一致性哈希 (ConsistentHash)
+		哈希 (Hash)
+		加权（Weighted）
+       1、默认轮询的算法
+       2. Ribbon 的核心组件 ：IRule . 其自带了7中算法。默认使用轮询算法。
+                 @Bean
+		    @LoadBalanced
+		    public RestTemplate getRestTemplate(){
+			return new RestTemplate();
+		    }
+
+		    @Bean
+		    public RandomRule myRule(){
+			return new RandomRule();                 // 随机算法，当注册了随机算法后，就会使用随机算法
+		    }
+
+       3、实现自定义随机算法 
+             需要在消费端进行自定义设置 ，在主启动类上加标签
+	         @RibbonClient(name = "PROVIDER-DEPT",configuration = MyRule.class)  ，启动时会自动加载该类
+	    实现MyRule类，该类不能与启动类在同一个包下
+	    @Configuration
+		public class MyRule {
+		    @Bean
+		    public IRule getCustomerRule(){
+			return new CustomerRule();
+		    }
+		}
+
+	    自定义的随机算法类需要实现AbstractLoadBalanceRule抽象类，重写其中的方法。
+	    实现每个微服务调用5次
+	    public class CustomerRule extends AbstractLoadBalancerRule {
+			    private int index = 0;
+			    private int total = 0;
+			    @SuppressWarnings({"RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE"})
+			    public Server choose(ILoadBalancer lb, Object key) {
+				if (lb == null) {
+				    return null;
+				} else {
+				    Server server = null;
+
+				    while(server == null) {
+					if (Thread.interrupted()) {
+					    return null;
+					}
+
+					List<Server> upList = lb.getReachableServers();
+					List<Server> allList = lb.getAllServers();
+					int serverCount = allList.size();
+					if (serverCount == 0) {
+					    return null;
+					}
+
+					if(total < 5){
+					    server =  upList.get(index);
+					    total++;
+					}else{
+					    total = 0;
+					    index++;
+					    if(index >= upList.size()){
+						index = 0;
+					    }
+					}
+
+					if (server == null) {
+					    Thread.yield();
+					} else {
+					    if (server.isAlive()) {
+						return server;
+					    }
+
+					    server = null;
+					    Thread.yield();
+					}
+				    }
+
+				    return server;
+				}
+			    }
+
+			    public Server choose(Object key) {
+				return this.choose(this.getLoadBalancer(), key);
+			    }
+
+			    public void initWithNiwsConfig(IClientConfig clientConfig) {
+			    }
+			}
+
+
+ Feign :负载均衡。与ribbon配合使用。起随机算法采用ribbon的随机算法
+            其为接口注解方式调用微服务，相当于Mapper.
+	    在api中配置feign的方式 ：
+	            @FeignClient(value = "PROVIDER-DEPT")      // 提供注册的微服务应用名，这些接口为提供方的controler层方法抽取出的接口
+			public interface DeptClientService {
+			    @RequestMapping(value = "/add", method = RequestMethod.POST)
+			    public void add(@RequestBody Dept dept);
+
+			    @RequestMapping(value = "/list",method = RequestMethod.GET)
+			    public List<Dept> list();
+
+			    @RequestMapping(value = "/get/{deptno}",method = RequestMethod.GET)
+			    public Dept get(@PathVariable(value = "deptno")  long deptno);
+
+			}、
+	    
+	       在消费方的启动类配置 ：
+	                @SpringBootApplication
+			@EnableEurekaClient
+			@EnableFeignClients(basePackages = {"cn.hegongda"})         // 开启feign功能
+			@ComponentScan("cn.hegongda")                                        // 扫描包
+			public class FeginConsumer
+			{
+			    public static void main( String[] args )
+			    {
+				SpringApplication.run(FeginConsumer.class,args);
+			    }
+			}
+
+               消费方调用controller层：
+	                   @Autowired
+			     private DeptClientService service;
+			    @RequestMapping(value = "/consumer/add")
+			    public Boolean add(Dept dept) {
+				 this.service.add(dept);
+				 return true;
+			    }
+											     
+Hystrix断路器 
+         服务熔断：一般由某个服务故障或异常引起，类似于保险丝，一旦某一个异常触发，直接熔断整个服务，而不是一直等到此服务超时
+	                当其中一个提供微服务的节点发生异常情况，如果不处理，其他的微服务节点也可能导致瘫痪，这样就可能会导致整个
+                       微服务瘫痪。所以需要用hsytrix进行处理
+		       - 在提供服务端进行配置
+		       - 引入相关的依赖
+		       - 在主启动类添加标签 ： @EnableCircuitBreaker  ： 对Hystrix熔断机制进行支持
+		       - 在controller层的配置 ： 
+		          @RequestMapping(value = "/get/{deptno}",method = RequestMethod.GET)
+			    @HystrixCommand(fallbackMethod = "Hystrix_GET")   // 当发生异常时，会执行Hystrix_GET方法
+			    public Dept get(@PathVariable  long deptno){
+
+				Dept dept =  deptService.get(deptno);
+				if(dept == null){
+				    throw new RuntimeException("该ID没有对应的信息");
+				}
+				return dept;
+			    }
+
+			    public Dept Hystrix_GET(@PathVariable("deptno") long deptno){
+				return new Dept().setDeptno(deptno).setDname("该部门不存在").setDb_source("no this databases");
+			    }
+						    
+             降级处理 ： 当整体资源较为紧张的时候，先关闭某些不重要的服务，将腾空出来的资源用于重要的服务，然后可以重新开启关闭的服务 
+	                      在客户端进行降级处理。利用了aop切面编程。将异常状况与主业务逻辑进行分离，降低耦合度。
+
+	                      在api处实现 ：
+			             @FeignClient(value = "PROVIDER-DEPT",fallbackFactory = DeptClientServiceFallBackFactory.class)  // 加上fallbackfactory
+			      自定义一个类实现FallBackFactory接口，需要在该类上加上component
+				       @Component
+					public class DeptClientServiceFallBackFactory implements FallbackFactory<DeptClientService> {
+
+					    @Override
+					    public DeptClientService create(Throwable throwable) {
+						return new DeptClientService() {
+						    @Override
+						    public void add(Dept dept) {
+
+						    }
+
+						    @Override
+						    public List<Dept> list() {
+							return null;
+						    }
+
+						    @Override
+						    public Dept get(long deptno) {
+						       return new Dept().setDeptno(deptno).setDname("该部门不存在").setDb_source("no this databases");
+						    }
+						};
+					    }
+					}
+
+			        在消费端的application.yml中开启fegin的降级处理 ：
+				    feign:
+					  hystrix:
+					    enabled: true
+
+								       
+Zuul : 路由网网关。配置好路由网关以后，zuul会自动找找到相应的微服务。配置时需要将其注册到eureka中。
+          配置方式 ： 引入相关的jar
+	                       <dependency>
+				    <groupId>org.springframework.cloud</groupId>
+				    <artifactId>spring-cloud-starter-zuul</artifactId>
+				</dependency>
+				<dependency>
+				    <groupId>org.springframework.cloud</groupId>
+				    <artifactId>spring-cloud-starter-eureka</artifactId>
+				</dependency>
+            配置application.yml文件：
+	                        server:
+				  port: 9527
+
+				eureka:
+				  instance:
+				    instance-id: zuul-customer
+
+				    prefer-ip-address: true
+				  client:
+				    register-with-eureka: true
+				    service-url:
+					defaultZone: http://localhost:8001/eureka/           
+				spring:
+				  application:
+				    name: zuul-exchange
+				
+                               当不配置路由映射时，访问路径为 http://localhost:9527/provider-dept/get/2    网关+微服务名+restful
+				zuul:
+				  ignored-services: provider-dept             //屏蔽掉真实的微服务名访问路径形式  “*” 屏蔽掉所有      
+				  routes:
+				    mydept.serviceId: provider-dept           // 将原真实微服务名的访问方式转换成 /mydept/的方式
+				    mydept.path: /mydept/**
+				  prefix: /liu                                             // 访问路径前缀必须加上  /liu
+				此时访问路径为 ： http://locahost:9527/liu/mydept/get/2
+
+SpringCloud configb: 分布式配置中心 
+
+
+服务的调用方式Dubbo使用的是RPC远程调用,而SpringCloud使用的是 Rest API,其实更符合微服务官方的定义
+服务的注册中心来看,Dubbo使用了第三方的ZooKeeper作为其底层的注册中心,实现服务的注册和发现,
+           SpringCloud使用Spring Cloud Netflix Eureka实现注册中心,当然SpringCloud也可以使用ZooKeeper实现,但一般我们不会这样做
+服务网关,Dubbo并没有本身的实现,只能通过其他第三方技术的整合,
+  而SpringCloud有Zuul路由网关,作为路由服务器,进行消费者的请求分发,
+  SpringCloud还支持断路器,与git完美集成分布式配置文件支持版本控制,事务总线实现配置文件的更新与服务自动装配等等一
+   系列的微服务架构要素

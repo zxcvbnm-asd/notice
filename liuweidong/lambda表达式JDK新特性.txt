@@ -1,0 +1,257 @@
+1、lambda表达式  
+        *   -> 符号进行分离 ，前半部分为参数列表，后半部分为lambda体，也就是抽象函数的具体实现。
+	         @Test
+		    public void test(){
+			System.out.println(getUpperCase("liu",x -> x.toUpperCase()));
+			System.out.println(getUpperCase("zhanghsui",x -> x.substring(2,4)));     // lambda表达式写填写动抽象函数
+		    }
+
+		    public String getUpperCase(String str, CustomreFun customreFun){
+			return customreFun.getValue(str);
+		    }
+
+              当只有一个参数时，可以不用写(),当lambda体中有多个语句时，用 {  }进行封装。
+	      当又返回值，且lambda体中只有一条语句时，可以省略{} 和 return。
+	      lambda表达式面向 函数式接口进行编程，即每一个接口内部只能有一个抽象函数。
+	      在函数式接口上面加上标签，代表改接口为函数式接口。
+	        @FunctionalInterface
+		public interface CustomreFun {
+		    public String getValue(String str);
+		}
+
+2、java8内置四大核心接口 ：
+     * Consumer<T>  :  消费型接口
+                     void  accept(T);
+     * Supplier(T) :   供给型接口
+                    T  get();
+     *  Function<T,R>  : 函数型接口 
+                  R  apply(T,t)
+     * Predicate<T>  : 断言型接口 
+                boolean  test(T t)
+
+3、方法引用 ：
+       *    对象名 :: 实例方法名 
+               Consumer<String> con = System.out::println;
+		con.accept("liu");
+		Employee employee = new Employee("liuweidong",58); 
+		Supplier<String> supper = employee::getName;          // employee中已经实现了getName方法。 可以省略参数列表
+		System.out.println(supper.get());
+                    
+       *   类 :: 静态方法 
+                Comparator<Integer> comparator =  Integer::compare;
+
+	* 类 :: 实例方法名   只有前一个参数作为调用方，后一个参数作为方法参数时，才能类+对象方法名
+	       public void test07(){
+			HandlerString handlerString = String::equals;       《=====》 (x,y) -> x.equals(y);
+			System.out.println(handlerString.isSame("liu","liu"));
+		    }
+
+4、构造器引用    
+       ClassName :: new  
+	       Supplier<Employee> supplier = Employee::new;
+		Employee employee = supplier.get();
+		System.out.println(employee);
+      注意 ： 构造器中的方法要与抽象方法中的参数一致。
+ 
+ 5、数组引用 ：
+      Type :: new;
+		 Function<Integer,String[]> function = String[]::new;
+		String[] apply = function.apply(10);
+		System.out.println(apply.length);
+
+6、StreamAPI :
+       步骤 ： 创建流、 操作流、 结束流
+                     //创建stream流的方式
+			// 方式一：通过collection集合创建流
+			List<Integer> list = new ArrayList<>();
+			Stream<Integer> stream = list.stream();
+
+			// 方式二 ：通过Arrays中的静态方法获取数组流
+			int []arr = new int[10];
+			IntStream stream1 = Arrays.stream(arr);
+
+			// 通过stream静态方法类中of创建流
+			Stream<String> stream2 = Stream.of("as", "ff", "cd");
+			stream2.forEach(System.out::println);
+
+			// 创建无限流
+			// 迭代的方式：
+			Stream.iterate(0,(x)->x+2).limit(10).forEach(System.out::println);
+
+			// gengert方式
+			Stream.generate(Employee::new).limit(2).forEach(System.out::println);
+
+
+      对于流的操作方式 ：（中间操作不会做任何操作，只有终止操作才会触发中间操作）
+          * filter ： 排除流中的某些元素，其中的函数式接口为 Predicate()
+	                 list.stream().filter((e) -> e.getAge() > 25).forEach(System.out::println);        // 过滤掉年龄小于25的
+
+	  * limit ： 截断流，使其中的元素数量不超过给定值
+	                 list.stream().limit(2).forEach(System.out::println);
+	
+	 * skip(n) ： 跳过元素，排除前n个元素，与limit(n) 互补，流中的元素不足n个，返回空流.
+	                  list.stream().skip(2).forEach(System.out::println);
+
+	 * distinct : 筛选，通过流生成的
+	                  list.stream().distinct().forEach(System.out::println);
+
+	 * map ： 映射，接收一个lambda表达式，将元素转换成其他形式或提取信息。接收一个函数作为参数作用于每一个元素上，
+	               并将其映射成一个新的元素。
+		        String []str = new String[]{"aa","bb"};
+                         Arrays.stream(str).map(x->x.toUpperCase()).forEach(System.out::println);    // 将每一个元素转成大写并输出
+	
+	 *flagmap : 接收一个函数作为参数，将流中每一个值都换成另一个流，然后把所有流都连接成另一个流。
+	                 @Test
+			    public void test02(){
+				String []str = new String[]{"aa","bb"};
+				Arrays.stream(str).flatMap(StreamTest::getStream).forEach(System.out::println);
+				// 等效于 ： 
+				Stream<Stream<Character>> streamStream = Arrays.stream(str).map(StreamTest::getStream);
+				streamStream.forEach(sm->sm.forEach(System.out::println));
+
+			    }
+			    public static Stream<Character> getStream(String s){
+				List<Character> list = new ArrayList<>();
+				for(Character c : s.toCharArray()){
+				    list.add(c);
+				}
+				return list.stream();
+			    }
+			}
+
+	  * sorted: 排序，默认是自然排序。即实现comparable接口。 定制排序是Comparator.
+	                 list.stream().sorted((e1,e2)->e1.getAge() - e2.getAge()).forEach(System.out::println);
+
+         *  allMatch(Predicate )  : 是否全部匹配
+	        boolean b = list.stream().allMatch(employee -> employee.getAge() == 36);
+
+	 * anyMatch(Predivate) : 任意有一个匹配 
+	         boolean b = list.stream().anyMatch((employee -> employee.getAge() == 36));
+	
+	 *  noneMatch(Predicate) :全都不匹配      
+	      boolean b = list.stream().noneMatch((employee -> employee.getAge() == 36));
+
+	 * findFirst()  : 返回第一条数据 
+	         Optional<Employee> first = list.stream().findFirst();
+		
+	  * findAny() : 返回任意一条数据
+	  
+	  * count()  :返回流中元素总个数
+
+	  * max() : 返回流中最大值
+
+	  * min() :返回流中最小值
+
+	  * reduce ： 归约 将流中元素反复结合起来，得到一个值。
+	                      List<Integer> list = Arrays.asList(1,2,3,5,6);                     // 将元素中的值进行累加
+                             Integer reduce = list.stream().reduce(0, (x, y) ->  x + y);  // 累加后的值作为x, y数组中下一个值
+	
+	  * collector ： 收集，将集合中某些元素收集到一起放到一个集合中
+	                      将员工的姓名提取出来放到一个集合中
+				     List<String> collect =list.stream().map(Employee::getName).collect(Collectors.toList());
+				     collect.forEach(System.out::println);
+			      可以指定容器放置 ：
+			              HashSet<String> collect =
+						list.stream().map(Employee::getName)
+						.collect(Collectors.toCollection(HashSet::new));
+				      collect.forEach(System.out::println);
+	               
+		              进行分组 groupingBy：按年龄进行分组
+			               Map<Integer, List<Employee>> collect = list.stream().collect(Collectors.groupingBy(Employee::getAge));
+
+			      分片partitioningBy ：满足条件在一个区，不满足条件在另一个区
+			                Map<Boolean, List<Employee>> collect = list.stream().collect(Collectors.partitioningBy((e) -> e.getAge() > 40));
+                            
+			       joining 连接： 将字符串进行连接
+
+并行流 ：parallel : 并行流，其底层结构相当于 forkjoin，开启多个线程执行一个任务。分而治之，提高cpu的利用率
+           // 计算0-1000000的和
+		  long reduce = LongStream.rangeClosed(0, 10000000L)
+			.parallel()
+			.reduce(0L, Long::sum);
+		 System.out.println(reduce);
+
+Optional<T>类 ：是一个容器类，代表一个值存在或者不存在。可用于避免空指针异常
+                           OptionalOf(new Class());     //创建一个实值对象
+			   Optional.Ofnullable();    // 允许为null
+			   Optional.empty();         // 创建一个空的Optional
+			   OPtional.isPresent();    // 判断对象是否为空，为空返回false，不为空返回true
+
+6、接口中可以存在默认的实现方法 ：需要用default修饰符进行修饰。
+       *  当一个类实现一个接口并且继承了另一个类时，类与接口都有相同的方法，则此时类中的方法优先。
+          当实现多个接口时，多个接口有相同的默认实现方法时需要重写默认方法。
+           public String getValue(String str);
+		    default String  getName(){
+			return "liuweidong";
+		    }	
+       * 接口中可以存在静态方法。
+               public static String  getAge(){
+			return 25+"";
+		    }
+
+         调用方式 ： 接口名 + 方法名
+
+7、java8提供了一套全新的API,是线程安全的。
+     * LocalDate,  LocalTime, LocalDateTime : 是用户可以读的时间
+
+	        LocalDateTime ldt = LocalDateTime.now();           // 获取当前系统时间
+
+		int dayOfMonth = ldt.getDayOfMonth();             // 获取该天在这个月中是哪天
+		int dayOfWeek = ldt.getDayOfWeek().getValue();    // 在星期中是哪一天， 与中国的一样不需要加1
+	
+		int plus = ldt.getMonth().plus(10).getValue();       // 将月加上10个月是多少
+
+		LocalDateTime ldt2 = ldt.minusDays(2);              // 将改日期减去两天是多少
+
+      * Instant : 系统可以读的时间，其以本初子午线为时间起点。1970.1.1  0点0分开始计时到现在的时间
+
+                       Instant instant = Instant.now();         // 获取世界的标准时间。
+                         
+                       OffsetDateTime instant = Instant.now().atOffset(ZoneOffset.ofHours(-8));  // 将时区进行移动，获取某个时区的时间
+
+		       long second = instant.getEpochSecond();  //获取分钟
+                       long s = instant.toEpochMilli();           // 获取毫秒值
+
+       * Duration ：计算两个时间的间隔。 
+                         LocalDateTime ldt1 = LocalDateTime.now();
+			TimeUnit.SECONDS.sleep(1);
+			LocalDateTime ldf2 = LocalDateTime.now();
+			System.out.println(Duration.between(ldt1,ldf2).toMillis());              // 转化成毫秒
+      * Period : 计算两个日期的间隔 
+			LocalDate localDate = LocalDate.of(1990,10,10);
+			LocalDate localDate1 = LocalDate.now();
+			System.out.println(Period.between(localDate,localDate1).getDays()); 
+
+      * TimeprolAdjuster : 时间矫正器。可以指定自己想要的时间
+                        LocalDateTime localDateTime = LocalDateTime.now();
+			LocalDateTime with = localDateTime.with(TemporalAdjusters.lastDayOfMonth());
+			
+	          可以自定义时间矫正器 ： 只需要实现TemporAdjuster即可
+		        
+			LocalDateTime with1 = localDateTime.with((l) -> {
+			    LocalDateTime l1 = (LocalDateTime) l;
+			    int value = l1.getMonth().getValue();
+			    System.out.println(value);
+			    if (value == 6) {
+			       return  l1.plusMonths(4);
+			    } else {
+				return l1.plusMonths(2);
+			    }
+			});
+		
+	* DateTimeFomater : 日期格式化 ：
+	              DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+		        // 将日期格式化为字符串
+			LocalDateTime localDateTime = LocalDateTime.now();
+			String format = localDateTime.format(dateTimeFormatter);
+			System.out.println(format);
+
+                       // 将字符串格式化为日期
+			String time = "19901010";
+			LocalDate parse = LocalDate.parse(time, dateTimeFormatter);
+			System.out.println(parse);
+
+提供了重复注解、
+			   
+			

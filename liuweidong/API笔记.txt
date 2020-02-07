@@ -1,0 +1,333 @@
+API
+
+1、Object 类中成员
+     * equals 比较子对象内存是否相同，其返回值为boolean类型
+           public boolean equals( Object obj)
+	   {
+	   	return this == obj;
+	   }
+
+	   现实生活中， 需要比较两个对象某些属性是否相等，所以需要重写。
+	     
+	     public boolean equals(Object obj)
+	     {
+	          if(obj intanceof Person)  // 判断object是否为Person类型对象
+		  {
+	          Person p = (Person)obj;  // 此时obj为Object类型提升， 而Object中午子类特有属性， 所以需要强制转换obj
+		  return this.age == p.age;
+		  }
+	     }
+         
+      * 1、hashCode的存在主要是用于查找的快捷性，如Hashtable，HashMap等，hashCode是用来在散列存储结构中确定对象的存储地址的；
+
+        2、如果两个对象相同，就是适用于equals(java.lang.Object) 方法，那么这两个对象的hashCode一定要相同；
+
+         3、如果对象的equals方法被重写，那么对象的hashCode也尽量重写，并且产生hashCode使用的对象，一定要和equals方法中使用的一致，
+	       否则就会违反上面提到的第2点；
+
+         4、两个对象的hashCode相同，并不一定表示两个对象就相同，也就是不一定适用于equals(java.lang.Object) 方法，
+	          只能够说明这两个对象在散列存储结构中，如Hashtable，他们“存放在同一个篮子里”。
+
+
+   * toString 返回子类对象的地址
+       public String toString （）
+       {
+       		return new Person();
+       }
+
+       正常应该返回子类对象的某些属性，所以重写
+        public String toString()
+	{
+		return name + age;
+	}
+
+2、String 类：构造方法
+       * 字节构造
+            byte []bytes = {12, 36, 124};
+	    String s = new String(bytes);
+	    Syso(s);
+
+	    String s1 = new String(bytes , 1 ,1) ;  索引位置， 个数
+
+	* 数组构造：
+	   char []ch = {'a', 'd', 's'};
+	   String s = new String (ch);
+		
+	  s1 = new String(ch , 1 ,1) ;  索引位置， 个数
+
+	 其他方法：
+	    --字符串长度 str.length();
+	    --返回子字符串： str.substring(1, 5)  索引1~5之间字符串  [1,5）
+	                            str.substring(2)   返回2以后所有字符串,包括2
+
+            --判断一个字符串是否为另一个字符串的前缀，或开头： str.startWith();返回值为boolean
+
+		      String str = "howareyou";
+		      str.startWith("how");
+		      return true;
+
+	    --判断一个字符串是否为另一个字符串的后缀，或结尾：str.endsWith();
+
+	    --判断一个字符串是否包含另一个字符串 str. contains("ho"); 返回值 boolean
+
+	    -- 查找一个字符在字符串中第一出现位置的索引  int  str.indexOf('');
+
+	    -- 将字符串转换成字节数组   getBytes
+
+	        String str = "gds";
+		Byte [] bytes = str.getBytes();
+		for( int i = 0; i < Byte.length; i++)
+		{
+			syso(Bytes[i]);
+		}
+
+           -- 将字符串转换成字符数组   str.toCharArray();
+
+          --判断字符串是否相等 str .equals(str1) boolean
+	   
+	   --判断字符串是否相同，忽略大小写  str.equalsIgnoreCase(str1);
+
+            // 转换成小写
+	          String str="HFIH";
+		 System.out.println(str.toLowerCase());
+             // 大写
+		 String str1= "chdis";
+		 System.out.println( str1.toUpperCase());
+
+3、StringBuffer :  数组缓冲区，避免内存浪费， 初始分配 16个字节。
+                           当超出指定容量后，会增加  2*capatity+2
+      * 一些方法： 
+		StringBuffer buffer = new StringBuffer();
+				buffer.append("hksdhvsuv");     // 尾添加   返回值为StringBuffer
+
+				buffer.delete(0,1);                     // 删除一段元素
+ 
+				buffer.insert(0, false);                  // 在某个位置插入字符串
+
+				buffer.reverse();                          // 逆序
+
+				buffer.replace(0, 2, "A");             // 用另一个字符串代替某一段字符串
+
+				String str = buffer.toString();        // 将buffer可变类型固定成不可变字符串， 返回值String
+
+				System.out.println(str);
+
+         注意： StringBuilder 与StringBuffer功能一样。 StringBuffer 线程安全。 而StringBuilder 则更快。一般使用Builder。
+	 
+
+4、正则表达式
+     * 检查手机号是否正确： 开头必须是是1， 第二位是34578， 后边是任意数字0~9， 一共11位
+                 public static void checkPhoneNum()
+   	{
+   		String phonenum = "11832030387";
+   		boolean b = phonenum.matches("1[34578][\\d]{9}");
+   	
+   		System.out.println(b);
+   	
+   	}
+
+	需要调用String 中matches 函数。  “1[34587][\\d]{9}”  1代表第一位必须是1，[34578]可以无序，代表第二位需要是其中一位，[\\d]代表0~9，{9}代表9位。
+
+     *	String str = "12   33   88    77 ";
+			String[] arr = str.split(" +");
+			System.out.println(arr.length);
+			for(int i = 0; i < arr.length; i++)
+			{
+				System.out.println(arr[i]);
+			}
+
+	 切割函数 split();
+	  由于有多个空格， 所以空格+， 可以匹配1个或多个空格
+    
+      *  切割小数点
+   		String str = "13.14.16.144";
+   		String[] arr = str.split("\\.");
+   		System.out.println(arr.length);
+   		for(int i = 0; i < arr.length; i++)
+   		{
+   			System.out.println(arr[i]);
+   		}
+         
+	 由于小数点匹配任意字符。所以需要转义 \\.
+
+    * 替换 replaceAll()  返回一个字符串。
+           String str = "dcfdhc9466vji654";
+   		str = str.replaceAll("[\\d]+", "#");
+   		System.out.println(str);
+
+      将数字替换成#。
+ * StringTokenizer  根据空格分隔字符串
+       StringTokenizer str = new StringTokenizer("Hellow word is very good");
+
+   *  正则表达式函数  ：Pattern.matches("1[1234][\\d]{2}", "1889")
+
+5、Date：
+					
+		Date date = new Date();   // 构造器 ，可以加参数  new Date（10）
+		
+		System.out.println(date);
+		
+		long time = date.getTime();   // 获取毫秒值
+		System.out.println(time);
+		
+		date.setTime(11565959595992L);   // 通过毫秒值设置日期
+		System.out.println(date);
+
+      格式化日期 ： y--年  M -- 月 d--日 D--星期  H-- 小时 m--分钟  s--秒
+       调用Format的子类SimpleFormatDate 创建对象
+           ** SimpleDateFormat  sdf = new SimpleDateFormat("yyyy年MM月dd日HH时mm分ss秒");
+	   在调用format方法，其返回值为字符串
+	     **  String date = sdf.format(new Date());
+	     **输出：
+	       syso（date)
+	       
+      将字符串转化成日期：函数：parse ， 返回值为 Date类型
+               SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");  // 抛出异常
+	        Date date = sdf.parse("1995-06-12");
+	        System.out.println(date)
+
+6、Calendar 类：为抽象类，需要调用子类。
+               *获取日历方式：
+		Calendar c = Calendar.getInstance();  直接调用
+		System.out.println(c);
+       
+                * 获取字段时间：
+		 Calendar c = Calendar.getInstance();
+		 int year = c.get(Calendar.YEAR);        // 获取年
+		 int month = c.get(Calendar.MONTH) + 1;   // 获取月   0~11月，需要加1
+		 int day = c.get(Calendar.DAY_OF_MONTH);    // 获取日
+		 System.out.println(year+"  " +month+ "  " +day);
+
+		 * 设置日历：
+		   Calendar c = Calendar.getInstance();
+	            c.set(Calendar.YEAR, 2035);   // 两个参数， 选设置的对象，后边是int 时间
+		    c.set(2015, 2, 12);   // 三个参数 ： 年、月、日
+		    用get方法查看新的日历
+
+		   * 日历偏移  add() 方法，无返回值
+		     Calendar c = Calendar.getInstance();
+                    c.add(Calendar.MONTH, 3);    // 当前月在加上3个月后的日历
+		    用get方法查看新日历
+
+7、基本数据类型包装类
+     * Integer :
+         public static void show1()
+	{
+		int a = Integer.parseInt("123");    //将字符串转化成十进制整数
+		System.out.println(a+1);
+	}
+	
+	public static void show2()
+	{
+		int b = Integer.parseInt("1101", 2);   // 将二进制数转化成十进制整数
+		System.out.println(b);
+	}
+
+	* 将整数转化成字符串
+	        int a = 2;
+		String s = a+"";    //直接+“”
+		System.out.println(s+1);
+		
+		String s1 = Integer.toString(4);    函数; toString
+		System.out.println(s1+1);
+		
+		String s2 = Integer.toString(5, 2);    将5转化成二进制并输出
+		System.out.println(s2);   结果101
+
+       *  构造器：
+           Integer in = new Integer("100");
+	   int i  = in.value();
+	   syso(i);   
+
+        *其他方法：
+	   --
+                 System.out.println(Integer.MAX_VALUE);   Integer.MAX_VALUE：int类型最大取值范围
+		System.out.println(Integer.MIN_VALUE);     Integer.MIN_VALUE    最小取值范围
+
+           --   返回结果为字符串类型
+	      System.out.println(Integer.toBinaryString(36));  转化成2进制
+		System.out.println(Integer.toOctalString(36));  8进制
+		System.out.println(Integer.toHexString(36));    16进制
+
+	*自动装箱和自动拆箱：
+	  // 基本数据类型与引用数据类型直接运算
+                Integer i = 1;
+		i = i + 1;
+		System.out.println(i);
+		
+	//超出byte范围内，重新new对象
+		Integer a = 200;
+		Integer b = 200;
+		System.out.println(a==b);    false
+		System.out.println(a.equals(b));   true
+
+	//数据在byte范围内，JVM不会重新new对象
+		Integer aa = 124;
+		Integer bb = 124;
+		System.out.println(aa == bb);  TRUE
+		System.out.println(aa.equals(bb));  TRUE
+
+8、System类：  
+         * currentTimeMillis() 获取毫秒值，可用于程序计算的时间
+
+	 *exit(0) 正常退出程序。
+
+9、Math类：ceil(), floor(), roun(), random(),pow,sqrt(),abs(),等于Javascript一样。都是静态方法，直接调用。
+
+10、Arrays: 都是静态类，直接调用方法。
+       int []arr = {1,3,4,2,7};
+		Arrays.sort(arr);   排序，升序
+
+		int a = Arrays.binarySearch(arr, 2);   折半查找法，返回值index
+
+		System.out.println(a);
+		
+		String s = Arrays.toString(arr);    将数组转换城字符串
+
+		System.out.println(s);
+
+11、BigInteger: 大数据类
+                BigInteger  a = new BigInteger("1274999944487886663336544");
+		BigInteger b = new BigInteger("4888778226554447889");
+		
+		// 加法
+		BigInteger c = a.add(b);    add
+		System.out.println(c);
+		
+		// 减法
+		
+		BigInteger d = b.subtract(a);  
+		System.out.println(d);
+		
+		// 乘法
+		BigInteger  m = a.multiply(b);
+		System.out.println(m);
+		
+	        // 除法
+		BigInteger n = a.divide(b);
+		System.out.println(n);
+
+12、BigDecimal: 浮点数高精度运算类：
+
+                BigDecimal a  = new BigDecimal("0.01");
+		BigDecimal b = new BigDecimal("0.03");
+
+		//加法
+		BigDecimal sum = a.add(b);
+		System.out.println(sum);
+		
+		// 减法
+		BigDecimal sum1 = a.subtract(b);
+		System.out.println(sum1);
+		
+		//乘法
+		BigDecimal sum2 = a.multiply(b);
+		System.out.println(sum2);
+
+		//除法  ， 当除不尽时，无限循环或不循环时，需要进行保留位数操作，否则报错。
+		BigDecimal sum3 = a.divide(b, 2, BigDecimal.ROUND_UP);  // 四舍五入
+		System.out.println(sum3);
+
+
+
+		

@@ -1,0 +1,227 @@
+HTML 注意事项：
+	* 文件后缀为.htm 或html
+	*规范：
+	1、一个html文件结束和开始的标签<html> </html>
+	2、Html内包含两部分内容
+	     *<head>  </head>
+	     * <body> 显示在页面上的内容都写在body里面</body>
+	3、有开始标，也要有结束标签 <> </>
+	4、不区分大小写
+	5、有的没有结束标签 <br/> 换行符  <hr/>  横线
+标签：
+	* 文字标签
+	  <font > </font>
+	   属性 size 1~7
+	   颜色 color :
+		1.red ,green, black, yellow, white
+		2.十六进制：#14668
+* 标题标签：
+	<h1> </h1>   <h2></h2>   <h3></h3>  ~~~~~~ <h6></h6> :标题字的大小不一样，并且自动换行
+
+
+* 水平线标签
+		   <hr/>
+		  属性：
+			1、size （1~7）粗细
+			2、Color 
+			3、实例 <hr  size = “5”  color = “ red” />
+* 特殊字符
+	1、<   &lt；  >   &gt;  <html>显示方法 &lt; html &gt;
+	2、空格  &nbsp;
+
+ * 列表标签
+	1、<dl> </dl> :表示列表范围
+	在<dl> 里面  <dt></dt> :上层内容
+	在<dl> 里面  <dd><dd> : 下层内容
+	   <dl>
+	     <!--  上层内容 -->       
+	       <dt>传智播客</dt>
+		    <!-- 下曾内容 -->
+	<dd>学工部</dd>
+	<dd>人事部</dd>
+	<dd>办公部</dd>
+	</dl> 
+ 
+* 有序列表标签
+		 属性： type 1, i, a ：安什么方式排序  <ol type = “a”>
+		  <ol></ol> :有序列表范围
+		   在ol里面 <li> 列表具体内容  </li>
+* 无序列表标签
+		   属性 type ：空心圆 circle  实心圆 ：disc  方块：square
+		<ul> </ul> :无序列表范围
+		在ul里面 <li>  具体内容 <li>
+
+
+
+1、超链接标签
+   <a href = " 路径"  > 页面的标题    </a>
+     * target 设置标签打开方式， 默认在当前页面打开
+       **  _blank 在新的窗口打开
+       ** _self在当前页面打开
+ 2、 定位资源
+    * 先定位一个位置：
+     <a  name = "top"> 顶部 </a>
+     * 回到顶部
+     <a href = "#top"> 回到顶部 </a>
+
+  3.  原样标签
+      <pre>   </pre>
+
+   4、表格标签
+   <table  border = "1"  bordercolor = "black"  cellspacing = "0" width = "200"  height = "20">
+					<tr>
+					        <td> 姓名 </td> 
+							<td>  张飞 </td>
+					</tr>
+		 </table>
+
+       * <table> 表格范围
+          <tr></tr> 行数
+	  <td></td> 每行当中的单元格数 ,在tr里
+	* 属性 ： border :边界线属性  bordercolor : 边界线颜色  cellspacing 消除单元格边界线 width; 边界线长宽
+	* 属性 ： align : center left right
+	              <tr align = “center”>  该行中字体居中
+		      <td align = "center ">    该单元格中字体居中
+		      <caption></caption>  表头
+  	  合并单元格
+          * 跨行操作 ： rowspan   <td  roespan = "3">  跨3 行
+ 	  * 跨列操作  ： colspan   <td  colspan = "3">  跨3列
+	  
+
+  5、 菜单标签 <form>  菜单范围  </form>
+       ** 普通输入选项 ：  
+               <input   type = "text" />
+       ** 密码输入选项  ：  
+
+               <input   type =  "password" />
+       ** 单选输入选项  ： 
+
+               <input   type = "radio" />
+            -- 在里面需要name
+	    -- name 的名字必须先相同
+	    -- 必须要有value
+	    -- 默认选项设置  <input  type = "radio"   checked = “checked”>
+
+       **复选输入项：
+               <input  type = "checkbox" />
+           -- 在里面需要name
+	   -- name 的名字必须先相同
+	   --必须要有value
+
+	** 文件输入选项:
+	           <input type = "file"/>
+
+	**下拉输入选项:（不是input）
+	    <select   name = "birth">
+		<option value = "1991">  1991 </option>
+		<option value = "1992">  1992 </option>
+		<option value = "1993">  1993 </option>
+	    </select>
+
+	    <option value = "1993" selected = "selected">  1993 </option>  下拉选择项默认为1993
+
+         ** 提交按钮
+	          <input  type = "submit" />  按钮显示提交
+		  <input  type = "submit"   value = "注册"/>  按钮显示注册
+		  <input  type = "image"  src  = "图片">
+	 **重置按钮：
+	     <input type = "reset"  value = "重注册">
+
+	** 普通按钮
+	      <input  type = "button"  value = "骚磊">
+	 
+	 ** 表单提交到的地方 action = “地址”
+	     
+	     <form  action = "地址"   method = "post" / "get"(默认)>
+	     get 和 post 区别（面试题）
+
+	     1 、 get 请求地址栏时携带参数数据， post不会携带
+
+	     2、get请求安全级别较低，post较高
+
+	     3、get请求数据大小的限制， post没有
+
+
+	     * enctype 一般请求下不需要这个属性，做文件上传时需要这个属性
+  
+   6、框架标签： (给<body></body> 标签去掉)
+       
+         *<frameset>
+	    --rows: 按照行进行划分
+	        <frameset rows = "80, *">  //上部分为80行，剩余为下部分
+
+           -- clos :按照列进行划分
+	         <frameset clos = "80, *" >  // 左半部分为80行， 剩余为有半部分
+	
+	*<frame> 具体显示的页面
+	    - <frame  name = "top"  src = "显示的页面地址">
+
+	 * 框架标签不能写在<body>里面， 需要给<body> 删除
+	    
+	    代码示例：
+	        <frameset  rows = "80, *">                               // 把页面分成上下两部分
+			<frame  name = "top" , src = "c.jpg">      // 上部分的页面
+			<frameset  clos = "80, *" >                       //  把下部分分成两部分页面
+				<frame name = "left"  src = "2.jpg"/>     // 左部分页面
+				<frame  name = "right  src = "3.jpg"/>   // 右部分页面
+			</frameset>
+		</frameset>
+              
+	      ---- 如果在左边的页面超链接， 让他在右边显示页面
+	        -- 设置连接里面的属性， target值设置成名称
+			<a href = "地址" target = "right">超链接1 </a>
+
+7、head的里面的标签
+     
+     * <titile> </titile>   :表示标签上显示的内容
+
+     * <meta  name = "keywoords"  content = "毕姥爷， 刘强东， 流向">  // 搜素引擎
+        <meta  http-equiv = "refresh",   content = "3"  url = "地址"/>    // 3秒后跳转到那个地址
+
+    * base 标签 ： 设置超链接的基本设置
+        ---- 可以统一设置超链接打开方式 
+	   <base  target = "_bank /">
+     
+     * link 标签， 引入外部文件 
+
+8、 其他标签
+   
+     u : 下划线
+     b: 加粗
+     i ：斜体
+     p ：普通文本
+     s ：删除线
+     sub, sup
+
+     div : 自动换行
+
+     span ； 在一行内
+
+补充知识点：
+    * <center> 将内容写在正中间</center>
+
+    *<div style="font-size:100">哈哈</div>    修改字体的大小
+
+    * op.selected==true    // 判断下拉选框是否被选中
+       
+       c.checked == true    // 判断复选框是否被选中
+
+表格设置行高： #table{line-height: 50px;}
+让文字竖直对齐，加上行高即可，文字自动对齐。
+添加背景图片： background:url(/goods/images/bg_btns.png) repeat-x 0px -132px;  图片以X轴循环，后边代表起始位置，若不循环则：
+                background: url(/goods/images/error.png) no-repeat;
+将文本设置岛中央：text-align: center
+
+音乐标签：
+  <audio src=" 音乐"  loop="循环次数"  autoplay="autoplay(自动播放)" id="music"> 
+
+    $("#music")[0].play();播放音乐
+    $("#music")[0].pause(); 暂停音乐
+
+
+canvas 画布 ：
+                画圆：             cxt.fillStyle="#fff";   // 设置填充色
+				     cxt.beginPath();   // 开启画图路径
+				     cxt.arc(x,y,4,0,2*Math.PI,false);  // x坐标，y坐标，半径，  ，弧度，逆时针
+				     cxt.closePath();   //闭合画图路径
+				     cxt.fill();   

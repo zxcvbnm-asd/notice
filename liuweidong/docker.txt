@@ -1,0 +1,68 @@
+10、dacker 镜像 ：
+        安装位置 ： D:// (x86)
+	centos7 : 启动linux服务器 ： 密码 123456   用户名 ： root
+	需要配置网络 ： 网络桥接，配置好有线网络后，单击 OK
+	重启linux的网络配置命令  ： service  network  restart 
+	查看linux的 ip地址 ： ip addr
+	检查内核版本： 必须是3.0以上版本 。 命令;  uname -r
+	联网安装docker的命令 ： yum install docker
+
+	启动docker的命令 ： systemctl start docker
+	查看docker的版本 ： docker -v
+	让docker在开机时自动启动 ： systemctl enable docker
+	停止docker :   systemctl stop docker
+        
+	镜像操作 ：
+	   搜索镜像 ： docker search 镜像名   ： docker search mysql
+	   下载镜像 ： docker pull  镜像名     默认下载的是镜像的最新版本
+	                     docker pull 镜像名 : tag   下载具体版本镜像
+	          
+	   查看镜像 ： docker images
+	   删除镜像 ：docker rmi  镜像ID
+	                    删除镜像可能会遇到如下问题：
+                             Error response from daemon: 
+			          conflict: unable to delete 91dadee7afee (must be forced) - image is being used by stopped container dc125da82944
+		         解决方案 ： 先删除容器  docker rm dc125da82944 
+			                    再删除镜像  docker rmi    91dadee7afee 
+
+
+        启动容器的操作：
+	     启动tomcat :  docker run --name mytomcat -d tomcat:8.5.38-alpine      // --name 给Tomcat命名 ， -的d 后台启动， 名字：版本
+	     查看启动的容器： docker ps 
+	     停止容器 ： docker stop 容器的ID ：   docker stop 5c2be181ca46
+	     查看所有的容器： docker ps -a  (包括运行的和没有运行的都查)
+	     启动容器 ：docker start  容器的ID
+	     删除一个容器（容器需要处于停止状态）： docker rm 容器ID
+	     端口映射： 在启动镜像时，需要将主机端口号映射到服务器的端口号。
+	                      docker run -d -p 8888:8080 tomcat
+			      -d : 表示后台运行
+			      -p : 主机端口号
+			      访问端口时，需要关闭防火墙。
+	    查看容器启动日志 ： docker logs 容器ID
+	    进入docker容器的命令 ： exec -it elasticsearch6 /bin/bash
+
+11、相关的软件安装 ：
+        * mysql ： 执行命令 docker run -p 3306:3306 --name mysql01 -e MYSQL_ROOT_PASSWORD=584521 -d mysql:5.5
+	                -e   MYSQL_ROOT_PASSWORD=584521  : 指定mysql的密码
+			-p   映射端口
+			-d   后台启动
+		        也可以执行该命令 ： docker run --name mysql02 MYSQL_ROOT_PASSWORD=123456 
+			                                -d mysql:5.5 
+							--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+			指定mysql的一些配置 ： 编码等
+
+
+12、取阿里云创建镜像加速器 ：
+        sudo tee /etc/docker/daemon.json <<-'EOF'
+	{
+	  "registry-mirrors": ["https://yu90s6wg.mirror.aliyuncs.com"]
+	}
+	EOF
+	sudo systemctl daemon-reload
+	sudo systemctl restart docker
+
+
+
+
+
+	D:\mysql-5.7.25-winx64\bin;%maven_home%\bin;D:\xshell\;D:\xftp\;%JAVA_HOME%\bin;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;%SystemRoot%\system32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SYSTEMROOT%\System32\WindowsPowerShell\v1.0\;D:\mysql\bin;D:\TortiseSVN\bin;D:\VisualSVN\bin;D:\Program Files\nodejs\

@@ -1,0 +1,134 @@
+SSH三大框架整合jar  : 除了基本的jar包外，还需要
+                                    spring-orm jar(hibernate与Spring) ,
+				     struts-spring(struts与spring), tx、web、c3p0、jdbc
+
+1、相关配置 ：
+        1）、spring配置
+             首先配置spring容器，引入四个约束 ： core/expression/context/aop
+                       在xml中配置 spring与web的监听器 ：
+		           <listener>
+			    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+			   </listener>
+		    在xml中配置spring 文件的位置  ：
+		           <context-param>
+			       <param-name>contextConfigLocation</param-name>
+			       <param-value>classpath:applicationContext.xml</param-value>
+			   </context-param>
+         2）、struts配置
+		   struts 的配置 ： 在xml中配置核心过滤器 ：
+		                <filter>
+				      <filter-name>struts</filter-name>
+				      <filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter</filter-class>
+				   </filter>
+
+		    在struts.xml中配置常量 ：
+		          <!--  struts.objectFactory = spring   将struts的对象创建交给spring-->
+                           <constant name="struts.objectFactory" value="spring"></constant>
+
+	         为了将Action的对象完全交给spring管理，需要如下配置 ：
+		         1)、在spring 中 ：
+				   <bean id="userAction" class="cn.hegongda.actions.UserAction" scope="prototype">
+				      <property name="service" ref="userService"></property>
+				   </bean>
+				 注意 ：action对象作用范围是多例的  : 所以配置 加 ： scope="prototype"
+		         2)、在struts.xml中：
+			          <package name="crm" namespace="/" extends="struts-default">
+					<action name="User_*" class="userAction" method="{1}">
+					    <result name="success">login.jsp</result>
+					</action>
+				     </package>
+			注意： action中的class对应 spring 中bean的 ID
+    
+           3）、Hibernate的配置：
+	            1）、配置相关的hibernate.cfg.xml   以及实体  user.hbm.xml
+		    2）、 * 在spring中配置 sessionFactory  :
+				      <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">   // 利用第四版本的hibernate
+						 <property name="configLocation" value="classpath:hibernate.cfg.xml"></property>    // 指定加载文件信息
+					 </bean>
+
+			      **** 常用方式：  
+			        <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+				      <!-- 配置hibernate基本信息 -->
+				       <property name="hibernateProperties">
+					  <props>
+					     //  必须配置的
+					     <prop key="hibernate.connection.driver_class">com.mysql.jdbc.Driver</prop>
+					     <prop key="hibernate.connection.url">jdbc:mysql://localhost:3366/crm</prop>
+					     <prop key="hibernate.connection.username">root</prop>
+					     <prop key="hibernate.connection.password">584521</prop>
+					     <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+					       //   不是必须配置的
+					     <prop key="hibernate.show_sql">true</prop>
+					     <prop key="hibernate.format_sql">true</prop>
+					     <prop key="hibernate.hbm2ddl.auto">update</prop>
+					  </props>
+				       </property>
+				       <!-- 引入orm数据源信息，指定orm 数据所在路径，spring会自动读取包中数据 -->
+				       <property name="mappingDirectoryLocations" value="classpath:cn/hegongda/domain"></property>
+				   </bean>
+
+                     
+		     3）、在dao 层的类继承 HibernateDaoSupport 类，该类下有 hibernate 模板，有三种查询方式：
+		              （1）、 匿名内部类的方式，其核心是  session.creatQuery() 查询方式
+			                       getHibernateTemplate().execute(new HibernateCallback<User>() {
+						public User doInHibernate(Session session) throws HibernateException {
+							return (User)session.createQuery("from User where name=?").
+									setParameter(0, "lisi").uniqueResult();
+						}}）；     
+			      （2）、通过criteria 语句查询
+			                         DetachedCriteria dc = DetachedCriteria.forClass(User.class);
+				         	dc.add(Restrictions.eq("name", name));
+					       List<User> user = (List<User>) getHibernateTemplate().findByCriteria(dc);
+
+				（3）、通过普通 mysql  语句进行查询
+
+		      4）、引入c3p0数据源  ：
+		              <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+					      <!-- 将c3p0连接池注进 sessionFactory，此时就无需在此配置 连接信息 -->
+					      <property name="dataSource" ref="myDataSource"></property>
+					      <!-- 配置hibernate基本信息 -->
+					       <property name="hibernateProperties">
+						  <props>
+						     <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+						     <prop key="hibernate.show_sql">true</prop>
+						     <prop key="hibernate.format_sql">true</prop>
+						     <prop key="hibernate.hbm2ddl.auto">update</prop>
+						  </props>
+					       </property>
+					       <!-- 引入orm数据源信息，指定orm 数据所在路径，spring会自动读取包中数据 -->
+					       <property name="mappingDirectoryLocations" value="classpath:cn/hegongda/domain"></property>
+					   </bean>
+		             注意 ： 此时hibernate.cfg.xml文件将失去作用
+		      5）、tx事务配置 ：
+		             <!-- 配置事务核心 管理器 -->
+					<bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+					   <property name="sessionFactory" ref="sessionFactory"></property>
+					</bean>
+				    
+				    <!-- 配置事务通知 -->
+				   <!--  <tx:advice id="txAdvice">
+				       <tx:attributes>
+					  <tx:method name="find*" isolation="DEFAULT" propagation="REQUIRED" read-only="true"/>
+					  <tx:method name="modefy*" isolation="DEFAULT" propagation="REQUIRED" read-only="true"/>
+					  <tx:method name="save*" isolation="DEFAULT" propagation="REQUIRED" read-only="false"/>
+				       </tx:attributes>
+				    </tx:advice> -->
+    
+				    <!-- 配置切面 aop -->
+				   <!--  <aop:config>
+					<aop:pointcut expression="execution(* *..UserServiceImpl.*(..))" id="pointCut"/>
+					<aop:advisor advice-ref="txAdvice" pointcut-ref="pointCut"/>
+				    </aop:config> -->
+
+				      <!-- 注解事务 -->
+				    <tx:annotation-driven  transaction-manager="transactionManager"/>
+
+
+   
+	  
+		
+
+			    
+     
+
+

@@ -1,0 +1,242 @@
+设计模式：
+  
+    1、单例设计模式  （面试）
+        * 恶汉式：
+	  每个类只有一个对象，不能创建多个对象
+	    
+	    public class A{
+	      private  static final  A a = new A();
+	       private  public A(){}
+               public static  A  getInstance(){
+	          return a;
+	       }
+	    }
+        
+	 当将类的构造器私有后，就可以禁止外类进行对象的创建，但可以通过静态方法来获取实例化对象。
+
+        * 懒汉模式：
+	public class A{
+	      private  static   A a =  null;
+	       private  public A(){}
+               public static  A  getInstance(){
+	           if( a == null)
+		     a = new A();
+	          return a;
+	       }
+	    }
+
+	    该种模式在多线程并发访问时，存在安全问题。
+
+	    *****高效安全的单例模式 （面试）
+                   public class A{
+	      private  static   A a =  null;
+	       private  public A(){}
+               public static  A  getInstance(){
+	           if( a == null){
+		      synchronized{
+		          if( a == null )
+			  a = new A();
+		      }
+		   }    
+	       }
+	    }
+
+ 2、* 简单工厂设计模式：
+         负责创建对象
+
+      * 工厂方法设计模式：精确创建对象
+
+
+3、装饰者设计模式：
+      * 装饰者类与目标类要实现相同的接口，或继承相同的抽象类
+      *装饰者类中要有目标类的引用作为成员变量，具体赋值一般通过代参构造器完成
+
+      功能：在不改变原来类的基础上，对其功能进行动态增强。
+			 // 继承与目标类相同的结果
+			 public class StudentServiceDecortor implements IStudentService {
+
+			 // 装饰着模式
+			private IStudentService target;
+			// 通过代参构造器进行赋值
+			public StudentServiceDecortor(IStudentService target) {
+				this.target = target;
+			}
+
+			// 实现对原目标功能进行更改
+			@Override
+			public String getToUpper() {
+				
+				return  target.getToUpper().toUpperCase();
+			}
+		   
+
+			  // 测试类
+			public static void main(String[] args) {
+				// 创建目标类引用
+				IStudentService studentService = new StudentServiceImpl();
+				// 传递引用
+				IStudentService decortor = new StudentServiceDecortor(studentService);
+				String result = decortor.getToUpper();
+				
+				System.out.println(result);
+			}
+
+    以上方式一般不用。  
+                     * 在装饰者模式中， 一般创建一个基类继承接口，创建代参构造器，传递目标类中的引用 ，但是不对目标类的功能进行任何增强
+                     * 具体装饰类中，创建代参构造器，重写父类方法，对目标类进行单一功能增强
+		       （实例：U盘）
+
+4、静态代理模式： 
+                    public class StudentServiceProxy implements IStudentService {
+			 // 静态代理模式
+			private IStudentService target;	        // 声明目标对象
+			// 通过无参构造器创建目标对象
+			public StudentServiceProxy() {
+				target = new StudentServiceImpl();
+			}
+			@Override
+			public String getToUpper() {
+				return  target.getToUpper().toUpperCase();
+			}
+		
+ 
+                     //  主程序
+			public static void main(String[] args) {
+			IStudentService decortor = new StudentServiceProxy();
+			String result = decortor.getToUpper();
+			System.out.println(result);
+
+     ******* 静态代理模式 与  装饰者模式的异同：
+                --- 相同点 ：   1、都要实现与目标类相同的业务接口
+		                      2、这两个类中都要生命目标对象
+				      3、都可以再不修改目标类的前提下增强目标方法
+
+		----不同点：    1、使用目的不同
+		                              装饰者 ： 增强目标对象
+					      静态代理模式 ： 保护和隐藏目标对象
+                                       2、对目标对象获取方式不同
+				              装饰者 ： 通过代参构造器传入
+					      静态代理模式 ： 在无参构造器中直接创键
+					3、 功能增强的实现者不同 
+					       装饰者 ; 其中存在一个装饰者基类，并不真正的实现增强，而是有具体装饰者进行功能增强，并且是单一
+					                    功能的增强，存在”装饰者链“的概念
+                                              静态代理 ： 该设计模式中不存在子父类的关系，具体增强，就是有代理完成，一般不需要子类。
+
+
+5、观察者设计模式：
+      一个被观察这有多个观察者，被观察者发出信息，观察者接收到信息，然后对接收到的信息作出处理。
+                      //  被观察者
+		       public class BeObserver implements IBeObserver {
+			private List<IObserver> list;
+			public BeObserver(){
+			 list = new ArrayList<>();
+			}
+                          // 添加观察者
+			@Override
+			public void addOberver(IObserver observer) {
+				 list.add(observer);
+			
+			}
+                           //  通知观察者
+			@Override
+			public void notifyObserver(String message) {
+				for(IObserver observer : list){
+					observer.reciveMessage(message);
+				}
+
+			}
+                            // 移出观察者
+			@Override
+			public void removeObserver(IObserver observer) {
+				list.remove(observer);
+			}
+
+
+                   // 定义观察者， 接收消息
+		public class FistObserver implements IObserver {
+
+		@Override
+		public void reciveMessage(String message) {
+			System.out.println("1 号接收到消息");
+	       
+		}
+
+          //  测试类
+		public static void main(String[] args) {
+		// 创建两个观察者
+		IObserver firstObserver = new FistObserver();
+		IObserver secondObserver = new SecondObserver();
+		// 创建一个被观察者
+		BeObserver observer = new BeObserver();
+		  //  添加观察者
+		observer.addOberver(firstObserver);
+		observer.addOberver(secondObserver);
+		// 发送消息
+		observer.notifyObserver("你们好");
+		
+6、SHH代理模式 ：
+       *  JDK 动态代理   实现有接口的目标类的增强，若目标类没有实现接口，则不能用JDK动态代理模式：
+	   public static void main(String[] args) {
+
+		final IUserService target = new UserServiceImpl();
+		IUserService service = (IUserService) Proxy.newProxyInstance(
+				target.getClass().getClassLoader(),   // 目标类加载器
+				target.getClass().getInterfaces(),     // 目标类所实现的所有接口
+				new InvocationHandler() {        // 内部匿名类
+			
+            // 参数1 ： 代理对象  2：目标方法  3：目标参数列表					
+			@Override
+			public Object invoke(Object proxy, Method method, Object[] args)
+					throws Throwable {
+				Object result = method.invoke(target, args);   // 执行目标类中的方法
+				return ((String)result).toUpperCase();          // 实现增强
+			}
+		} );
+		
+	      System.out.println(service.getName());
+	}
+
+    * cglib 动态代理 目标类没有实现接口。实现接口的也可以增强。引入jar包   原理 ： 子类增强父类。
+		 public class MyCglibFactory implements MethodInterceptor {
+		private UserServiceImpl target;
+		public MyCglibFactory(UserServiceImpl service) {
+			this.target = service;
+		}
+
+		public UserServiceImpl getUserServiceImpl(){
+			// 创建增强对象
+			Enhancer enhancer = new Enhancer();
+			// 指定目标类为父类
+			enhancer.setSuperclass(UserServiceImpl.class);
+			// 设置回调函数，程序不会立刻执行该方法，当使用相关方法时，才会执行该代码
+			enhancer.setCallback(this);
+			// 创建增强对象
+			return (UserServiceImpl) enhancer.create();
+		}
+
+		@Override
+		public Object intercept(Object obj, Method method, Object[] args,
+				MethodProxy arg3) throws Throwable {
+			Object invoke = method.invoke(target, args);
+			return ((String)invoke).toUpperCase();
+		}
+
+	}
+
+* 多线程观察者设计模式 ：
+      可以监控自身的线程生命周期，在不同时刻所处的状态已经执行的任务
+    
+
+ 
+
+* 多线程读写锁设计模式 ：读写分离设计模式 ： 
+     当有一个共享资源时 ： 当有一个线程正在写，其他线程允许度
+                                        当有一个线程正在读，其他线程允许读
+					当有一个线程正在写，其他线程不允许写
+					当有一个线程正在读，其他线程不允许写
+      
+		
+
+		   
+
+

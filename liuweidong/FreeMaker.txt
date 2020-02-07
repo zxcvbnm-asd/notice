@@ -1,0 +1,67 @@
+1、FreeMaker 静态模板 ，需要导入依赖 :
+                <dependency>
+				<groupId>org.freemarker</groupId>
+				<artifactId>freemarker</artifactId>
+		</dependency>
+
+    freemaker的语法 ：
+       * 取值 ： 通过java代码将数据存放到数据集中 即map的键值对中
+                     ${name}   // 直接取值
+		     ${user.name}    // 取pojo中的对象
+		     对于时间的取值 ：
+		       ${date?time}    // 获取时分秒  2:25:36
+		       ${date?date}   // 获取日期   2012-06-15
+		       ${date.datetime}  // 获取日 以及时分秒
+		       自定义时间 ： ${date?string("yyyy/MM/dd  HH:mm：ss")}
+		     对于空值 ：
+			      ${val!"liu"}     // val 为null 时，去默认值 liu
+			      对空值进行if判断 
+			      <#if val??>
+			           值不为null
+			      <#esle>
+			           值为null
+			      </#if>
+		      遍历 ：
+		           <#list  users as user>
+                                  ${user.name}
+			   </#list>
+		     嵌入页面 ：
+		       <#include "b.ftl">
+		     在map中取map :
+				 姓名:${(stuMap['stu1'].name)!''}
+				 工资:${stuMap['stu1'].money}
+			  或 ：  工资:${stuMap.stu1.money}
+		     遍历map ：
+		           <#list stuMap?keys as k>
+				姓名 ： ${stuMap[k].name}
+				工资 ： ${stuMap[k].money}
+			    </#list>
+
+
+2、freemaker的使用规范 ：
+         @Test
+	public void test01() throws Exception{
+		 // 创建一个configuration对象，参数 版本号
+		Configuration con = new Configuration(Configuration.getVersion());
+		// 设置模板文件所在目录
+		con.setDirectoryForTemplateLoading(new File("E:/workspace/mall/mall-item-web/src/main/webapp/WEB-INF/ftl"));
+		// 设置模板文件的字符集 utf-8
+		con.setDefaultEncoding("utf-8");
+		// 加载模板，创建模板对象
+		Template template = con.getTemplate("a.ftl");
+		// 创建模板使用的数据集，一般是map，也可以是 pojo
+		Map map = new HashMap<>();
+		// 向数据集中添加数据
+		map.put("name","liuweidong");
+		// 创建writer对象，一般指 FileWriter对象，生成指定文件名
+		Writer writer = new FileWriter(new File("E:/a.html"));
+		// 调用模板的process方法输出文件
+	    template.process(map, writer);
+	    // 关闭流
+	    writer.close();	
+	}
+	
+	将模板转化为字符串 ：     html = FreeMarkerTemplateUtils.processTemplateIntoString(template, model);
+
+
+	

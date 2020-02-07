@@ -1,0 +1,73 @@
+Quartz :  任务调度框架。
+             最基本的使用方式 ：
+	       1、 创建Scheduler 调度器（）:  从工厂中获取          
+	       2、创建Trigger（触发器）  :
+	       3、 定义JobDetail（任务类型） :
+
+     Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
+
+        Trigger trigger = newTrigger().withIdentity("trigger1","group1")   // trigger的唯一标识
+                .withSchedule(simpleSchedule()        //  使用simpleTrigger
+                .withIntervalInSeconds(1)                 // 每隔一秒执行一次
+                .repeatForever())                              // 永远执行
+                .build();
+
+        JobDetail jobDetail = newJob(Hello.class).   // Hello.class : 指的是任务类
+                withIdentity("job1","job1")                 // 标识 ： 可以省略
+                .usingJobData("quartz","2")                // 属性 ： 可以省略
+                build();
+
+        scheduler.scheduleJob(jobDetail,trigger);      //  调度器将任务进行出发
+        scheduler.start();                                          // 开始执行
+
+	JobDetail & Job： JobDetail 定义的是任务数据，而真正的执行逻辑是在Job中，例子中是HelloQuartz。 为什么设计成JobDetail + Job，
+	不直接使用Job？这是因为任务是有可能并发执行，如果Scheduler直接使用Job，就会存在对同一个Job实例并发访问的问题。
+	而JobDetail & Job 方式，sheduler每次执行，都会根据JobDetail创建一个新的Job实例，这样就可以规避并发访问的问题。
+
+	Calendar 类是框架自身提供的一个类，用于补充trigger时间不够的问题
+	        AnnualCalendar calendar = new AnnualCalendar();
+		GregorianCalendar excludeDay = new GregorianCalendar();     // 为Calendar的一个子类
+		excludeDay.setTime(newDate().inMonthOnDay(2,25).build());   /
+		calendar.setDayExcluded(excludeDay,true);             // 排除2月的25号
+		scheduler.addCalendar("ex",calendar,false,false);  // 将时间加入到调度器中
+
+		Trigger trigger = newTrigger()
+			.modifiedByCalendar("ex")      // 调用自定义时间
+
+
+	触发器的类型 ：
+	   SimpleTrigger ： 对应 simpleSchedule()  
+	                             适用于任务的类型： 指定时间，以该时间间隔执行一次任务，可以指定任务的执行次数。
+				                                   repeatForerver();  : 一直执行，从不间断
+								   withRepeatCount() : 指定执行多少次
+        
+	   CalendarIntervaltrigger ： 
+	             类似于SimpleTrigger，指定从某一个时间开始，以一定的时间间隔执行的任务。 但是不同的是SimpleTrigger指定的时间间隔为
+		     毫秒，没办法指定每隔一个月执行一次（每月的时间间隔不是固定值），而CalendarIntervalTrigger支持的间隔单位有秒，分钟，
+		     小时，天，月，年，星期。
+
+                     相较于SimpleTrigger有两个优势：1、更方便，比如每隔1小时执行，你不用自己去计算1小时等于多少毫秒。 
+		                                                        2、支持不是固定长度的间隔，比如间隔为月和年。但劣势是精度只能到秒。
+                     它适合的任务类似于：9:00 开始执行，并且以后每周 9:00 执行一次
+
+            DailyTimeIntervalTrigger ：
+	            指定每天的某个时间段内，以一定的时间间隔执行任务。并且它可以支持指定星期。
+			它适合的任务类似于：指定每天9:00 至 18:00 ，每隔70秒执行一次，并且只要周一至周五执行。
+			它的属性有:
+			startTimeOfDay 每天开始时间
+			endTimeOfDay 每天结束时间
+			daysOfWeek 需要执行的星期
+			interval 执行间隔
+			intervalUnit 执行间隔的单位（秒，分钟，小时，天，月，年，星期）
+			repeatCount 重复次数
+	       
+
+	       Quartz API的关键接口是：
+		    Scheduler - 与调度程序交互的主要API。
+		    Job - 由希望由调度程序执行的组件实现的接口。
+		    JobDetail - 用于定义作业的实例。
+		    Trigger（即触发器） - 定义执行给定作业的计划的组件。
+		    JobBuilder - 用于定义/构建JobDetail实例，用于定义作业的实例。
+		    TriggerBuilder - 用于定义/构建触发器实例。
+
+              当要向执行的任务中

@@ -1,0 +1,182 @@
+ 
+ 一、 注解
+	    语法 ： @注解名称
+	    作用 ：替代xml配置文件
+	    注解是有框架来读取使用
+   
+ 二、  注解的使用 ：
+	     定一注解类 ：
+		 @interfaceA{ }  所有注解都是 annotation的子类
+	     使用注解：
+		作用目标 ：
+		   类 、方法、构造器、参数、局部变量、
+	     读取注解：
+		 反射读取
+   
+ 三、   格式 ： @interface Myanno1{ String name(); int year(); }
+
+	    调用 ： @Myanno1(value="liu",value=5)
+			public void fun(){  }
+
+		    @interface Annoy{
+				String name();
+				int num();
+				String sex() default "wei";  // 默认值 ： 不写也行
+			}
+
+	 注意：    vlaue 特权 ： 当属性名为 value时，在使用注解时，不用写value。 
+                       @interface Myanno2{
+				int value();
+				String name() default"liMyu";
+			}
+
+			@Myanno2(25)
+
+  四、  注解属性的类型 ：
+	       8种基本类行 、class类型、String、枚举enum类型、注解类型、以上类型的一维数组类型
+		@interface Anno3{
+			Class a();
+			Myenum n();
+			int []arr();
+				Myanno2 m();
+			}
+			
+			enum Myenum{
+				A,B,C
+			}
+			@Anno3(a=String.class,n=Myenum.A,arr=5,m=@Myanno2(25))
+			public void fus(){
+				
+			}
+五、注解的目标限定 与 策略保留
+      1、目标限定 ： 只能用在类、方法·······等其中一个的限定
+           @Target(value=ElementType.METHOD)    // 该注解只能用在方法上
+		@interface Anno4{
+			
+		}
+
+            @Anno4()
+	    public void  funs(){
+		
+	    }
+      2、策略保留 
+         源文件  : 注解只在源码中会出现
+	 字节码文件 ： 注解在class文件中存在 。但会被JVM忽略，不能反射
+	 JVM ： 会把注解加载到内存中，可以反射进行读取
+
+	 @Retention(value=RetentionPolicy.RUNTIME)     // 将注解加载到内存中
+	    @interface Anno9{
+		
+	    }
+
+六、反射泛型信息 ：
+    	@Test
+	public void fun(){
+		new C();
+	}
+		}
+		abstract class A<T>{
+			
+			public A(){
+				
+				Class c = this.getClass();  // 得到子类的类
+				java.lang.reflect.Type type = c.getGenericSuperclass();  // 获取传递给父类的传递参数类型
+				ParameterizedType ptype = (ParameterizedType) type;       // type就是A<String>
+				Type[] types = ptype.getActualTypeArguments();   // 获取参数 ,是一个class数组
+				Class a = (Class) types[0];    // 就是string 
+				System.out.println(a.getName());
+			}	
+		}	
+		class B extends A<String>{	
+		}
+		class C extends A<Integer>{}
+
+七、反射注解  
+          public class CC {
+    @Test
+    public void fun() throws NoSuchMethodException, SecurityException{
+    	Class<A> c = A.class;
+    	MyAnno an = c.getAnnotation(MyAnno.class);
+    	System.out.println(an.name()+"  "+an.num());
+    	
+    	Method method = c.getMethod("fun");
+    	MyAnno m = method.getAnnotation(MyAnno.class);
+    	
+    	System.out.println(m.name()+"  "+m.num());
+	    }
+		
+	}
+
+	 @MyAnno(name="zhangdan",num=5)
+	 class A{
+		 @MyAnno(name="liiu",num=5)
+		 public void fun(){
+			 
+		 }
+	 }
+	 
+	 @Retention(RetentionPolicy.RUNTIME)
+	 @interface MyAnno{
+		 String name();
+		 int num();
+	 }
+	   
+
+
+1、servlet3.0 新特性 ， 由于其不存在xml文件， 需要对其进行注解。
+
+     要求 ： myeclipse 10.0 以上
+                tomcat7.0以上  
+     创建 JAVAEE 6.0
+
+2、概述 ： 注解代替xml配置文件
+                异步处理
+		对上传的支持
+3、servlet 异步请求 
+      asyncSupported=true   支持异步请求
+
+
+     @WebServlet(urlPatterns="/AServlet",asyncSupported=true)
+public class AServlet extends HttpServlet {
+	
+	@Override
+	public void doGet(final HttpServletRequest req, final HttpServletResponse resp)
+			throws ServletException, IOException {
+		
+		resp.setContentType("text/html;charset=UTF-8");    // 需要设置编码
+		final AsyncContext ac = req.startAsync(req, resp);    // 得到上下文
+		
+		
+		ac.start(new Runnable() {   // 开启一个新的线程，执行里面的任务
+			
+			public void run() {
+
+					println("liu<br/>", resp);
+					for(int i = 0;i < 1000; i++){
+						println(i+"", resp);
+					}
+			     ac.compelet();     // 表示该线程执行完毕 。	
+			}
+			
+		});
+	}
+	
+	public void sleep(long ms){
+		try {
+			Thread.sleep(ms);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void println(String text, HttpServletResponse resp){
+		
+		try {
+			resp.getWriter().write(text);
+			resp.getWriter().flush();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}

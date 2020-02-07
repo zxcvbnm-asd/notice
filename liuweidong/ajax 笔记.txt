@@ -1,0 +1,60 @@
+1、ajax 支持异步处理请求的页面技术， 而传统请求都是同步的 （javascript and xml）
+
+2、ajax 发送请求分为四步：
+      * 创建 ajax 的核心对象 XMLHttpRequest （浏览器内置对象，可以直接调用）
+        if(window.XMLHttpRequest)
+	{
+		 var xhr = new XMLHttpRequest();
+	 }else
+	 {   
+	           // IE5 和 IE6 只支持ActiveXObject 对象
+	         var xhr = new ActiveXObject("Microsoft.XMLHTTP");
+	 }
+
+      * 注册回调函数
+         // 程序执行到此处，后面的回调函数并不会立刻执行，只是将回调函数注册给xhr对象
+	      当xhr对象的属性readyState发生改变时，后面的回调函数会发生改变
+
+	      XMlHttepRequest 在对象响应和请求过程中，readyState会有四中状态值
+	       0 ： 请求未初始化
+	       1：服务器链接已经建立
+	       2：请求已连接
+	       3：请求处理中
+	       4：请求以完成，且响应已经就绪
+
+	     xhr.onreadystatechange (){
+	          if(xhr.onreadyState == 4)   // 服务器响应结束
+		     // 获取响应状态码
+		     if(xhr.status == 200)  // 正常响应
+		     {
+		            var s = responseText;  // 获取响应值
+			    var span=document.getElementById("id1");
+			    span.innerHTML = s;
+		  }else    // 如果法身异常， 弹出状态码
+		  {
+		     alert(xhr.status);
+		  }
+	      }
+	     
+
+
+
+      * 开启浏览器和服务器之间的通道
+         xhr.open(method,  url,  true（是否支持异步，统true）);
+
+      * 发送请求
+        xhr.send();
+
+3、对于post请求： 
+     
+      需要注意一下两步：
+        // 建立通道
+          xhr.open("post", "One?username="+name, true);
+          xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+          // 发送请求
+          xhr.send(传递参数);
+
+4、get请求缓存问题解决：在路径中加一个时间戳（毫秒值）
+
+    var temp = new Date().getTime();
+    xhr.open("get", "One?_="+temp+"&username="+name, true);

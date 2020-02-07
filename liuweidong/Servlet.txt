@@ -1,0 +1,344 @@
+Servlet  java Web三大组件之一
+    实现方式： 
+ （一）    * 通过Servlet接口方式，需要重写其中的方法。
+         // 生命周期方法： 在Servlet被销毁之前只执行一次
+	public void destroy() {
+		
+	}
+        // 获取Servlet配置信息
+	public ServletConfig getServletConfig() {
+		return null;
+	}
+
+	// 获取Servlet信息，一般不用
+	public String getServletInfo() {
+		return null;
+	}
+
+	// 生命周期方法：在Servlet创建方法时立刻执行，只执行一次
+	public void init(ServletConfig arg0) throws ServletException {
+		
+		
+	}
+        // 生命周期方法： 多次被tomcat调用
+	public void service(ServletRequest request, ServletResponse response)
+			throws ServletException, IOException {
+		
+	}
+
+       注意; 生命周期的方法由tomcat调用
+
+       xml配置servlet:
+             <servlet>
+	       <servlet-name>xxx</servlet-name>
+	       <servlet-class>ch.hegongda.servelet.ServeletDemo</servlet-class>
+	     </servlet>
+
+	     <servlet-mapping>
+		<servlet-name>xxx</servlet-name>
+		<url-pattern>/servlet</url-pattern>
+	     </servlet-mapping>
+
+    特性： 单例模式，一个类只有一个servlet, 
+              线程不安全，效率高
+	      类有我们自己来写，对象由服务器创建，方法由服务器调用  
+
+2、ServletConfig:  对应一段xml， 是接口类，其实现类有多个，
+     API:
+     String getServletName()    获取<servlet-name>中的内容
+     String  getInitParameter(String name)  :通过名称获取指定初始化参数值
+     Enumeration getInitParameterName(); 获取所有初始化参数名称， 返回值是一个集合Enumeration.
+
+     初始化参数配置：
+      <servlet>
+          <init-param>
+	      <param-name>p1</param-name>
+	      <param-value>v1</param-value>
+	  </init-param>
+	   <init-param>
+	      <param-name>p2</param-name>
+	      <param-value>v2</param-value>
+	  </init-param>
+      </servlet>
+
+      Enumeration 遍历方式：
+         
+            // 获取初始化参数名称
+		Enumeration<String> en = config.getInitParameterNames();
+		while(en.hasMoreElements()){
+		  String name = en.nextElement();
+		  String value = config.getInitParameter(name);
+		  System.out.println(name+"  "+value);
+		}
+
+3、web中配置html文件的方法：提交路径的写法
+        action="/项目名/类名"
+      <form action="/Day8/Demo"  method="post">
+
+4、getServletContext();      获取servlet的上下文  返回值 ： ServletContext 接口实现类
+      
+      启动tomcat时就创建Servlet对象则在<servlet>内+：
+       <load-on-stratup> 整数 </load-on-startup>
+
+     // 定义全局初始化参数： 任何一个类都可以使用
+         <context-param>
+	    <param-name>xxx</param-name>
+	    <param-class> yyy </param-class>
+	 </context-param>
+                   
+                 ServletContext sc = config.getServletContext();
+		 //  通过属性名获取属性值， 同样也适用于getInitParameteNames(); 
+		String value1 = sc.getInitParameter("name");
+		System.out.println(value1);
+
+	      // 设置域属性， 同样是全局变量
+		sc.setAttribute("物理", "100");
+
+		// 获取域属性
+		String v1 = (String) sc.getAttribute("物理");
+		System.out.println(v1);
+		// 获取Servlet路径 
+		String path = sc.getContextPath();  // 返回项目名称
+		System.out.println(path);
+
+              // 获取真实路径    “/images”是http协定 ， 而返回值则是 系统file 协议
+             String realPath = sc.getRealPath("/images");               返回值  E:\java\apache-tomcat-7.0.91\webapps\Day9\images
+		System.out.println(realPath);
+
+5、<url-pattern> 模式下的路径写法：
+      * 精确路径 ：  <url-pattern>/some </url-pattern>
+
+                       --        多级写法：      <url-pattern>/some/servlet </url-pattern>
+
+		       --       一个servlet可以有多个url路径：
+				<url-pattern>/some </url-pattern>
+				 <url-pattern>/some/servlet </url-pattern>
+
+      *通配符路径：         
+		 <url-pattern>/some/* </url-pattern>
+		 访问方式： htttp://loacalhost:8080/some/写什么都行
+
+      *全路径模式：
+              -- /*  :真正的全路径模式，无论是静态资源，还是动态资源，都会被拦截
+
+	      -- / :只能拦截动态资源，而不能拦截静态资源
+
+      *后缀模式 *.do
+                访问时结尾必须是 .do形式，不能与其他路径模式混合使用。
+
+     注意： 精确路径匹配，最长路径匹配
+
+
+（二）、继承GenericServlet方式：  需要重写init()以及service()方法。
+			    
+          * 获取请求方法：
+	       public void service(ServletRequest req, ServletResponse res)
+			throws ServletException, IOException {
+		
+		System.out.println("=============");
+		
+		HttpServletRequest request = (HttpServletRequest) req;    // 上转型，
+		HttpServletResponse response = (HttpServletResponse)res;
+		
+		String method = request.getMethod();     // 获取请求方法。
+		System.out.println("方法："+"   "+method);
+
+（三）、HttpServlet协议：
+            重写dopost()  和 doget() 方法  注意事项：
+	     *若只接受dopost()请求， 则只写dopost()方法
+
+	     * 若两个请求都接受， 则
+			 @Override
+			public void doPost(HttpServletRequest req, HttpServletResponse resp)
+					throws ServletException, IOException {
+				 System.out.println("登录成功");
+			}
+			
+			@Override
+			public void doGet(HttpServletRequest req, HttpServletResponse resp)
+					throws ServletException, IOException {
+					doPost(req, resp);
+			}
+
+2、servlet获取参数问题：request(  html表单中内容 )
+
+     注意：* 请求参数是放在Map当中的
+               * Map中的key值时参数名称， value是请求参数所有值，放在String[]中
+	       *使用最多的方法是 : getParameter();
+
+           / / 通过参数名获取指定参数值
+		String name = request.getParameter("name");
+		String age1 = request.getParameter("age");
+		Integer age = Integer.valueOf(age1);
+		System.out.println("name="+"   "+name+"   "+"age="+"   "+age);
+		// 获取全部参数名
+		Enumeration<String> names = request.getParameterNames();
+		while(names.hasMoreElements())
+		{
+			String name1 = names.nextElement();
+			String value1 = request.getParameter(name1);
+			System.out.println(name1+"   "+value1);
+		}
+		
+		// 获取参数值
+		String []hobby = request.getParameterValues("hobby");
+		for(String interst: hobby)
+		{
+			System.out.println(interst);
+		}
+		
+		//获取存放请求参数的map值
+		Map<String, String[]> map = request.getParameterMap();
+		for(String key: map.keySet())
+		{
+			System.out.println(key+request.getParameter(key));
+		}
+	}
+
+  servlet域属性相关问题：
+              // 设置域属性
+		request.setAttribute("company", "高通");
+		request.setAttribute("school", "河北工程大学");
+
+		// 获取域属性
+		String company = (String) request.getAttribute("company");
+		String school = (String) request.getAttribute("school");
+
+		// 通过集合获取域属性
+		Enumeration<String> en = request.getAttributeNames();
+		while(en.hasMoreElements())
+		{
+			String name = en.nextElement();
+			System.out.println(name+"   "+request.getAttribute(name));
+		}
+
+		// 删除域属性
+		request.removeAttribute("company");
+
+		其他方法：
+		// 请求跳转
+		request.getRequestDispatcher("/other").forward(request, response);
+		
+
+servlet 有关路径的一些方法：
+              
+              // 获取请求的url
+		StringBuffer url = request.getRequestURL();
+		System.out.println(url);
+		// 结果： http://localhost:8080/Day11/Test
+		
+		// 获取请求URI: 除去主机和协议部分
+		String urI = request.getRequestURI();
+		System.out.println(urI);
+		//    /Day11/Test
+		
+		// 获取当前Web的根目录
+		String conString = request.getContextPath();
+		System.out.println(conString);
+		//   /Day11
+		
+		// 获取客户端IP地址
+		String client = request.getRemoteAddr();
+		System.out.println(client);
+		//   127.0.0.1
+		
+		// <url-pattern> 下的精确路径
+		String path = request.getServletPath();
+		System.out.println(path);
+		//  /a/b
+		
+		// <url-pattern> 下的模糊路径
+		String info = request.getPathInfo();
+		System.out.println(info);
+		//   /ccbfhh
+
+        // 获取真实路径    “/images”是http协定 ， 而返回值则是 系统file 协议  ( servletContext)
+             String realPath = sc.getRealPath("/images");               返回值  E:\java\apache-tomcat-7.0.91\webapps\Day9\images
+		System.out.println(realPath);
+
+
+  3、post乱码提交时中文解决方案：
+        由于表单是UTF-8编码，而服务器时iso-8859-1编码
+        调用方法： request.setcharacterEncoding("utf-8") : 设置了请求正文中的字符编码，而不能解决Get编码问题。
+
+	Get乱码解决方法： 在conf文件夹下找到xml文件端口号位置： 加入 URIEncoding("UTF-8");
+           
+	同时解决两种方法：
+	        // 将name字符串按照源编码打散
+	       byte []bytes = name.getBytes("iso-8859-1");
+		// 将name再按照新编码组合
+		name = new String(bytes, "utf-8");
+
+		 String name = request.getParameter("name");
+		  name = new String(name.getBytes("ISO8859-1"), "UTF-8");
+
+ 4、解决响应乱码的问题：
+
+          // 指定MIME（text/html）字符编码，     必须要先指定编码
+          response.setContentType("text/html; charset=UTF-8");
+                                                                            /*
+	                                                                          response.setContentType("text/html");
+	                                                                           response.setCharacterEncoding("UTF-8");
+									    */
+	  PrintWriter pw = response.getWriter();
+
+	  // 修改并指定上面的编码
+	  response.setCharacterEncoding("UTF-8");
+	  ********************  重定向编码固定解决方式：
+                --- 先对传递数据进行编码： 
+		      name =  URLEncoder.encode(name, "UTF-8");
+		-- 中间过程：
+		        response.sendRedirect("Servlet?name="+name);
+			 String name = request.getParameter("name");
+		--- 跳转到另一界面后，对数据进行解码
+		      name = URLDecoder.decode(name, "UTF-8");
+	       --- 在进行打散和组装
+		     name = new String(name.getBytes("ISO8859-1"), "UTF-8");
+		     
+	   
+      
+ 5、重定向与请求跳转
+                   // 请求跳转
+		request.getRequestDispatcher("/other").forward(request, response);
+		    // 重定向
+		 response.sendRedirect("/other");
+     
+                 重定向解决数据传输问题：
+		  
+		  response.sendRedirect("other? pname=zhamnhsan&page=69");
+
+		 重定向可以在不同项目之间跳转，而请求跳转只能在一个项目中跳转。
+		  response.sendRedirect("/Day11/other");
+
+	      注意： 重定向可以防止表单重复提交。
+
+
+6、请求转发 中的两个方法;  forward() 与  include()
+      --- forward() 与  include()的区别：   主要表现在标准输出流的的开启时间不同。
+       ---forward()  使用forward的Servlet 的标准输出流还未开启，  对客户端的响应不是由该Servlet响应的
+
+       --- include() 使用forward的Servlet的标准输出流已经开启， 对客户端所有的响应都是有该Servlet响应的
+
+7、前台路径： html 、css、js 文件中的路径 ：
+             以斜杠开头的写法   绝对路径 = Web服务器根路径 （http://localhost:8080）+ 前台路径 （/Day5/stu.html）
+	     以路径名开头的写法：  绝对路径 = 资源路径（http://localhost:8080//Day5） +相对路径 （stu.html）
+
+	       <!--带斜杠时： 该路径为前台相对路径 ：  其参考路径为 ： http://localhost:8080/  test/login.action  -->
+               <!--  <form action="/test/login.action" method="post">  -->
+               <!-- 不带斜杠时，则参考路径为   ： http://lcoalhost：8080/Struts2_1/(相对资源访问路径)  test/login.action -->
+              <form action="test/login.action" method="post">
+   
+     后台路径： java, xml、jsp 文件中的路径你：
+              以斜杠开头的写法   绝对路径 = Web应用根路径 （http://localhost:8080//Day26）+ 前台路径 （/servlet）
+	     以路径名开头的写法：  绝对路径 = 资源路径（http://localhost:8080//Day5） +相对路径 （servlet）
+
+	         <!-- /test 为后台相对路径  ：  其参考路径为 ： http://localhost:8080/Struts2-1/ test -->
+                	<package name="xxxx" namespace="/test" extends="struts-default">
+
+	     特例： 重定向 response.sendRedirect(/Day/servlet);  其根目录为： http://localhost:8080
+
+     
+             
+          
+/goods/bookServlet ? method=findByCategory
+href="${pb.url } & pc=${pb.pc-1}

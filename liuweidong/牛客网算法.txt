@@ -1,0 +1,112 @@
+ /**
+     * 层次遍历二叉树
+     * 1、使用一个队列为桥梁
+     * 2、使用last和nlast记录根节以及其下一层节点
+     * @param root
+     * @return
+     */
+    public static List<Integer> showTree(Node root){
+        Node last = null;
+        Node nlast = null;
+        Node temp = null;
+        List<Integer> list=  new ArrayList<>();
+        ArrayDeque<Node> aq = new ArrayDeque<>();
+        last = root;
+        aq.add(root);
+        while (aq.size()!=0){
+            // 记录弹出的第一个节点
+            temp = aq.removeFirst();
+            //将弹出节点放到list集合中
+            list.add(temp.value);
+            // 当其左节点不为空时，将nlast指向其左节点
+            if(temp.left !=null){
+                aq.add(temp.left);
+                nlast = temp.left;
+            }
+            // 当其右节点不为空时，让nlast右移动
+            if(temp.right != null){
+                aq.add(temp.right);
+                nlast = temp.right;
+            }
+            // 当last为temp时，说明已经遍历了一层，可以添加一个标志作为层
+            if(last == temp){
+                last = nlast;
+                list.add(100);
+            }
+        }
+        return list;
+    }
+
+   序列化二叉树与重构序列化二叉树（LinkedList 的 poll方法，作用是找到头结点并删除， offer的作用是 向集合中添加元素）
+
+	       // 反序列化重建二叉树
+	    public static Node createSerlizeTree(Node node , LinkedList<String> list){
+		String value = list.poll();
+		if(value.equals("#")){
+		    return null;
+		}
+		node = new Node(value);
+		node.left = createSerlizeTree(node.left,list);
+		node.right = createSerlizeTree(node.right,list);
+		return node;
+	    }
+
+	    private static StringBuffer buffer = new StringBuffer();
+	    // 先序序列化二叉树
+	    public static String beforeSerlizeTree(Node node){
+		if(node == null){
+		    buffer.append("#!");
+		    return null;
+		}
+		// 先处理当前节点
+		buffer.append(node.value+"!");
+		// 处理左子树
+		beforeSerlizeTree(node.left);
+		// 处理右子树
+		beforeSerlizeTree(node.right);
+
+		return buffer.toString();
+	    }
+
+判断二叉树是否为搜索二叉树 ：
+     思路 ： 通过中序遍历的方式进行比较，先左节点，再中节点，再由节点， 一个比一个小，用前驱节点与当前节点进行比较
+                 当前驱节点比当前节点的值大。则一定不是搜索二叉树。
+
+      private static Node preNode;       // 用于记录前驱节点
+      public static  boolean isBST(Node root){
+        if(root == null){
+            return true;
+        }
+	// 先左子树
+        if (!isBST(root.left)) {
+            return false;
+        }
+	// 前驱节点与当前节点进行比较
+        if(preNode !=null && preNode.value > root.value){
+            return false;
+        }
+	// 将当前节点赋值给根节点
+        preNode = root;
+	// 在看右节点
+        return isBST(root.right);
+    }
+
+ 通过二分法查找数组中的最小元素（前提数组需要按一定顺序排列）针对 （3 4 5 0 1 2）
+    public int minNunmerRotateArray(int []arr){
+        int low = 0;
+        int hei = arr.length-1;
+        int mid = 0;
+        while (low < hei){
+            mid = low + (hei-low)/2;
+            if(arr[mid] > arr[hei]){
+                low = mid + 1;
+            }else if(arr[mid] == arr[hei]){
+                hei = hei - 1;
+            }else{
+                hei = mid;
+            }
+        }
+        return arr[low];
+    }
+
+        

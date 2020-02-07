@@ -1,0 +1,296 @@
+ 集合框架： 
+
+ 1、 Collection()  之 ArrayList（数组集合）
+      * Collection<String> arr = new ArrayList<String>();    // 多态创建对象
+
+		arr.add("abc");     // 添加元素
+		
+		arr.clear()； // 清空集合
+		
+		boolean c = arr.remove("mnl");       // 移出某个元素 ,返回值为boolean类型
+		
+		boolean b = arr.contains("feg");    // 判断是否包含这个元素，返回值为boolean
+		
+		Object []obj = arr.toArray();    // 将集合变成数组
+		for(int i = 0; i < obj.length; i++)
+		{
+			System.out.println(obj[i]);
+		}
+     
+       * 迭代器：Iterator  :用于集合遍历  ， 是一个接口类，Collection中有该抽象类，子类必然重写该接口。
+                      ListIterator : 只能遍历 list ， 不能遍历set集合， 其可以在指定下标以后进行遍历。
+		                            ListIterator<Integer> iterator = list.listIterator(2);
+
+                      两个抽象方法： hasNext():判断是否有元素，返回值为boolean类型
+		                              Next(); 取出集合中元素。
+
+              ArrayList<String> array = new ArrayList<String>();
+		array.add("aab");
+		array.add("cad");
+		array.add("mns");
+		array.add("abf");
+		
+		Iterator<String> it = array.iterator();    // 获取迭代器
+		boolean a = it.hasNext();
+		
+		// 遍历：
+		while( it.hasNext())
+		{
+			String s = it.next();
+			System.out.println(s);
+		}
+
+2、增强for循环： for(数据类型  变量名： 引用数据类型的名)
+                           好处： 可对数组集合实现快速遍历
+			   弊端： 不能对数组中元素进行操作
+				 {
+					int []arr = {1,2,3,4};
+					for(int i : arr)
+					{
+						System.out.println(i);
+					}
+				}
+
+3、泛型：指定数据类型，提高安全性。增强for循环
+     
+      泛型通配符： <?>
+
+       // 实现不同迭代器的遍历。
+     ArrayList<Integer> arr = new ArrayList<Integer>();
+		arr.add(123);
+		arr.add(456);
+		arr.add(789);
+		
+		HashSet<String> ha = new HashSet<String>();
+		ha.add("abc");
+		ha.add("def");
+		ha.add("opq");
+		
+		iterator(arr);
+		iterator(ha);
+		
+	}
+	
+	public static void iterator(Collection<?> coll)
+	{
+		Iterator<?> it = coll.iterator();
+		while(it.hasNext())
+		{
+			System.out.println(it.next());
+		}
+	}
+
+	限定符： iterator(ArrayList<? extends  Father>   arr)   上限定符
+	              iterator(ArrayList<? super Father>   arr)   下限定符
+    			    
+4、List特有方法补充
+        * add(index ,   元素)；
+	*  remove(index);   返回被删除的元素
+	*  get(index);  得到索引上元素
+	* set(index , "元素")； 设置某个位置上的元素， 返回值：设置前该位置上的元素
+
+5、Iterator的并发修改异常： 在用迭代器遍历的时候，不能使用List的方法。不能对元素进行修改。
+          List<String> list = new ArrayList<String>();
+		
+		list.add("abc");
+		list.add("efc");
+		list.add("mnl");
+		
+		Iterator<String> it = list.iterator();
+		while(it.hasNext())
+		{
+			String s = it.next();
+			if(s.equals("efc"))
+			{
+				list.add("m");     // 不能进行该操作。
+			}
+			System.out.println(s);
+		}
+
+       报错：ava.util.ConcurrentModificationException    迭代器并发修改异常
+
+6、LinkedList: 一链表为底层结构。 链表集合，增删快，查询慢。其特有方法：
+		LinkedList<Integer> link = new LinkedList<Integer>();
+		 link.add(1);
+		 link.add(2);
+		 link.add(3);
+		 
+//		 int a = link.getFirst();   获取头结点
+//		 System.out.println(a);
+//		 
+//		 int b = link.getLast();     获取尾节点
+//		 System.out.println(b);
+		 
+//		 link.addFirst(10);        在头结点添加一个元素
+//		 link.addLast(100);       在尾节点添加一个节点
+//		 System.out.println(link);
+		 
+		 int a = link.removeFirst();         移出头结点，并返回其值
+		 int b =link.removeLast();           移出为节点返回其值
+		 System.out.println(a+"  "+b);
+		 System.out.println(link);
+
+7、set接口：实现接口：hashSet  不能重复元素，没有索引。  遍历方式： 1、增强for循环  2 、迭代器遍历
+                  
+		  在String中，自带hashCode()以及equals();（已经重写了）
+		  而在自己所建造的类中，要重写 hashCode()以及equals（）； 以使元素达到无序不重复。
+			public class Person {
+				private String name;
+				private int  age;
+				
+				public int hashCode()
+				{
+					return name.hashCode() + age*12;
+				}
+				
+				public boolean equals(Object obj)
+				{
+					if(this == obj)
+					{
+						return true;
+					}
+					if(null == obj)
+					{
+						return false;
+					}
+					if(obj instanceof Person)
+					{
+						Person p = (Person)obj;
+						return name.equals(p.name) && age == p.age;
+					}
+					return false;
+				}
+
+8、LinkedHashSet: 基于链表的哈希表实现。继承了HashSet. 具有顺序，怎样存进，就怎样取出。
+
+  补充 ： TreeSet集合是set接口的一个实现类，其底层结构为红黑树，可以实现对基本类型的自动排序。不允许出现重复元素
+              对于引用类型需要实现Comparable<>接口，重写其CompareTo()方法。
+	      public class Person implements Comparable<Person> {
+		    private String name;
+		    private int age;
+		    ...
+		    public int compareTo(Person o) {
+			return 0;                //当compareTo方法返回0的时候集合中只有一个元素
+			return 1;                //当compareTo方法返回正数的时候集合会怎么存就怎么取
+			return -1;                //当compareTo方法返回负数的时候集合会倒序存储
+		    }
+		}
+
+		treeSet根据自定以的方式进行比较元素 ：
+		        public int compareTo(Person o) {
+				// 按照年龄进行排序 ， 如果年龄相同，就会按照名字的内容进行比较
+				int age = this.age - o.age;            
+				return age==0?this.name.compareTo(o.name):age;
+			}
+
+	       对基本类型通过比较器进行比较 ： 
+	               需求:现在要制定TreeSet中按照String长度比较String。 Comparetor<>
+		        public class ConpareByLen implements Comparator<String>{
+			@Override
+			public int compare(String o1, String o2) {
+			   int len = o1.length() - o2.length();
+			   return len==0?o1.compareTo(o2):len;
+			}
+		    }
+               // 打印结果长度由小到大顺序排列
+	        TreeSet<String> set = new TreeSet<>(new ConpareByLen());
+		set.add("hfhfh");
+		set.add("fji");
+		set.add("a");
+		set.add("hvfidhvfd");
+		Iterator<String> iterator = set.iterator();
+		while(iterator.hasNext()){
+			System.out.println(iterator.next());
+		}
+
+Map 接口： Hashmap(无序)   LinkedHashMap（有序）
+              Map<Integer, String>  mp = new HashMap<Integer, String>();
+		mp.put(1, "a");     put() 添加元素，其返回值为value类型，一般情况下返回null，当键值覆盖时，返回被覆盖的value
+		mp.put(2, "b");
+		mp.put(3, "c");
+		mp.put(4, "c");
+		mp.put(4, "d");
+		String value = mp.remove(4);     // remove() 通过键值移出一个元素，并返回实值
+		System.out.println(value);
+		
+		System.out.println(mp);
+		System.out.println(mp.get(2));     // 通过键值获取一个人元素
+
+    **遍历：将键值通过KeySet方法保存到Set集合中，通过迭代器遍历键值，再通过get方法获取到实值。
+          Map<Integer, String>  mp = new HashMap<Integer, String>();
+		mp.put(1, "a");
+		mp.put(2, "b");
+		mp.put(3, "c");
+		mp.put(4, "c");
+		
+		Set<Integer> set = mp.keySet();
+		Iterator it = set.iterator();
+
+		while(it.hasNext())
+		{
+			Integer key = (Integer) it.next();
+			String value = mp.get(key);
+			System.out.println(key+"  "+value);
+		}
+ 
+           //增强for循环
+              for(Integer key : set)
+		{
+			String value = mp.get(key);
+			System.out.println(key+"   "+value);
+		}
+    ** 遍历2： 通过内部类Entry<>完成遍历
+           
+              Map<Integer, String>  mp = new HashMap<Integer, String>();
+		mp.put(1, "a");
+		mp.put(2, "b");
+		mp.put(3, "c");
+		mp.put(4, "c");
+		
+		Set<Map.Entry<Integer, String>> set = mp.entrySet();
+		Iterator<Map.Entry<Integer, String>> it = set.iterator();
+		while(it.hasNext())
+		{
+			Map.Entry<Integer, String> entry = it.next();    // 内部类定义对象：Map.Entry<Interger, String> entry
+			Integer key = entry.getKey();      // 获取键值
+			String value = entry.getValue();   // 获取实值
+			System.out.println(key+"  "+value);
+		
+		}
+
+		//  面试题：（增强for循环 不能遍历Map， 能遍历Set。
+		   for(Map.Entry<Integer, String> entry : set)
+		{
+			System.out.println(entry.getKey()+"  "+entry.getValue());
+		}
+	}
+
+       *Map的另一个接口实现类： HashTable()  线程安全，但是运行速度慢。
+                         ---被HashMap取代。与HashMap的不同点，HashMap能存取null，而HashTable不能。
+			 -----------底层结构：都是哈希表。
+
+      补充 ： TreeMap底层结构为红黑树，与TreeSet的用法一致，不能有重复的key，对key值自动进行排序。底层仍然是红黑树
+                  对于引用类型，需要继承 Comparable<>接口， 进行自定义比较
+		    
+
+9、JDK1.5新特性：方法可变参数。可以传递多个参数，其本质为一个数组。 
+               ---求取未知数的和： getSum（int ... a）必须指定数据类型，并且三个...
+
+	       注意：一个方法中可变参数只能有一个。
+	                 可变参数写在方法列表的的最后面 getSum(int a, int b, int ... c)
+
+10、Collections()工具类，直接操作Collection中一些静态方法
+        ist<Integer>  list = new ArrayList<Integer>();
+		list.add(2);
+		list.add(3);
+		list.add(4);
+		list.add(1);
+		// 升序排列
+		Collections.sort(list);    
+		// 这半查找
+		int index = Collections.binarySearch(list, 3);
+		System.out.println(index);
+		 // 随机排列
+		Collections.shuffle(list);
+		System.out.println(list);
+   

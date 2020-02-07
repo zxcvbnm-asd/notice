@@ -1,0 +1,356 @@
+1、Redies 的安装   
+    下载安装包，解压到usr/local目录下
+    进入redies 目录下 执行 make 命令 ， 执行 make distclean 命令
+    出现gcc的错误， 执行 yum install gcc -y ;  若出现 No file or directory , 则执行 make MALLOC=libc 命令
+    然后在执行make 命令，进行文件编译
+    可以执行 make  install   将命令加载到环境变量中
+
+2、redies 相关命令 ：
+     ./redis-server   : 启动redies
+     ./redis-cli shutdown  : 关闭redies  , 也可以同国 kill pid  / kill -9 pid
+     ./redis-server &   : 后台启动redies
+     nohup ./redis-server &   :  后台启动并将日志输入到 nohup.out文件中
+
+3、redis的三种客户端 ：
+     1、命令行客户端 ：   ./redis-cli -h 127.0.0.1 -p 6379    通过redis 自带命令进入客户端
+     2、redis 远程客户端 ： 安装软件 ， 修改redis下的配置文件 ： redis-config：  bind 127.0.0.1 注释掉 protected madol yes 改为 no;
+          关闭redis 服务器 ，通过命令   ./redis-server /usr/local/redis-3.-1/redis-config & 启动服务器，关闭防火墙
+	  进行连接
+
+4、redis 相关的基础  ：
+     *   ping  : 返回pang   : 代表redis 服务正常
+     *  默认有16个库，可以通过配置文件进行改库，输入的文字默认到第一个库
+     * 切换数据库 ： select  index;
+     * 删除数库中所有数据 ; flushall
+     * 删除数据库 ： flushdb
+     * 获取数据库所有的配置值 ： config get *
+     * 退出链接 ： exit
+     *  查看数据库中key 的数目 ： dbsize;
+     * 查看服务器统计信息 ： info    输出客户端信息 、内存信息、持久化信息
+
+5、redis 相关的命令 ：
+      
+      关于key的命令 ：
+        kyes *  : 查看所有键值   查看某一具体键值 ： keys kk*
+	exists  键名 ： 查看该键是否存在 
+	move key db : 将键值移到另一个数据库
+	ttl key : 查看key值还有多长时间过期  -1 代表永远不过期  -2 代表该键值已经不存在 或者银镜过期
+	expire key seconds : 设置键值的过期时间
+	del key : 删除key
+	type key : 查看key值类型
+	persist key : 清除key的过期时间，实现持久化
+
+6、redis java 相关操作 ：  （启动服务器时需要在配置文件下启动）
+       
+         // 连接服务器
+       Jedis jedis = new Jedis("192.168.145.128", 6379);
+    	 // 获取键值内容
+    	String name = jedis.get("name");
+    	 
+	 // 得到所有键值
+    	Set<String> keys = jedis.keys("*");
+    	
+    	Iterator iterator = keys.iterator();
+    	
+    	while(iterator.hasNext()){
+    		System.out.println(iterator.next());
+    	}
+
+    jedis 对象中存在相关命令，可以代替命令行进行操作
+
+
+7、redis 字符串类型  String：
+     set : 设置 key   value
+     get key :  
+
+     incr key :  key中的数值加一，必须是数字
+     desc key ： 加一
+     setxt :  设置key值生存时间 
+     setnx : key之不存在，则设置，key值存在，则不设置
+     getset： 设置新址并返回旧的值
+     strlen : 返回字符串长度
+     append: 追加字符串 
+     incrby : 指定增加数字
+     descby : 指定建数字
+     setrange : 替换字符串                                     SETRANGE name 1 zhand    （将一位置级以后全部替换）
+     getrange: 截取字符串                                     GETRANGE name 0 1( a[0]  a[1])                        GETRANGE name 0 -1(全部截取)
+     mset : 同时设置一个或多个key值                      mset name liu age 25
+     mget : 同时得到多个key值                               mget name liu
+     msetnx : 设置一个或多个键值 ，若有已经存在的key ,则不成功
+
+ 哈西类型 ：key String value[name: liuweidong  city :beijing]
+    hset : 设置 （单一设置）    hset  name liu
+    hget: 获取  （但以获取）    hget name
+    hmset : 设置多个            hmset person name liu age 25 school heognda
+    hmget : 获取多个           hmget person name age school
+    hgetall : 获取哈希表所有键值 以及相关的属性值             hegtall person                       
+    hkeys : 获取所有键值                          hkeys person
+    hvals : 获取实值                         hvals stu
+    hlen : 获取长度  （该属性中的键值对个数）                        hlen stu 
+    hexists : 查看字段是否存在                        hexists stu name
+    hincrby : 加上一定数字                          HINCRBY stu age 30
+    hincrbyfloat:
+    hsetnx:  key中键值已经存在，则设置不成功，若不存在，则设置成功
+
+列表类型 list   key String  vlaue string[beijing,shanghai ,guangzhou  ]
+      lpush :  左添加元素
+      rpush:  右添加元素
+      lrange: 获取指定范围元素                      LRANGE name 0 2
+      lpop: 左删除一个元素并显示
+      rpop:  右删除一个元素斌显示
+      lindex : 获取制定下表元素                          LINDEX name 0
+      llen:获取长度
+      lrem: 删除元素                                       lrem country 0  handan   // 删除集合中value 为handan的全部值
+      ltrim: 只保留中中间2-4各元素                                                     ltrim list 2 4
+      lset: 修改元素
+      linsert: 插入元素          
+  
+ set类型：key String  value[shanghai guangzghou]  : 实值不允许重复
+    sadd : 添加元素                sadd name liu li zhang
+    smembers : 提取元素        smembers name 
+    sismember:判断元素是否为集合中的元素    sismember name li
+    scard: 获取元素个数           scard name
+    srem:删除一个或多个元素       scard name  liu li
+    srandmember: 随机返回一个元素 或多个  srandmember name
+    spop: 随机删除一个元素    spop name
+    smove: 将元素从一个集合移到另一个集合    smove name person zi     // 将 zi 元素添加到 从 name 集合中 添加到 person 集合中
+    sdiff : 两个集合取差集              sdiff  person name    在person 中去除person和name 中共有的   sdiff  name person  去除 name 中person 和 name 中共有的
+    sunion : 两个集合取并集          sunion person name
+    sinter : 两个集合取交集          sinter name person
+ 
+有序集合：zset   key String value[90 shanghai  80 guangzhou]    可以进行排序（根据分数进行排序）
+   zadd: 添加远元素               zadd  A  1 a 2 b 0 c 6 d                 数据顺序 ：  c a b d 
+   zrem: 删除元素
+   zcard: 获取元素个数
+   zrank: 获取某个元素的排名
+   zrange: 获取指定成员
+   zrevrank: 反序
+   zcount: 获取两封书之间元素个数
+   zrangebyscore:获取两份数之间的元素
+
+8、消息的订阅与发布 ：
+    
+    消息队列三要素 ：
+       生产者、消费者、消息服务器 （redis中介）
+       生产者-----》消息服务------》消费者
+
+  再redis客户端下执行 ，通过命令语句执行
+   消费者选定频道 ： subscribe  chnnel
+   生产者发送消息 ： publish chnnel  + message
+
+   java 代码实现消息的订阅与发送
+
+		   收先设置消息订阅者 ：
+		      public class RedisSubscriber extends JedisPubSub {
+
+			@Override
+			public void onMessage(String channel, String message) {
+			      // 此回调方法执行相关业务    
+				System.out.println("channel已经联通"+message);
+			}
+			
+			public static void main(String[] args) {
+				// 连接redis
+				Jedis jedis = new Jedis("192.168.145.128", 6379);
+				// 创建一个redispub对象
+				RedisSubscriber pub = new RedisSubscriber();
+				// 消费者订阅频道信息
+				jedis.subscribe(pub, "channel");
+	                }
+
+		  设置消息生产者 ：
+			   public class RedisPublisher {
+			  public static void main(String[] args) {
+				  Jedis jedis = new Jedis("192.168.145.128",6379);	
+				  // 设置频道发送消息
+				  jedis.publish("channel", "欢迎收听我的月亮你的心");
+			}
+
+9、redis 事务 ：
+    MULTI : 用multi  命令告诉 redis , 接下来要执行的命令先不要执行 ，把他们暂时存起来（开启事务）
+     set k2 2 : 第一条命令进入等待队列
+     set k v : 第二条命令进入等待队列
+    EXEC : 告知redis 执行前两条命令 （提交事务）  /  discard :  回滚事务
+
+10、redis 的watch机制实现乐观锁
+       监视一个或多个key  ,如果事务exec 执行之前这个key 被其他命令所修改，那么事务江北打断
+
+       set k1 1 
+       watch k1   : 监视k1，当开始监控时，其他客户端不能修改k1的值
+       set k1 2
+       multi     开启事务
+       set k1 3
+       exec  ： 提交 事务
+
+       最终k1 的值为 2
+
+11、redis 两种实现持久化的方式 ：
+       *   通过RDB方式写入 ：Redis Databases, 在指定的时间间隔内将内存中数据集快照写入硬盘中，数据回复时将快照文件直接写入内存。
+           RDB方式数据持久化，配置 redis.conf 即可：
+	    save<seconds><change>
+	        save 100 2    // 在100秒内，数据改变两次，将数据写入硬盘当中 
+           dbfilename : 设置RDB文件名，默认drump.rdb
+	   dir : 文件所在位置
+
+       *AOF持久化 ： 将Redis命令写入硬盘中。实现持久化
+         appendonly : 默认是no, 改成yes 便可实现持久化
+	 appendfilenme : 指定AOF文件，文件名 ： appendonly.aof
+	 apppendfsync :  no: 不主动进行同步操作，有系统完成 ,30秒一次。比较快，但是不安全
+	                          always：每次执行写入数据同步执行，慢一些但是比较安全
+				  enerysec: 每秒执行一次同步操作，比较平衡，介于速度安全之间
+         atuo-aof-rewrite-percentage
+	 atuo-aof-rewrite-min-size: 允许重写最小AOF文件大小
+
+
+12、redis主从复制 配置文件 ：
+       主  ：（master）
+           include  /usr/local/redis-3.2.12/redis.conf  // 包含 原来服务其配置文件信息
+	   daemonize yes     // 同意后台启动
+	   port 6380
+	   pidfile /var/run/redis_6382.pid
+	   logfile 6382.log
+	   dbfilename dump6382.rdb
+
+	从 ：（slave）
+	   include   /usr/local/redis-3.2.12/redis.conf
+	   daemonize yes
+	   port 6380
+	   pidfile /var/run/redis_6382.pid
+	   logfile 6382.log
+	   dbfilename dump6382.rdb
+	   slaveof 127.0.0.1 6380
+   
+       相关指令 ： info replication : 查看服务器状态，是否为主或从
+                         slaveof no one  : 可以将从服务器提升为主服务器
+			 slaveof  127.0.0.1  6381  : 将主服务器变成从服务器
+
+12、Redis 高可靠哨兵 ：
+       在配置文件中  ： sentinel monitor mymaster 127.0.0.1 6379 2      // IP 哨兵监控主服务器的IP   主服务器的端口号  投票数： 需要两个哨兵
+       在服务器中断之后，通过哨兵可以监控到，并将其他slave提升为 master,成为新的master,设置多个哨兵监视一个主服务器
+
+       修改配置文件 ： sentinel.conf  
+       修改port 26380
+       修改监控的服务器端口号 ： 6380
+    
+       启动sentinel :  ./redis-sentinel  ../redis26380.conf  
+
+       总结 ： 当主服务器挂掉后，哨兵会将主服务器转移到其他从服务器上。当挂掉的服务器修好后，哨兵会将其再次提升为主服务器
+                 在开启三台服务器的情况下，在开启三个窗口，开启三个哨兵。
+
+13、redis 安全问题 ：(均在redis.conf文件中执行)
+       1、设置密码 ： requirepass :  
+       2、绑定IP ： bind 127.2.3.6    
+       3、禁止命令 或 重命名 
+          rename-command flushall "  "      #flushall
+	  rename-command config  " "       #
+	  rename-command flushdb ""   #
+       4、修改默认端口    port  8015
+
+14、redis 的优点 ：
+       * redis足够简单稳定
+       *支持丰富的数据结构
+       *内存存储读写性能优秀
+       *提供持久化支持
+       *支持部分事务操作
+
+  补充 ： redis连接池 ：
+             @Test
+		public void test2(){
+			JedisPool pool = new JedisPool("192.168.1.108", 6379);
+			Jedis jedis = pool.getResource();
+			String name = jedis.get("name");
+			System.out.println(name);
+			jedis.close();
+			pool.close();
+		}
+
+             redis集群java代码 ：
+                @Test
+			public void test3(){
+				// 创建一个JedisCluster 对象，里面有一个参数nodes为set类型，里面包含了若干个HostAndPort对象
+				Set<HostAndPort> nodes = new HashSet<>();
+				nodes.add(new HostAndPort("192.168.1.108", 7001));
+				nodes.add(new HostAndPort("192.168.1.108", 7002));
+				nodes.add(new HostAndPort("192.168.1.108", 7003));
+				nodes.add(new HostAndPort("192.168.1.108", 7004));
+				nodes.add(new HostAndPort("192.168.1.108", 7005));
+				nodes.add(new HostAndPort("192.168.1.108", 7006));
+				JedisCluster cluster = new JedisCluster(nodes);
+		//		cluster.set("gender", "男");
+				String gender = cluster.get("gender");
+				System.out.println(gender);
+				cluster.close();
+			}
+
+
+
+ 1、解决redis的缓存穿透问题 ：
+        可以通过布隆过滤器 *（BloomFilter）： 　适用范围：可以用来实现数据字典，进行数据的判重，或者集合求交集
+	　对于原理来说很简单，位数组+k个独立hash函数。将hash函数对应的值的位数组置1，查找时如果发现所有hash函数对应位都是1说明
+	      存在，很明显这个过程并不保证查找的结果是100%正确的。同时也不支持删除一个已经插入的关键字，
+	      因为该关键字对应的位会牵动到其他的关键字。所以一个简单的改进就是 counting Bloom filter，
+	      用一个counter数组代替位数组，就可以支持删除了。
+       
+        缺点：具有一定的误判率，不能删除。
+	 <dependency>
+		      <groupId>com.google.guava</groupId>
+		      <artifactId>guava</artifactId>
+		      <version>24.0-jre</version>
+         </dependency>
+
+	    // 先将热点数据的key值放到布隆过滤器
+	    public void putBloomFilter(){
+		List<User> users = userMapper.findByPage();
+		BloomFilter bloomFilter = BloomFilter.create(Funnels.stringFunnel(Charsets.UTF_8),users.size(),0.0001);
+		for (User user : users) {
+		    bloomFilter.put(user.getUid());
+		}
+
+		String key = "01c057ef-6ded-46e8-bdeb-0mf5967f31e2";
+		boolean b = bloomFilter.mightContain(key);                   // 判断布隆过滤器中是否可能存在key
+		System.out.println(b);
+	    }
+  
+   -- lua 脚本
+        好处 ：  可以减少网络开销 ，大幅度提升服务性能
+                    减少操作 ：redis 把所有操作当做一个整体来执行，中间不会插入其他命令， 相当于存储过程‘
+		    复用功能 
+        lua是一个动态类型语言，可以存储任何类型的值
+	      * 空 ： nill
+	        字符串 ： “  ”  ' '
+                数字
+		布尔  boolean
+		表 ：是lua的唯一数据结构， 既可以当做数组，也可以做map，或被视为对象
+		函数 ： 封装某个函数或某些功能
+         变量 ：全局变量和局部变量 
+	                     全局变量无需声明可以直接使用，默认值为nill， 在redis脚本中不允许使用全局变量，以防止脚本之间相互影响
+		             局部变量的声明 ：  local 变量名 
+	  注释 ： -- 单行 
+	              --[[开始，到]]结束
+	  赋值 ：lua支持多重赋值 ：local a,b = 1, 2, 3
+	  操作符 ： ~= 不等于      
+	                 如果类型不同进行比较，会返回false，可以根据 tonumber或者 tostring 进行转换
+		         
+
+
+redis进行集群搭建 ：
+    下载redis ：
+                 wget http://download.redis.io/releases/redis-5.0.4.tar.gz
+     安装c语言的环境 ：
+               yum install gcc-c++
+      编译   进入redis源码目录。    cd /redis/src :   make 
+      安装    在 src目录下  ：        make install PREFIX=/usr/local/redis   PREFIX参数指定redis的安装目录。一般软件安装到/usr目录下
+                 将解压的redis的redis.conf 复制到 安装的redis的bin目录下  cp redis.conf  /usr/local/redis/bin
+
+      将redis复制6分到redis-cluster目录下 ,分别修改每个redis下的redis.conf文件 ：
+                port 7000 //端口7000,7002,7003 
+		bind 本机ip //默认ip为127.0.0.1 需要改为其他节点机器可访问的ip 否则创建集群时无法访问对应的端口，无法创建集群 （0.0.0.0）
+		daemonize yes //redis后台运行 
+		pidfile /var/run/redis_7000.pid //pidfile文件对应7000,7001,7002 
+		cluster-enabled yes //开启集群 把注释#去掉 
+		cluster-config-file nodes_7000.conf //集群的配置 配置文件首次启动自动生成 7000,7001,7002 把注释#去掉 
+		cluster-node-timeout 15000 //请求超时 默认15秒，可自行设置  把注释#去掉 
+		appendonly yes //aof日志开启 有需要就开启，它会每次写操作都记录一条日志　
+        建立集群 ： 
+           ./redis-cli --cluster create --cluster-replicas 1  192.168.25.132:7001  192.168.25.132:7002 
+	                                     192.168.25.132:7003  192.168.25.132:7004  192.168.25.132:7005  192.168.25.132:7006

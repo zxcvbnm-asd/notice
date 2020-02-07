@@ -1,0 +1,344 @@
+
+javascript
+
+1、 javascript 与 html 结合的两种方式：
+       
+       * <script type = "text/javascript">  js代码   <script>
+
+       * 创建一个js文件， 然后引入js文件。
+            <script  type ="text/javascripte"  src ="js文件路径" >   <script>  
+	        注意：<script> </script> 之间不能再写代码了。
+
+2、js原始类型 和 定义变量
+     
+     * 定义变量的关键字：  var
+
+     * 原始数据类型： 
+            string:  字符串  var str  = "aaaa"
+	    number : 数字  var  num = 123
+	    boolean :  true 和 false   var  s = true
+	    null  :  返回值为空（不是重点）
+	    undufined：未赋值变量  var aa;
+
+	     注意 ： typeof 判断变量类型。 alert(typeof(num));
+
+3、 js基本语句 ： switch（） if（）  for（） while（） 都 do  - while()与Java一样
+
+4、js运算符：
+      * 不区分小数和整数   var i = 123;  i/1000*1000  = 123;
+      
+      * == 和 === 的区别： 
+          --- 都表示判断
+	  --- ==比较数值是否相同， ===比较数值和类型是否都相同。
+
+      * documents.write(""); 在页面输出语句， 可以是html代码；
+           documents.write("hr/");
+
+ 5、乘法口诀表：
+        <script  type = "text/javascript">
+			document.write("<table   border =  '4'  bordercolor = 'red'>");
+			for(var i = 1;  i<= 9; i++)
+			{   
+				document.write("<tr>");
+				for(var j = 1; j<=i; j++)
+				{
+					    document.write("<td  align = 'left'>");
+						var sum = 0;
+						sum = i * j;
+						document.write(i+ "*"+ j+ "=" +sum );
+						document.write("</td>");
+				}
+				 document.write("</tr>");
+			}
+			
+			document.write("</table>");
+
+6、js 数组三种形式：
+
+       * var arr = [1,2,3,"4"];
+
+       *var arr = new Array(5);  // 一个数组有5个元素
+            arr[0] = 1;
+
+       * var arr = new Array(1 ,2,3) ;  数组中有三个元素; 1,2,3
+
+        属性：length， 计算数组的长度。  arr.length
+
+7、js函数：
+     * function test()
+     {
+	函数主体
+     }
+
+     调用; test();
+
+
+     * var add = function()
+     {
+	函数主体；
+     }
+
+       调用 ： add();
+
+8、<script> </script> 标签一般放在<body>后面。
+
+9、无函数重载
+
+10、string :
+         * 属性 ： str.length ; 
+	 * 方法：
+	   （1）var str = "abc";
+		         var str1 = "12";
+				 document.write(str.length);                字符串长度
+				document.write(str.bold());                     字符串加粗
+				document.write(str.fontcolor("red"));     字符串颜色
+				document.write(str.fontsize(5));              字符串子的大小
+				document.write(str.link());                       字符串设置成超链接
+				document.write(str1.sub());  // sup           字符串上标 和下标
+ 
+
+             （2） 与Java相似的方法：
+	     			
+	              var str = "abc";
+				 var str1 = "def";
+					 var str2 = "a-d-d-b-c"
+					 document.write(str.concat(str1));	str.concat(string) : 连接两个字符串	
+
+					 document.write(str.charAt(1));             str.charAt(index) :返回索引字符
+
+					 document.write(str.indexOf("b"));      str.indexOf(char) : 返回字符下表所在位置
+					 document.write("<hr/>");
+
+					 var arr = str2.split("-");                         str.split() : 将字符串分割成数组
+					 for(var i = 0;i < arr.length; i++)
+					 {
+						  document.write(arr[i] + "   ");
+					 }
+
+					 document.write(str.replace("b", "Q"));    str.replace(两个参数)  将字符串中原始字符换成第二个
+	                        document.write("<hr/>");
+
+					 var str = "sfhiszhviv";
+					 document.write(str.substr(1,3));        str.substr() :返回字符串[1,  3]
+					 document.write(str.substring(1,3));     str.substring() : 返回字符串 [1, 3)
+
+11、 数组：
+       *创建的三种方式： （1）、var arr =[1,2,3,4];  注意 是【】 不是{}；
+       				    （2）、var arr = new Array(5); // 5个元素
+				    （3） 、var arr = new Array(1,3,5);
+				     （4）、创建一个空数组：var = new Array();  \\空数组
+
+        * 属性 ： arr.length;
+
+	* 方法 :   （1）、concat 连接两个数组
+	               （2）、push 在末尾添加一个元素并返回数组长度， 当添加的元素为数组是，仍然按一个元素计算
+		       （3）、pop 删除末尾元素并且返回删除的那个元素
+		       （4）、join : 分割一个数组， 正常数组形式1,2,3,4 而arr.join("-") 后，则1-2-3-4
+		       （5）、reverse：实现数组的逆序
+
+12、Date 
+              创建对象; var date = new Date();
+	       var date = new Date();
+	     document.write(date);   // Sat Sep 08 2018 21:57:44 GMT+0800 (中国标准时间
+
+	    // 转换成中国标准时间格式
+	    document.write(date.toLocaleString());   //?2018?年?9?月?8?日? ?21?:?59?:?08      **** 需要的方法： toLocaleString()
+
+                   document.write(date.getFullYear()+"     ");    // 得到年  getFullYear()
+
+		   document.write(date.getMonth()+1);      // 得到月  返回0~11 所以需要加1
+		   document.write("<hr/>");
+
+		   document.write(date.getDay());            // 得到星期  getDay()  返回0~6  0代表周日
+
+		   document.write(date.getDate());     //  得到日 ：  getDate()
+
+		document.write(date.getMinutes());   // 得到分钟 getMinutes()
+
+		 document.write(date.getHours());      // 得到小时  getHours()
+		 
+		 document.write(date.getSeconds());    // 得到秒  getSeconds
+		 
+		 document.write(date.getTime());      // 得到1970到现在的毫秒值
+
+13、Math对象： 其中的方法都为静态方法，所以直接 Math.方法（）；
+              var n = 2.5;
+        document.write(Math.ceil(n));     // 向上进位  3
+	document.write(Math.floor(n));   // 向下进位  2
+	document.write(Math.round(n));   // 四舍五入  3
+	document.write("<hr/>");
+	document.write(Math.floor(Math.random()*100));   // random() 取随机数0.00144~1， 可以乘以10、100改变随机数
+	document.write("<hr/>");
+	document.write(Math.max(5,9));    // 取较大值
+
+	* pow(2,3)  2的3次方
+	*sin(), cos(), tan()
+	*abs() 绝对值
+	* min(1,3)小的
+
+14、js的全局函数，直接调用函数名即可。
+     * eval() 直接调用字符串中js语句
+       var str = "alert('1234');";
+	eval(str);
+
+    * encodeURI()  对字符串进行编码  （中文标点符号编码）
+	var  str1 = "中文测试： aaaa1155";
+	var encode1 = encodeURI(str1);
+	document.write(encode1);
+
+    *  decondeURI()  对字符串进行解码
+	var decode1 = decodeURI(encode1);
+	document.write(decode1);
+
+   *  isNaN（） ：判断字符串是否位数字， 若是，返回FALSE不是TRUE
+	var str2 = "aaaa";
+	var b= isNaN(str2);
+	document.write(b);
+
+     * parseInt（） 将字符串中数字转换成int类型
+	var str3 = "113";
+	document.write(parseInt(str3) + 1
+
+15、 js的重载函数：
+         * 面试题（js是否存在重载）
+	   1、js不存在重载函数
+	   2、 但是可以模拟重载函数
+	          function add()
+		{
+			var sum = 0;
+			 for(var i = 0; i < arguments.length; i++)
+			 {
+				 sum = sum + arguments[i];
+			 }
+			  return sum;
+		}
+	  
+		   /*   function  add(a, b ,c)
+		   {
+			   return a +b +c;
+		   }*/
+
+		   alert(add(1,2));
+		   alert(add(1,2,3));
+
+16、js的bom对象：
+       *bom:  浏览器对象模型
+
+       *navigator :获取客户机信息（获取浏览器信息）
+          document.write(navigator.appName());  //浏览器名称
+
+        *screen  :获取屏幕信息
+	  document.write(screen.width);   宽
+	  document.write(screen.height);  长
+
+	* location ：1、获取到url请求的地址  :  
+				document.write(location.href);
+	                   2、设置url地址，在页面设置一个跳转按钮，按下后跳转到另一个页面。
+			        <input type = "button"  value = "跳转"  onclick = "href1()"/>
+				    <script  style = "text/javascript">
+				      
+					  function href1()
+					  {
+						  location.href = "路径";
+					  }
+
+				  </script>
+	*history:记录访问页面的历史
+	            访问上一页： history.back()    或  history.go(-1)
+		    访问下一页; history.forward()   或 history.go(1)
+
+	*****window下的函数：窗口对象， 顶层对象
+	     * alert()  //  页面弹出框，显示出内容
+
+             *confirm()  :确认框，返回值为boolean类型
+
+	         var flag = window.confirm("是否删除");
+		   if(flag == true)
+		   {
+			   document.write(alert("删除成功"));
+		   }
+		   else
+		   {
+			   document.write(alert("删除失败"));
+		   }
+
+	      * propmt() : 用户提示框：
+	        window.prompt("请输入姓名：" ,"2");
+
+	      * open() : 打开一个新窗口， 第一参数 ： 路径  2，空参 3、窗口大小
+	         window.open("https://www.bilibili.com/video/av11887542/?p=57", " ", "width = 200, height = 200");
+
+	      * opener获取父窗口的 document （当父窗口打开 open新窗口时）
+	         $(function(){
+		      var text = $("#name").text();
+		      var  document = window.opener.document;
+		      var name = document.getElementById("name");
+		      alert(text);
+		      name.value=text;
+		  })
+
+	      * close() ; 关闭窗口
+
+	      *  定时器：setInterval("alert('aaa')", 3000);  3秒后就会弹出一次
+
+	      *定时器2：setTimeout("alert('aa')", 3000);  3秒后执行一次，只执行一次
+
+	      * clearIntval() 清除1型定时器  参数：定时器返回的id值
+	         clearTimeout() 清除2型定时器
+
+		      <input type = "button"  value = "clearIntval"  onclick = "clear1()">
+			 <br/>
+			 <input type = "button"  value = "clearTimeout"  onclick = "clear2()">
+		    <script  style = "text/javascript">
+
+			var id = setInterval("alert('235')", 3000);
+			var id2 = setTimeout("alert('125')", 2000);
+
+			function clear1()
+			{
+				clearInterval(id);
+			}
+
+			function clear2()
+			{
+				clearTimeout(id2);
+			}
+
+
+** dom对象
+    dom； document  object model ：文本对象模型
+        
+	解析超文档过程：
+	根据html的层级结构，在内存中分配一个树形结构，需要把html中每部分封装成对象
+	--document对象; 整个文档
+	--element 对象： 标签对像
+	--属性对象
+	--文本对象
+
+	---Node节点对象：这个对象是这些对象的父对象
+	    如果在对象里面找不到想要的方法，去Node对象里去找。 相当于Java中Object类
+
+  闭包 ：
+     从函数外部读取函数内部局部变量。
+     将局部变量的作用于延长 
+	     $(function () {
+
+		  var fadd = add();
+
+		  $(".btn").click(function () {
+		      fadd();
+		      fadd();
+		  })
+
+		  function add() {
+		      var count = 1000;
+		      function  innner() {
+			  count++;
+			  alert(count);
+		      }
+		      return innner;
+		  }
+	      })
+
+	  在内部函数在定义一个函数，延长局部变量的作用域
+

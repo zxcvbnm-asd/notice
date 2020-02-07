@@ -1,0 +1,155 @@
+nginx的安装 ：
+   1、安装如下的依赖库 ：
+        由于nginx是C语言进行编写的，需要编译，在linux需要暗转 jcc的环境。
+	如果没有，则需要安装 ： yum install gcc-c++
+        yum install -y pcre pcre-devel
+	yum install -y zlib zlib-devel
+	yum install -y openssl openssl-devel
+  2、上传安装包进行解压
+      进入目录下，configure是一个可执行文件，用从configure 创建一个makeFile文件
+		./configure \
+		--prefix=/usr/local/nginx \
+		--pid-path=/var/run/nginx/nginx.pid \
+		--lock-path=/var/lock/nginx.lock \
+		--error-log-path=/var/log/nginx/error.log \
+		--http-log-path=/var/log/nginx/access.log \
+		--with-http_gzip_static_module \
+		--http-client-body-temp-path=/var/temp/nginx/client \
+		--http-proxy-temp-path=/var/temp/nginx/proxy \
+		--http-fastcgi-temp-path=/var/temp/nginx/fastcgi \
+		--http-uwsgi-temp-path=/var/temp/nginx/uwsgi \
+		--http-scgi-temp-path=/var/temp/nginx/scgi
+  3、启动之前可能会报错。由于缺少相关的文件，此时只需要创建相关的文件
+             [root@localhost sbin]# mkdir /var/temp/nginx/client -p
+  4、进入nginx 的目录下，启动nginx、
+           启动nginx   ./nginx
+	   关闭nginx    ./nginx -s stop 
+	   刷新配置文件 （在修改配置文件时不用关闭服务器） ./nginx -s reload
+
+       编辑nginx目录下的config下的nginx.config文件 ，该文件的中内容为 
+                                     #user  nobody;
+					worker_processes  1;
+
+					#error_log  logs/error.log;
+					#error_log  logs/error.log  notice;
+					#error_log  logs/error.log  info;
+
+					#pid        logs/nginx.pid;
+
+
+					events {
+					    worker_connections  1024;
+					}
+
+
+					http {
+					    include       mime.types;
+					    default_type  application/octet-stream;
+
+					    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+					    #                  '$status $body_bytes_sent "$http_referer" '
+					    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+					    #access_log  logs/access.log  main;
+
+					    sendfile        on;
+					    #tcp_nopush     on;
+
+					    #keepalive_timeout  0;
+					    keepalive_timeout  65;
+
+					    #gzip  on;
+
+					    server {
+						listen       80;               
+						server_name  localhost;
+
+						#charset koi8-r;
+
+						#access_log  logs/host.access.log  main;
+
+						location / {
+						    root   html;
+						    index  index.html index.htm;
+						}
+					   }
+					    server {
+						listen       81;
+						server_name  localhost;
+
+						#charset koi8-r;
+
+						#access_log  logs/host.access.log  main;
+
+						location / {
+						    root   html;
+						    index  index.html index.htm81;
+						}
+					    }
+					}
+        ***  解决nginx重启“var/run/nginx/nginx.pid" no such file or directory问题 ：
+	       到/var/run下看没有nginx这个目录，创建/var/run/nginx，再启动。重启虚拟机，这个目录会被删掉。 
+  5、配置虚拟主机，利用EditPlus进行编辑 ：
+            具体步骤 * file-->FTP--->FTPSstings
+	                  * 进入一个窗口 ： add--> description: 起个名 
+			                                         UserServer : 服务器的地址
+								 Username :  登录名 root
+								 password :   密码 123456
+								 AndvancedOptions : 添加一个协议 ： sftp  port: 22  点击 OK
+		          * 点击服务器名，找到相关的Driectory下的服务器名， 就进入了Linux目录下了，可以有效对文本进行编辑
+
+  6、为了实现不同网站同时访问一个端口时，可以访问到不同的网站，可以进行如下配置 ：
+                   server {
+			listen       80;
+			server_name  www.wei.com;                    当域名为该域名时会访问 html-wei
+
+			#charset koi8-r;
+
+			#access_log  logs/host.access.log  main;
+
+			location / {
+			    root   html-wei;
+			    index  index.html index.htm;
+			}
+		    }		
+
+	        server {
+			listen       80;
+			server_name  www.dong.com;                        该域名访问的是 html-dong
+
+			#charset koi8-r;
+
+			#access_log  logs/host.access.log  main;
+
+			location / {
+			    root   html-dong;
+			    index  index.html index.htm;
+			}
+		    }
+
+7、反向代理实现配置 ：(nginx 将收到的请求 转发给相应的 服务器进行处理，放回服务器的响应，本身不做任何处理和响应)
+   
+       upstream sohu{
+              http://192.168.1.104:8080
+       }
+       
+         server {
+			listen       80;
+			server_name  www.souhu.com;                        该域名访问的是 html-dong
+
+			#charset koi8-r;
+
+			#access_log  logs/host.access.log  main;
+
+			location / {
+			    proxy_pass: http://sohu;
+			    index  index.html index.htm;
+			}
+		    }
+
+8、nginx实现负载均衡 ： 进行如下配置 
+    upstream zi{
+      server 192.168.1.100:8082;
+      server 192.168.1.100:8022 weight=10;      
+    }
+    l两台服务器是同样的内容，增加权重，可以改变服务器被访问的次数

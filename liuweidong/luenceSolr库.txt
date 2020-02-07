@@ -1,0 +1,514 @@
+luenceLucene 是一个高效的，基于Java 的全文检索库。  ： 基于luence的搜索引擎主要有 ： solr 和 elasticsearch 
+luence的基本原理  ：
+    我们生活中的数据总体分为两种：结构化数据 和非结构化数据 。
+
+		结构化数据： 指具有固定格式或有限长度的数据，如数据库，元数据等。
+
+		非结构化数据： 指不定长或无固定格式的数据，如邮件，word文档等。
+
+                非结构化数据又一种叫法叫全文数据。
+
+按照数据的分类，搜索也分为两种：
+
+		对结构化数据的搜索 ：如对数据库的搜索，用SQL语句。再如对元数据的搜索，如利用windows搜索对文件名，类型，修改时间进行搜索等。
+
+		对非结构化数据的搜索 ：如利用windows的搜索也可以搜索文件内容，Linux下的grep命令，再如用Google和百度可以搜索大量内容数据。
+
+对非结构化数据也即对全文数据的搜索主要有两种方法：
+
+             一种是顺序扫描法 (Serial Scanning)： 所谓顺序扫描，比如要找内容包含某一个字符串的文件，就是一个文档一个文档的看，
+	     对于每一个文档，从头看到尾，如果此文档包含此字符串，则此文档为我们要找的文件，接着看下一个文件，直到扫描完所有的文件。
+	 
+            也即将非结构化数据中的一部分信息提取出来，重新组织，使其变得有一定结构，然后对此有一定结构的数据进行搜索，从而达到搜索相对较快的目的。
+
+            这部分从非结构化数据中提取出的然后重新组织的信息，我们称之索引 。
+
+
+全文检索大体分两个过程，索引创建 (Indexing) 和搜索索引 (Search) 。
+
+		索引创建：将现实世界中所有的结构化和非结构化数据提取信息，创建索引的过程。
+
+		搜索索引：就是得到用户的查询请求，搜索创建的索引，然后返回结果的过程。
+
+于是全文检索就存在三个重要问题：
+‘“’
+1. 索引里面究竟存些什么？(Index)
+
+2. 如何创建索引？(Indexing)
+
+3. 如何对索引进行搜索？(Search)
+
+下面我们顺序对每个个问题进行研究。
+
+二、索引里面究竟存些什么
+
+  顺序检索与与全文检索的区别 ：
+      *  对于少量数据，全文检索不一定比顺序检索快（由于其创建索引较慢的原因）
+      * 顺序检索每次搜索都要进行扫描整个文件，而全文检索通过索引进行查询。索引只创建一次，可以多次使用
+
+三、如何创建索引
+全文检索的索引创建过程一般有以下几步：
+
+第一步：一些要索引的原文档(Document)。
+		为了方便说明索引创建过程，这里特意用两个文件为例：
+
+		文件一：Students should be allowed to go out with their friends, but not allowed to drink beer.
+
+		文件二：My friend Jerry went to school to see his students but found them drunk which is not allowed.
+
+第二步：将原文档传给分次组件(Tokenizer)。
+		分词组件(Tokenizer)会做以下几件事情( 此过程称为Tokenize) ：
+
+		1. 将文档分成一个一个单独的单词。
+
+		2. 去除标点符号。
+
+		3. 去除停词(Stop word) 。
+
+              所谓停词(Stop word)就是一种语言中最普通的一些单词，由于没有特别的意义，因而大多数情况下不能成为搜索的关键词，因而创建索引时，
+	       这种词会被去掉而减少索引的大小。
+
+              经过分词(Tokenizer) 后得到的结果称为词元(Token) 。
+
+	   在我们的例子中，便得到以下词元(Token)：
+
+	  “Students”，“allowed”，“go”，“their”，“friends”，“allowed”，“drink”，“beer”，“My”，“friend”，“Jerry”，“went”，
+	 “school”，“see”，“his”，“students”，“found”，“them”，“drunk”，“allowed”。
+
+第三步：将得到的词元(Token)传给语言处理组件(Linguistic Processor)。
+          语言处理组件(linguistic processor)主要是对得到的词元(Token)做一些同语言相关的处理。
+
+		对于英语，语言处理组件(Linguistic Processor) 一般做以下几点：
+
+		1. 变为小写(Lowercase) 。
+
+		2. 将单词缩减为词根形式，如“cars ”到“car ”等。这种操作称为：stemming 。
+
+		3. 将单词转变为词根形式，如“drove ”到“drive ”等。这种操作称为：lemmatization 。
+
+		Stemming 和 lemmatization的异同：
+
+		相同之处：Stemming和lemmatization都要使词汇成为词根形式。
+
+		两者的方式不同：
+
+		Stemming采用的是“缩减”的方式：“cars”到“car”，“driving”到“drive”。
+
+		Lemmatization采用的是“转变”的方式：“drove”到“drove”，“driving”到“drive”。
+
+
+
+          语言处理组件(linguistic processor)的结果称为词(Term) 。
+
+		在我们的例子中，经过语言处理，得到的词(Term)如下：
+
+		“student”，“allow”，“go”，“their”，“friend”，“allow”，“drink”，“beer”，“my”，
+
+第四步：将得到的词(Term)传给索引组件(Indexer)。
+				索引 组件(Indexer)主要做以下几件事情：
+
+				1. 利用得到的词(Term)创建一个字典。
+
+				2. 对字典按字母顺序进行排序。
+
+				3. 合并相同的词(Term) 成为文档倒排(Posting List) 链表。
+
+
+在此表中，有几个定义：
+
+Document Frequency 即文档频次，表示总共有多少文件包含此词(Term)。
+
+Frequency 即词频率，表示此文件中包含了几个此词(Term)。
+
+      所以对词(Term) “allow”来讲，总共有两篇文档包含此词(Term)，从而词(Term)后面的文档链表总共有两项，第一项表示包含“allow”的第一篇文档，
+     即1号文档，此文档中，“allow”出现了2次，第二项表示包含“allow”的第二个文档，是2号文档，此文档中，“allow”出现了1次。
+
+
+三、如何对索引进行搜索？
+
+搜索主要分为以下几步：
+
+    第一步：用户输入查询语句。
+
+   第二步：对查询语句进行词法分析，语法分析，及语言处理。
+
+   第三步：搜索索引，得到符合语法树的文档。
+	此步骤有分几小步：
+
+	首先，在反向索引表中，分别找出包含lucene，learn，hadoop的文档链表。
+
+	其次，对包含lucene，learn的链表进行合并操作，得到既包含lucene又包含learn的文档链表。
+
+	然后，将此链表与hadoop的文档链表进行差操作，去除包含hadoop的文档，从而得到既包含lucene又包含learn而且不包含hadoop的文档链表。
+
+	此文档链表就是我们要找的文 档。
+
+第四步：根据得到的文档和查询语句的相关性，对结果进行排序。
+       虽然在上一步，我们得到了想要的文档，然而对于查询结果应该按照与查询语句的相关性进行排序，越相关者越靠前。
+
+如何计算文档和查询语句的相关性呢？
+
+       不如我们把查询语句看作一片短小的文档，对文档与文档之间的相关性(relevance)进行打分(scoring)，分数高的相关性好，就应该排在前面。
+
+那么又怎么对文档之间的关系进行打分呢？
+
+1. 计算权重(Term weight)的过程。
+   影响一个词(Term)在一篇文档中的重要性主要有两个因素：
+
+	Term Frequency (tf)：即此Term在此文档中出现了多少次。tf 越大说明越重要。
+
+	Document Frequency (df)：即有多少文档包含次Term。df 越大说明越不重要。
+
+容易理解吗？词(Term)在文档中出现的次数越多，说明此词(Term)对该文档越重要，如“搜索”这个词，在本文档中出现的次数很多，说明本文档主要就是讲这方面的事的。然而在一篇英语文档中，this出现的次数更多，就说明越重要吗？不是的，这是由第二个因素进行调整，第二个因素说明，有越多的文档包含此词(Term), 说明此词(Term)太普通，不足以区分这些文档，因而重要性越低。
+
+这也如我们程序员所学的技术，对于程序员本身来说，这项技术掌握越深越好（掌握越深说明花时间看的越多，tf越大），找工作时越有竞争力。然而对于所有程序员来说，这项技术懂得的人越少越好（懂得的人少df小），找工作越有竞争力。人的价值在于不可替代性就是这个道理。
+
+道理明白了，我们来看看公式：
+
+
+2. 判断Term之间的关系从而得到文档相关性的过程，也即向量空间模型的算法(VSM)。
+   我们把文档看作一系列词(Term)，每一个词(Term)都有一个权重(Term weight)，不同的词(Term)根据自己在文档中的权重来影响文档相关性的打分计算。
+   于是文档二相关性最高，先返回，其次是文档一，最后是文档三。
+
+
+1. 索引过程：
+
+1) 有一系列被索引文件
+
+2) 被索引文件经过语法分析和语言处理形成一系列词(Term) 。
+
+3) 经过索引创建形成词典和反向索引表。
+
+4) 通过索引存储将索引写入硬盘。
+
+2. 搜索过程：
+
+a) 用户输入查询语句。
+
+b) 对查询语句经过语法分析和语言分析得到一系列词(Term) 。
+
+c) 通过语法分析得到一个查询树。
+
+d) 通过索引存储将索引读入到内存。
+
+e) 利用查询树搜索索引，从而得到每个词(Term) 的文档链表，对文档链表进行交，差，并得到结果文档。
+
+f) 将搜索到的结果文档对查询的相关性进行排序。
+
+g) 返回查询结果给用户。
+
+
+1、创建索引库：
+      public static void main(String[] args) throws IOException {
+		//指定分析器对文档内容进行分析
+		Analyzer analyzer = new StandardAnalyzer();
+		//Path path = Paths.get("E://index");
+		//指定索引库存放的位置
+		Directory directory = FSDirectory.open(new File("E://index")); 
+		IndexWriterConfig indexWriterConfig = new IndexWriterConfig(Version.LATEST, analyzer);
+		// 第一步 创建一个indexWriter 对象
+		IndexWriter indexWriter = new IndexWriter(directory, indexWriterConfig);
+		// 第二步 创建一个Document 对象
+	
+		//创建filed对象，将filed对象放到document中
+		File file = new File("E://test");
+		File[] files = file.listFiles();
+		for(File f : files){
+			Document document = new Document();
+			// 获取到文件
+			String name = f.getName();
+			Field fileNameField = new TextField("fileName", name, Store.YES);
+			// 获取文件路径
+			String paths = f.getPath();
+			Field filePathFiled = new StoredField("filePath", paths);
+			// 获取文件大小
+			long size = FileUtils.sizeOf(f);
+			Field fileSize = new LongField("fileSize", size, Store.YES);
+			// 获取文件内容
+			String content = FileUtils.readFileToString(f);
+			Field  fileContentField = new TextField("fileContext", content, Store.YES);
+			
+			document.add(fileNameField);
+			document.add(filePathFiled);
+			document.add(fileContentField);
+		// 用 indexWriter将文档写入数据索引库			
+			indexWriter.addDocument(document);
+		}
+		// 第五步关流
+		indexWriter.close();
+	}
+
+根据索引进行查询 ：
+      public void search() throws IOException{
+		// 创建directory,指定索引库所在位置
+		Directory directory = FSDirectory.open(new File("E://index"));
+		//创建一个indexReader对象，指定directory
+		IndexReader indexReader = DirectoryReader.open(directory);
+		//创建一个indexsearch 对象，需要指定indexReader
+		IndexSearcher searcher = new IndexSearcher(indexReader);
+		//创建一个 TremQuery对象,指定查询的域和关键词
+		TermQuery query = new TermQuery(new Term("fileName", "spring.txt"));
+		// 执行查询
+		TopDocs top = searcher.search(query, 3);
+		// 返回查询结果，遍历并输出结果
+		ScoreDoc[] scoreDocs = top.scoreDocs; // 取出频率最高的两个文档，放在数组中
+		for(ScoreDoc scoreDoc : scoreDocs){
+			// 获取文档编号
+			int doc = scoreDoc.doc;
+			// 通过文档编号获取文档
+			Document document = searcher.doc(doc);
+			String name = document.get("fileName");
+			String size = document.get("fileSize");
+			String path = document.get("filePath");
+			String context = document.get("fileContext");
+			System.out.println(name);
+			System.out.println(size);
+			System.out.println(path);
+			System.out.println(context);
+			System.out.println("=================");
+		}
+		//关闭流
+		indexReader.close();
+	}
+
+	// 删除全部索引库
+		@Test
+		public void testDelete() throws IOException{
+			IndexWriter indexWriter = getIndexWriter();
+			indexWriter.deleteAll();
+			indexWriter.close();
+		}
+
+        // 根据条件删除指定索引
+	    public void deleteByQuery() throws IOException{
+		IndexWriter indexWriter = getIndexWriter();
+		TermQuery query = new TermQuery(new Term("fileName","java"));
+		indexWriter.deleteDocuments(query);
+		indexWriter.close();
+	    }
+
+	// 修改索引（原理：先删除，再添加索引）
+	    @Test
+		public void updateLuence() throws IOException{
+			IndexWriter  indexWriter = getIndexWriter();
+			Document doc = new Document();
+			doc.add(new TextField("FileC", "相关工作",Store.YES));
+			indexWriter.updateDocument(new Term("fileName","java"), doc, new IKAnalyzer());
+			indexWriter.close();
+		}
+
+        //组合查询
+	    @Test
+	    public void queryByAssociation() throws Exception {
+		IndexSearcher searcher = getIndexSearcher();
+		BooleanQuery  bq = new BooleanQuery();
+		Query query1 = new TermQuery(new Term("fileName", "java"));
+		Query query2 = new TermQuery(new Term("fileName", "study"));
+		// 条件语句一是否必须满足（MUST/SHOULD/NOT）
+		bq.add(query1, Occur.MUST);
+		bq.add(query2, Occur.SHOULD);
+		TopDocs top = searcher.search(bq, 8);
+		showDocument(top, searcher);
+		searcher.getIndexReader().close();
+	    }
+
+   // 根据数值范围进行查询
+	    @Test
+	    public void queryByNumRang() throws Exception{
+		IndexSearcher searcher = getIndexSearcher();
+		Query query =  NumericRangeQuery.newLongRange("fileSize", 100L, 200L, true, true);
+		TopDocs top = searcher.search(query, 8);
+		showDocument(top, searcher);
+		searcher.getIndexReader().close();
+	    }
+
+  //查询全部索引
+	    @Test
+	    public void testQueryAll() throws IOException{
+		IndexSearcher searcher = getIndexSearcher();
+		Query query = new MatchAllDocsQuery();
+		TopDocs top = searcher.search(query, 8);
+		showDocument(top, searcher);
+		searcher.getIndexReader().close();
+	    }
+  // 通过解析条件进行查询 
+	    @Test
+	    public void queryByParse() throws  Exception{
+		IndexSearcher searcher = getIndexSearcher();
+		QueryParser qp = new QueryParser("fileName", new IKAnalyzer());
+		Query query = qp.parse("fileContext:java");
+		TopDocs top = searcher.search(query, 8);
+		showDocument(top, searcher);
+		searcher.getIndexReader().close();
+	    }
+ 
+
+ 1、solr整合 Tomcat
+      * 将solr文件中的weapp下的 solr.war复制到Tomcat的weapp下，并且解压到solr文件中，删除solr.war压缩包
+      * 将solr中example中lib 里面的exit中的5个依赖包 复制到 Tomcat中solar中的WEB-INF下的lib中
+      * 在某一个目录下创建一个 solrhome文件，将solr文件下中的example中的solr下的文件复制一份到solrhome中
+        在Tomcat中的weapp下的solr的WEB-INF下的web.xml中配置solrhome路径
+
+2、配置中文分析器 ：  在solrhome下的schema.xml中配置
+
+            *   将IK的 jar 包放到tomcat的 solar 的WEB-INF的 lib包下
+	    *   在lib层目录新建classes文件，将IK的配置文件放到该文件下
+
+             *  <!-- 配置IK解析器-->
+		   <fieldType name="text_ik" class="solr.TextField">
+		      <analyzer  class="org.wltea.analyzer.lucene.IKAnalyzer"/>
+		   </fieldType>
+		 <!--设置域-->
+		  <field name="title_ik" type="text_ik" indexed="true" stored="true"/>
+		  <field name="content_ik" type="text_ik" indexed="true" stored="false" multiValued="true"/>
+
+4、SolrJ :是访问solr服务的Java客户端，提供索引和搜索的方法。SolrJ通常嵌入在业务系统中，通过SolrJ的API操作solr 服务
+         //  添加一个文档 与 更新一致
+	@Test
+	public void addDocument() throws SolrServerException, IOException{
+        // 连接solr服务器
+		String baseURL = "http://localhost:8080/solr/collection1";
+		SolrServer server = new HttpSolrServer(baseURL);
+		SolrInputDocument doc = new SolrInputDocument();
+		doc.setField("id", 456);
+		doc.setField("t_name", "摩托车");
+		doc.setField("t_price", 45.9);
+		// 添加到服务器
+		server.add(doc);
+		server.commit();
+	}
+
+	    @Test
+		public void deleteIndex() throws SolrServerException, IOException{
+			String baseURL = "http://localhost:8080/solr/collection1";
+			SolrServer server = new HttpSolrServer(baseURL);
+			server.deleteByQuery("*:*", 1000);
+		//	server.deleteById("456", 1000);
+			
+		}
+
+	// 查询
+	@Test
+	public void query() throws Exception{
+		String baseURL = "http://localhost:8080/solr/collection1";
+		SolrServer server = new HttpSolrServer(baseURL);
+		// 用于封装查询条件
+		SolrQuery solrQuery = new SolrQuery();
+		// 查询 ： 关键词  java 过滤条件 ： press:清华大学  price : 0-100   排序 ：价格降序  查询指定字段 ： name,price
+		solrQuery.set("q", "t_name:java");
+		//过滤条件
+		solrQuery.set("fq", "t_press:清华大学");
+		solrQuery.set("fq", "t_price:[* TO 100]");
+		// 排序
+		solrQuery.addSort("t_price", ORDER.desc);
+		// 默认域设置
+		solrQuery.set("df", "t_name");
+		// 指定域出查询
+		solrQuery.set("fl","t_name,t_price,id");
+		// 高亮设置
+		// 开启高亮
+	         solrQuery.setHighlight(true);
+		// 设置高亮 字段
+	        solrQuery.addHighlightField("t_name");
+		//前缀和后缀
+	       solrQuery.setHighlightSimplePre("<span style='color:red'>");
+	        solrQuery.setHighlightSimplePost("</span>");
+		//执行查询
+		QueryResponse response = server.query(solrQuery);
+
+		// 获取文档结果集
+		SolrDocumentList docs = response.getResults();
+		// 高亮map
+		Map<String, Map<String, List<String>>> map = response.getHighlighting();
+		// map1  key id : map
+		// map2  key 域名 : 高亮字段集合
+		
+		//输出总条数
+		System.out.println(docs.getNumFound());
+		// 遍历文档获取内容
+		for(SolrDocument doc : docs ){
+			System.out.println(doc.get("t_name"));
+			System.out.println(doc.get("t_price"));
+			System.out.println(doc.get("id"));
+			Map<String, List<String>> map1 = map.get(doc.get("id"));
+			
+			List<String> list = map1.get("t_name");
+			System.out.println(list.get(0));
+		}
+	}
+
+	// 手动将数据库导入索引库
+	    @Test
+	       public void baseToSolr() throws Exception{
+		String baseURL = "http://localhost:8080/solr/";
+		SolrServer server = new HttpSolrServer(baseURL);
+		Class.forName("com.mysql.jdbc.Driver");
+		Connection con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3366/goods", "root", "584521");
+		String sql = "select bid,bname,author,press,price from t_book";
+		PreparedStatement state = con.prepareStatement(sql);
+		/*state.setString(1, "bid");
+		state.setString(2, "bname");
+		state.setString(3, "author");
+		state.setString(4, "press");
+		state.setString(5, "price");*/
+		ResultSet rs = state.executeQuery();
+		List<SolrInputDocument> docs = new ArrayList<>();
+		while(rs.next()){
+			SolrInputDocument doc = new SolrInputDocument();
+			doc.setField("id", rs.getString("bid"));
+			doc.setField("t_name",rs.getString("bname"));
+			doc.setField("t_author",rs.getString("author"));
+			doc.setField("t_press",rs.getString("press"));
+			doc.setField("t_price",rs.getString("price"));
+			// 添加到服务器
+			/*server.add(doc);
+			server.commit();*/
+			docs.add(doc);
+		}
+		server.add(docs, 1000);
+		rs.close();
+		state.close();
+		con.close();
+	}
+ 
+  设置返回条数和起始条数：
+            	    solrQuery.setRows(16);
+	            solrQuery.setStart(0);
+
+   注意： 当查询的多个条件是并集时，可以创建一个stringBuffer来封装条件 。各个条件之间用 and连接，要有空格
+                 StringBuffer params = new StringBuffer("t_name: "+t_name);
+		if(t_press!=null && t_press.trim()!=""){
+			params.append(" AND t_press: "+t_press);
+		}
+		if(t_price!=null && t_price.trim()!=""){
+			String[] prices = t_price.split("-");
+			params.append(" AND t_price:[" +prices[0]+" TO  "+prices[1]+"]");
+		}
+		System.out.println(t_price+"  "+t_name+"   "+t_press);
+		
+		solrQuery.setQuery(params.toString());                              // 最后执行 setQuery
+
+
+再springmvc.xml中配置SolrServer的方式：
+           <!-- 被指solrServer -->
+ 	<bean id="server" class="org.apache.solr.client.solrj.impl.HttpSolrServer">
+	      <constructor-arg value="http://localhost:8080/solr/collection1"/>                     //通过构造器的方式进行设置值
+	</bean> 
+
+
+	集群版solrServer 的用法 ： CloudSolrServer :
+	   @Test
+	public void test5() throws Exception{
+		// 搭建集群需要 CloudSolrServer,zkHost参数列表
+		CloudSolrServer server = new CloudSolrServer("192.168.1.103:2181,192.168.1.103:2182,192.168.1.103:2183");
+		// 设置默认collection
+		server.setDefaultCollection("collection2");
+		//创建一个文档，向文档中添加属性
+		SolrInputDocument doc = new SolrInputDocument();
+		doc.setField("id", "item01");
+		doc.setField("item_title", "liuweidong");
+		server.add(doc);
+		server.commit();
+	}
+
+	

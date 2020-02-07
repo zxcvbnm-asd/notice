@@ -1,0 +1,394 @@
+1、linux 查看ip地址：   在命令行中 ：  ifconfig+ 回车
+
+widow查看端口号的命令： netstat -ano|findstr 8082   查看8082的进程号
+              杀死进程的命令： taskkill /f /t /im  进程号
+
+2、磁盘基本命令 ：
+     cd /   切换目录
+     ll  列出当前目录下的文件或文件夹
+     ls 列出当前目录下的文件或文件夹 ， 横着排列
+     ll -a   ls  -a   将隐藏的. 文件列出来
+     dir 列出当前目录下的文件
+     mkdir + 文件名 ：在当前目录下创建文件夹
+     df   df -h  :  查看磁盘空间使用情况  
+     du  du -sh + 目录名 :   查看目录使用情况
+     pwd ： 显示当前目录。
+
+3、系统指令：
+     date ： 显示系统时间
+     date -s : 可以修改系统时间 ‘时间’ 
+     shutdown -h[时间]: 关机  （关机重启之后 执行sync）
+     shutdown -r  1  : 一分钟后重启
+     halt : 直接关机
+     reboot ：重启
+     sync : 将内存中数据保存到磁盘中
+     ps -ef : 查看当前系统进程有哪些  
+     ps -aux : 查看系统进程有哪些
+     kill pid  : 杀掉系统进程   pid (系统进程号)
+     kill -9 pid  : 强制杀掉系统进程
+     su : 切换用户 
+     top ； 查看系统负载运行情况  （ctrl + c  退出）
+     uptime : 查看系统负载运行情况 结果只有一行
+     free -m : 查看系统内存有多少可以用
+     uname -a : 查看系统具体情况 
+     hostname：查看主机名 
+     who : 登录用户信息
+     whoami : 当前登录用户信息
+     crontab :
+           crontab -l: 查看是否有定时任务
+	   crontab -e : 编辑定时任务   点击 a 键开始编辑   shift 键：wq  保存
+	   crontab  -r : 推退出定时任务
+
+     >>  追加内容
+     > 覆盖内容
+     |  可以实现过滤作用     ps -ef | grep   hhsd   获取所有hhsd信息
+     clear  ： 置顶
+
+4、文件管理指令 ：
+     mv test files  : 移动文件 ; 将test 文件移动到files中
+     mv test  testh  : 将文件名更改
+     rm - rf : 删除文件夹或文件 
+     touch aa.txt  : 创建文件 k
+     cat + 文件名 ： 查看文件中的内容   cat -n 文件名 ：  显示出文件的行号
+     more + 文件名 ： 信息一页一页显示  空格键翻页 
+     less  + 文件名 ： 主屏输出 pgup  pgdown 翻页，按q键退出
+     head + 文件名 ： 看前十行信息  
+     tail + 文件名  ： 看尾十行信息
+     cp -rf  + 文件名 + 文件夹 ： 将文件复制到文件夹中
+     find  ./-name  +  文件名 ： 查找当前目录下的指定文件      
+     which : 查看指令在哪里
+     echo  $PATH :  查看path路径  
+     echo 追加内容到文件   echo "1"  >> a.text
+     stat :查看文件详细信息
+
+ 5、用户指令 
+      useradd + 用户名 ： 创建一个新的用户  型用户在 cd  /home/下
+      userdel + 用户名 ： 删除用户 
+      passwd  + 用户名  ： 修改该用户密码    
+      id liu : 查看liu的用户是否存在
+
+6、网络命令 ：
+    netstat -nlp  : 查看端口情况   
+    ping  :  检查网络是否可以连接
+
+7、文件权限  
+      -（代表文件）     p（代表文件夹）  r-x （用户权限）   ---（用户所属组权限）    --- （用户其他权限）
+    
+     read  4  write 2  excute 1   三组 
+     修改文件读写执行权限   :  chmod 555 aa.log
+     修改文件所属用户权限 ： chown 用户名  aa.log
+     修改文件所属组 ： chgrp 用户名  aa.log
+     查看用户所属组 ：  id  
+
+8、文档操作命令 ：
+     grep : 过滤  
+     sort :  按照字母顺序排列
+     uniq :  去掉重复行
+     wc : 统计行 、单词  、字符
+
+ 88、快捷键进行设置
+         Ctrl  c  : 停止程序
+	 Ctrl  l  : 清屏
+	 Ctrl  q：退出
+
+ 9、 压缩和解压缩命令 ：
+       tar 格式压缩 ： tar -zcvf  aa.tar.gz(压缩包名)  aa.txt 
+                               tar -vcf aa.tar  aa.txt    (文件不解压).
+        tar 解压格式 ： tar -zxvf aa.tar.gz
+	                       tar -cvf  aa.tar.gz
+
+	zip压缩 ： zip aa.zip  aa.zip
+	zip解压  ： unzip aa.zip
+
+	gz压缩 ： gzip  文件名
+	解压 ： gunzip  文件.gz
+
+10、rpm安装 ：
+       rpm -qa | grep 名  ： 查看相关的程序
+       rpm -e 程序名  ： 卸载相关程序
+       rpm -ivh 程序包  : 安装相关程序包
+
+11、编写shell脚本 
+      创建脚本， 以 .sh 进行结尾。 在第一行写 #!/bin/bash
+        echo " hello word "  
+	将在控制台进行输出  hello word
+
+12、shell变量 ：
+        echo  $JAVA_HOME  : 查看变量
+	查看当前系统中所有变量 ： set
+	定义变量  SS = 100   变量名 = 变量值
+	撤销变量 ： unset SS 
+	生命静态变量  readonly  SS=100 , 静态变量将不能被修改
+	将查询值赋给变量 A=`ls`
+     
+      参数命令
+          $1  (1-10)  : 代表输入的参数
+	  $* : 输入的所有参数
+	  $@ : 输入的所有参数
+	  $# : 输入的所有参数的个数
+	  $$ : 打印当前执行进程号
+	  $! : 打印后台最后一个进程执行的线程号
+	  $? : 检测上一条命令是否执行成功  0 成功   1 失败
+	 
+	运算符 ：
+	  $((2+3))  或者 $[2+3]
+
+	 判断语句 ：
+	   [ condition ]  ： 条件前后需要加 空格
+	   两个整数进行比较 ： 
+	        =  : 比较字符串
+		-lt : 小于
+		-le : 小于等于
+		-eq: 等于
+		-gt : 大于
+		-ge :大于等于
+		-ne : 不等于
+
+          
+	 if 语句的脚本进行编写 ：(是123和456就进行输出)
+		  if [ $1 -eq "123" ]    
+		     then
+		     echo "123"
+		elif [ $1 -eq "456" ]
+		    then
+		    echo "456"
+		fi
+   
+          case语句的脚本进行编写 （是1打印1， 2打印2， 3打印3 ， 其他打印other）
+	        case $1 in                // $1 代表参数
+		"1")
+		   echo "1"
+		;;                             // ;; 代表一个分支的结束
+		"2")
+		   echo "2"
+		;;
+		"3")
+		   echo "3"
+		;;
+		*)                          // 剩余其他的分支
+		  echo "other"
+		;;
+		esac                      
+
+	    for 语句脚本进行编写 
+                  1.1 ：
+		         for i in "$*"                     // $* 取出所有输入的逐个复制给 i 
+			 do
+			   echo "$i"
+			 done
+		  1.2  ： （计算1到100的值）
+		     s=0                                // 定义sum
+			for ((i=0;i<=100;i++))
+			  do
+			    s=$[$s+$i]
+			done
+		     echo "$s"  
+	 
+	     while语据脚本进行编写 ：
+	        s=0
+		i=1
+		while [ $i -le 100 ]
+		 do
+		  s=$[$s+$i]
+		  i=$[$i+1]
+		 done
+		echo $s 
+
+ 13、Read 进行控制台输入输出 ：
+        read  -p  "input your name" NAME      相当于 java中 Scanner，控制台提示输入信息，并将输入值赋值给  NAME
+	read -t 3 -p  "input your name" NAME      输入3s后将停止
+
+ 14、系统函数
+		basename  /usr/local/text.txt                   // 输出  text.txt
+		dirname    /usr/local/text.txt                    // 输出  /usr/local
+        自定义函数 
+	   编写格式 
+	      [function] funname[()]{
+	           Action;
+		   [return int;] 
+	      } 
+	 创建sum脚本 
+	       自定义sum函数
+	       function sum(){
+		   s=0
+		   s=$[$1+$2]
+		   echo "$s"
+		}
+
+		read -p "input your num1" NUM1;      // 提示输入参数
+		read -p "input your num2" NUM2;
+
+		sum $NUM1 $NUM2                 // 调用函数
+
+
+ JAVA_HOME=/local/jdk1.7.0_80
+JRE_HOME=/usr/local/jdk1.7.0_80/jre
+CLASS_PATH=.:$JAVA_HOME/lib:$JRE_HOME/lib
+PATH=$PATH:$JAVA_HOME/bin:$JRE_HOME/bin
+export JAVA_HOME JRE_HOME CLASS_PATH PATH
+
+在ect/profile 文件中配置环境变量方式 ：
+    export JAVA_HOME=/usr/local/jdk1.8.0_11
+    export HADOOP_HOME=/usr/local/app/hadoop-2.4.1
+     export PATH=$PATH:$JAVA_HOME/bin:$HADOOP_HOME/bin
+
+  
+10、其他命令：
+    curl : curl http://www.baidu.com   抓取网络源代码   
+    wget + 下载链接 ： 下载相关文件
+    快捷键 ： tab  补全   ctrl+c :  终止当前进程   ctrl+d : 关闭终端  shift+ctrl+r  连接终端
+
+11、vi  和 vim 编辑器 
+       vi : linux下的 标配纯字符界面， vim是vi的升级版本
+       yum -y install vim*  安装vim编辑器
+
+       vi的启动 ： vi + 文件名；  文件存在打开，不存在，则创建该文件
+
+       按a键由命令模式切换到输入模式 ： 编辑完成 esc  保存 ：wq   不保存 ： ！wq
+
+       在命令模式下快捷键：
+        dd 删除该行内容
+	yy 复制该行内容
+	p : 粘贴内容
+	u : 进行撤销
+	o : 进入光标的下一行
+	gg 光标回到文件第一行
+	GG 光标回到文件最后一行
+        ^   光标在行首
+	$   光标在行尾
+	/+单词  ：  搜索到所要查的内容   n 往后查询
+   
+12、启动tomcat 输出日志
+       ./startup.sh | tail -f ../logs/catalina.out 
+
+13 、 
+       Centos7 防火墙
+		启动防火墙 ：  systemctl  start firewalld
+		关闭防火墙 ： systemctl   stop firewalld
+		查看防火墙 ：  systemctl status firewalld
+       Centos6 防火墙
+                启动防火墙 ：  service iptables start
+		临时关闭防火墙 ： service iptables  stop
+		查看防火墙 ： service iptables status
+		查看防火墙的几种状态 ： chkconfig iptables --list     
+	 	                                     0:off	1:off	2:off	3:off	4:off	5:off	6:off
+                 开启防火墙的状态 ：  chkconfig iptables on
+		 关闭防火墙的状态 ： chkconfig iptables off
+14、rmp 相关命令：
+     rmp -qa | grep mysql  查找 含有该单词的软件包
+     rmp -e + 软件包 ：  写在某个软件包 
+
+15、mysql 安装问题：
+      
+      启动mysql  ;  service mysqld start
+      停止服务器  ： service mysqld stop
+
+
+16、zookeeper 的相关命令 ： 位置 cd  /usr/local/
+        进入zookeeper目录下，创建 data文件夹，mkdir data
+	进入conf目录下，将 zookeppersimple.cfg 改为 zoo.cfg    : mv   zookeppersimple.cfg   zoo.cfg   
+        编辑zoo.cfg ， 将文件夹所在位置改为  data的路径
+        进入到bin目录下， 指定命令 ./zkServer.sh  start  启动 zookepper
+	查看zookepper的状态 ： ./zkServer.sh  status
+	停止zookepper服务 ： ./zkServer.sh stop 
+
+
+
+ linux的克隆 ： 编辑----> 虚拟网络配置---> net8配置相关的属性 ： 查看 网关，ip地址信息
+
+ 关掉图形界面 ： init 3
+ 重启网络 ： service network restart
+ 修改vm启动时的图形界面 ： vim  /etc/inittab
+ 当普通用户修改一个系统级别的配置文件时， 不能退出，则 :q! 可以强制退出。
+
+ 通过sudo命令执行系统文件 ： 会在普通用户和root用户之间进行切换，第一次执行sudo时，会进行相关提示。执行以下相关的命令将普通
+ 用户加入到文件中。
+   sudo  vim /etc/inittab        // 普通用户编辑系统文件
+   su                   // 切换到root用户
+   vim  /etc/sudoers            // 编辑文件
+	       ## Allow root to run any commands anywhere
+	       root    ALL=(ALL)       ALL
+	       liu    ALL=(ALL)       ALL                    // 将普通用户加入到该文件，代表该文件可以在任意位置执行
+     wq!      // 进行保存即可
+
+  
+  不让系统在启动时打开图形界面 ：
+       sudo vim /etc/inittab   
+           将文件中 id改变为3
+	wq 进行保存
+
+   修改ip地址，通过配置文件的方式
+       vim /etc/sysconfig/network-scripts/ifcfg-ens33                        
+                TYPE=Ethernet
+		PROXY_METHOD=none
+		BROWSER_ONLY=no
+		BOOTPROTO=dhcp
+		DEFROUTE=yes
+		IPV4_FAILURE_FATAL=no
+		IPV6INIT=yes
+		IPV6_AUTOCONF=yes
+		IPV6_DEFROUTE=yes
+		IPV6_FAILURE_FATAL=no
+		IPV6_ADDR_GEN_MODE=stable-privacy
+		NAME=ens33
+		UUID=ab6ea3d5-e9cf-4970-9535-43f4c2692c61
+		DEVICE=ens33
+		ONBOOT=yes
+		IPADDR=192.168.25.138                         // 修改ip
+		PREFIX=24
+		GATEWAY=192.168.25.2
+		DNS1=8.8.8.8
+   修改完ip 进行重启（reboot） 或者 netword restart
+
+
+  修改主机名：hostnamectl   set-hostname   主机名 （新开窗口则主机名自动更新）
+  通过修改配置文件进行修改ip地址 ：
+      vim sudo /etc/hostname                 // 添加主机名
+      vim /etc/sysconfig/network            // 进行ip和主机名的映射
+             192.168.25.138  liuweidong               （可以  ping liuweidong）
+
+
+ SSH 进行秘钥连接 ：
+   通过命令设置私钥和公钥 ： ssh-keygen -t rsa        (rsa默认加密算法)， 一路回车
+         ----   Enter file in which to save the key (/home/liu/.ssh/id_rsa):  默认保存的路径
+    在id_rsa 目录中的公钥复制到远程的另一台主机 ：
+         scp id_rsa.pub spark:/home/liu          （spark 在本地hosts文件中进行映射） scp远程copy
+
+    在另一台主机中进行配置 ：
+      在 .ssh 目录下创建 authorized_keys 文件， 将公钥文件中内容追加到authorized_keys 中。修改器权限 chmod 600
+      追加内容的命令 ： cat ../id_rsa.pub  ./authorized_keys 
+
+
+安装vmware-tools工具方式 ：
+    安装依赖包：
+      [root@localhost ~]# yum -y install perl gcc gcc-c++ make cmake kernel kernel-headers kernel-devel net-tools
+   点击菜单 `虚拟机` ——> `安装VMware Tools(T)...`
+   创建目录 ：
+      [root@localhost ~]# mkdir -p /mnt/cdrom
+    挂载目录：
+      [root@localhost ~]# mount -t auto /dev/cdrom /mnt/cdrom
+       mount: /dev/sr0 is write-protected, mounting read-only
+    拷贝安装包到用户家目录
+       [root@localhost ~]# cp /mnt/cdrom/VMwareTools-10.0.5-3228253.tar.gz ~
+     解除挂载
+       [root@localhost ~]# umount /dev/cdrom
+     解压安装包
+       [root@localhost ~]# tar -zxvf VMwareTools-10.0.5-3228253.tar.gz
+      进入目录
+       [root@localhost ~]# cd vmware-tools-distrib/
+     进行安装
+        [root@localhost ~] ./vmware-install.pl 
+      在安装过程中出现 The path "" is not a valid path to the 3.10.0-327.el7.x86_64 kernel h 时进行如下操作 ：
+         ---  yum -y update
+         ---  yum -y install kernel-headers kernel-devel gcc
+	 --- reboot重启之后在进行安装
+   
+
+
+
+      
+  
+
+
+	
+

@@ -1,0 +1,43 @@
+1、oracle安装 ： 下载两个安装包解压到同一个路径下
+                           下载32位oracle的客户端
+			   下载plsql连接工具
+
+			   将instance-11.2 拷贝到plsql的根目录下，创建network/admin/tnsnames.ora文件，添加如下内容：
+			        ORCL_TEST =
+				  (DESCRIPTION =
+				    (ADDRESS_LIST =
+				      (ADDRESS = (PROTOCOL = TCP)(HOST = 127.0.0.1)(PORT = 1521))
+				    )
+				    (CONNECT_DATA =
+				      (SERVICE_NAME = test)
+				    )
+				  )
+			    
+
+			    设置环境变量： ORACLE_HOME=instance的目录
+			    设置字符环境变量 ： NLS_LANG = SIMPLIFIED CHINESE_CHINA.ZHS16GBK
+
+			   通过两个sql语句查询字符集进行字符查看，看其是否一致
+			    SELECT * FROM v$nls_parameters;或者
+                            SELECT USERENV ('language') FROM DUAL
+
+ oracle将本地jar包安装到本地仓库 ：
+     mvn install:install-file -DgroupId=com.oracle 
+           -DartifactId=ojdbc14 -Dversion=10.2.0.4.0 
+	   -Dpackaging=jar -Dfile=C:\Users\Administrator\Desktop\quartz-jobs-2.2.1.jar
+
+   
+    mvn install:install-file -DgroupId=org.quartz-scheduler
+           -DartifactId=quartz-jobs -Dversion=2.2.1
+	   -Dpackaging=jar 
+	   -Dfile=C:\Users\Administrator\Desktop\quartz-jobs-2.2.1.jar
+
+    -Dartifactld = ojdbc14 这个是名字
+     -Dversion = 10.2.0.4.0 是版本号 
+     Dfile=F:\oracle\ojdbc14-10.2.0.4.0.jar 是路径 此操作需要先安装好m
+
+	<dependency> 
+	    <groupId>com.oracle</groupId>
+	    <artifactId>ojdbc14</artifactId>
+	    <version>10.2.0.4.0</version>
+	</dependency>

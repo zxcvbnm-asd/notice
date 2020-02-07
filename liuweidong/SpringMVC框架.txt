@@ -1,0 +1,409 @@
+                                                                SpringMVC时Spring的一个模块，主要用于Web开发
+
+1、Spring配置方式进行开发 ：
+      *  在web.xml中配置中央调度处理器 ： （中央调度处理器就是一个servlet，相当于前端控制器）
+		     <!-- 注册中央调度处理器 -->
+			   <servlet>
+			      <servlet-name>springmvc</servlet-name>
+			      <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+			      <!-- 在创建中央调度处理器时会找spring容器，正常会到WEB-INF下去找，需要自定义容器位置 -->
+			       <init-param>
+				  <param-name>ContextConfigLocation</param-name>
+				  <param-value>classpath:springMVC.xml</param-value>
+			       </init-param>
+			      <!-- 在服务器启动时就创建 -->
+			      <load-on-startup>1</load-on-startup>
+			   </servlet>
+			   <servlet-mapping>
+				 <servlet-name>springmvc</servlet-name>
+				 <!-- url-pattern 是将请求交给servlet进行处理，就是将用户的请求交给中央调度处理器进行处理
+				      路径的方式有两种 ：1、通过拓展名的方式  *.do    *.action  *.mvc  
+					                            2、通过斜杠的方式
+				  -->
+				 <url-pattern>*.do</url-pattern>
+			   </servlet-mapping>
+        * src下创建 springMVC.xml 文件，引入 springmvc的约束， 此文件相当于applicationContext.xml文件，用于创建bean对象
+				  <beans xmlns="http://www.springframework.org/schema/beans"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+					xmlns:context="http://www.springframework.org/schema/context"
+					xmlns:aop="http://www.springframework.org/schema/aop"
+					xmlns:tx="http://www.springframework.org/schema/tx"
+					xmlns:mvc="http://www.springframework.org/schema/mvc"
+					xsi:schemaLocation="http://www.springframework.org/schema/beans
+					http://www.springframework.org/schema/beans/spring-beans.xsd
+					http://www.springframework.org/schema/context
+					http://www.springframework.org/schema/context/spring-context.xsd
+					http://www.springframework.org/schema/aop
+					http://www.springframework.org/schema/aop/spring-aop.xsd
+					http://www.springframework.org/schema/tx
+					http://www.springframework.org/schema/tx/spring-tx.xsd
+					http://www.springframework.org/schema/mvc
+					http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+						<!-- 声明处理器对象，让其处理请求
+								   此时 id的写法 ： 需要加上'/',表示该bean是能处理请求的bean,如果不加'/',则代表普通bean
+						                                    id ： 名称为请求路径   
+						 -->
+			               <bean id="/some.do" class="cn.hegongda.controllers.MyControllers"></bean>
+		          </beans>
+	
+	  *  java代码 ： 定义MyController 实现接口 Controller .
+				 * 实现controller的类实际是后端处理器 （back controller）
+				 * 其返回值为ModelAndView ,由两部分构成
+				 * 1、Model ：是一种数据结构类型，HashMap (相当于Model)
+				 * 2、View  : 负责显示数据  ： 相当于（view层）
+				public class MyControllers implements Controller {
+					public ModelAndView handleRequest(HttpServletRequest request,
+							HttpServletResponse response) throws Exception {
+							ModelAndView mv = new ModelAndView();
+						// 框架对数据的处理 ：把数据放入到requset作用域中，相当于 request。setAttractbiute();
+							mv.addObject("msg", "欢迎来到all the word");
+						// 对转发的请求处理是 ： forword()
+						// request.getRequestDispatcher("/show.jsp").forwoard(req,resp);
+							mv.setViewName("/index.jsp");
+							return mv;
+				}
+			 注意 ： 为了保护文件不按照套路执行，可以将jsp文件放到 WEB-INF下
+			 总体执行过程  ： 首先在服务器启动时 创建了中央调度处理器，而后立刻初始化了 springMVC容器，将controller 后端处理器
+						   创建，当发送请求时，通过已经创建好的后端处理器进行处理请求。
+
+	 *  为了简化试图路径的写法，可以在springMVC.xml中声明试图解析器 ：
+			 <!-- 声明视图解析器：  用于简化视图路径的写法
+			        实现 ViewResolver接口的类都是 视图解析器
+			 -->
+			<bean  class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+			     <!-- 配置视图前置路径 -->
+			     <property name="prefix" value="/WEB-INF/jsp/"></property>
+			     <!-- 配置视图拓展名 -->
+			     <property name="suffix" value=".jsp"></property>
+			</bean>
+                     在java中原来视图路径 ： 	mv.setViewName("/WEB-INF/index.jsp");
+		                  现在可以写成 ：      	mv.setViewName("index");                      // 框架会自动将路径设置位 prefix+index+suffix
+
+2、当中央调度处理器的url-partten路径设置为 "/" 时 产生的弊端 ： 静态资源（图片、css、js）将不能访问，因为找不到相关的controller 控制器.
+       有两种解决方式 ：  *  将静态资源的访问处理交给 Tomcat服务器进行处理。 Tomcat中有一default servlet,可以专门用来处理静态资源的访问
+                                       这时在 springMVC.xml中配置相关标签即可。
+				             <!-- 将静态资源的访问交给Tomcat的默认servlet处理 -->
+							<mvc:default-servlet-handler/>
+					注意 ： 当服务器不同时，则可能会没有 default这个servlet,这时候需要 配置servlet的具体名字
+					             mvc:default-servlet-handler default-servlet-name="FileServlet"/>
+
+			             * 通过框架自身解决静态资源访问问题 ： 
+				            <!--
+					      location : 指定静态资源所在位置
+					      mapping  ： 指定访问的路径的样式    1、* 代表任意文件   2、** 代表人以文件和目录         
+					     -->
+					<mvc:resources location="/image/" mapping="/image/**"></mvc:resources>
+					<mvc:resources location="/html/" mapping="/html/**"></mvc:resources>
+					 可以简化为 ：    <mvc:resources location="/" mapping="/**"></mvc:resources>
+http://localhost:8080/img/2.jpg
+	
+3、 基于注解式开发 ： 
+               在springMVC.xml中 配置组件扫描器。
+              自定义控制类 ：
+                          @Controller         // 引入控制器注解
+			public class MyControllers{
+			    @RequestMapping(value="some.do" ,method=RequestMethod.GET，params={"name","age"})
+				public ModelAndView doSome(){                                               // 自定义处理请求地方法
+					ModelAndView mv = new ModelAndView();
+					mv.addObject("msg", "欢迎来到all the word");
+					mv.setViewName("show");
+					return mv;
+				}
+		    @RequestMapping  ： 对发过来的请求指定 处理方法，其可以在 方法或类上进行注解，当放在类上，用于指定模块名称
+		                                        属性value       String[]       :    内容可以为  1、 .do     2、也可以为 "/" 开头
+							属性 method  String[]     ： 指定post还是get 请求，其为数组。
+												  method={RequestMethod.POST,RequestMethod.GET}) 无论是post还是get都会处理
+												  当不指定具体method时，post 和 get 请求都会处理
+							属性 params  String[]      :  params={"name","age"}    请求中必须包含 name和age参数，也可其他参数
+							                                         params={"!name","age"}   请求中不能包含 name参数
+												 params={"name=zhan","age=4"}   请求中 name必须等于zhan,age=4
+		    
+		    当需要request、response、session时，直接在方法中定义参数即可。框架会自动为其赋值
+		         public ModelAndView register(HttpServletRequest request,HttpServletResponse response,HttpSession session)
+
+		    形参校验器   ：当方法中形参与 传递参数名称不一致时，可以通过新参校验器进行校验，位置如下
+		           public ModelAndView doSome(@RequestParam(value="rname") String name, @RequestParam(value="rage")Integer age){
+		    当rname为空时，会报错，这时可以通过其属性进行更改。解决办法：
+		         @RequestParam(value="rname",required=false) String name 
+                      此时传递的rname不一定有值
+
+4、 对于请求参数逐个进行接收  ：
+                   //  相当于 ： String name = requset.getParamter("name");
+              public ModelAndView doSome(String name, int age){         // 框架会自动对参数进行赋值处理，此时name,age应该与请求参数一致
+		ModelAndView mv = new ModelAndView();
+		mv.addObject("name", name);
+		mv.addObject("age", age);
+            逐个接收参数的问题 ：  1、post提交会出现乱码问题
+	                                      2、表单中需要转换成 int 的文本向 不能为空，否则 会发生 参数转换异常的 状态码
+	    解决post请求出现乱码的问题 ： 通过在 web.xml 注册框架提供的过滤器来解决 post 提交中文乱码问题
+					   <!-- 注册过滤器解决中文乱码问题 -->
+				   <filter>
+					     <filter-name>characterEncodingFilter</filter-name>
+					     <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+				     <!-- 指定当前项目使用的编码 -->
+					     <init-param>
+						<param-name>encoding</param-name>
+						<param-value>UTF-8</param-value>
+					     </init-param>
+				     <!-- 指定响应和请求的编码 -->
+					     <init-param>
+					       <param-name>forceEncoding</param-name>
+					       <param-value>true</param-value>
+					     </init-param>
+				   </filter>
+				   <filter-mapping>
+					       <filter-name>characterEncodingFilter</filter-name>
+					       <url-pattern>/*</url-pattern>
+				   </filter-mapping>
+
+	    对于请求参数封装成对象，这样就便于参数的接收。此时请求参数应该与 对象的属性名相同。
+	            public ModelAndView doSome(Student student){}
+                  表单中 参数 name,age.   Student 中属性 ： name,age.  一一对应
+ 5、通过注解方式进行开发，当中央调度处理器路径 为 “/” 时，在设置好静态资源 时会无法找到相关动态资源，这时候需要配置注解驱动标签。
+           <mvc:annotation-driven/>
+
+6、方法返回值的转发操作 ：
+       *  String返回值 ：     public String doSome(Student student){
+						System.out.println(student.getName());
+						return "/welcome.jsp";
+	   返回的 string 是视图路径 ： 可以是全路径， 也可以是 视图解析器的 逻辑路径。 相当于 forward 请求转发
+	   主要作用 ： 单纯的页面跳转。 不携带数据。
+
+        *  ModelAndView  : 既携带数据，也携带视图路径。 一般较为常用。
+        *  void无返回值，此时可以用于处理 ajax 请求
+        *  返回对象 ：  1）、 在配置文件中加入 <mvc:annation > 注解驱动，创建HttpMessageConvert接口的7个实现类的对象，其中
+	                                MappingJackson2HttpMessageConvert 实现将对象转换成 json 
+	                       2）、加入 json工具库，框架默认使用 jsckson库工具类
+			       3）、在处理器方法上面加入 @ResponseBody 相当于 ： response.getWrite.write();
+	                       4）、    辨别返回值为String 类型时，是 视图路径还是 数据的方法 ：
+		                             当方法体上有 @ResponseBody注解时，则为返回的是数据
+					     当方法体生没有该注解，则返回的是视图路径
+			       5）、框架处理逻辑 ：
+			                     * 框架会根据处理器返回值结果的类型，去HttpMessageConverter 中去寻找相关的实现类对象
+					           如返回值 String   ----  》   StringHttpMessageconverter
+	                                     *  调用接口的实现类处理返回值，将返回值转换成响应格式的数据  /text    /json
+					     * 把转换完成的数据通过 @ResponseBody注解输出到浏览器
+                                6）、解决返回值为中文乱码问题 ：  添加属性  produces即可
+				            @RequestMapping(value="login.do",produces="text/html;charset=UTF-8" )
+	      返回对象为 Object 时，则执行上述步骤，但框架自身会自动将编码格式转换为 utf-8 ，数据格式转换为  json 类型，此时，调用的
+	                      实现类为 MappingJackson2HttpMessageJackson.
+              返回值为 List<Object> 时， 则框架会自动将 list 转换成 json数组的格式 。
+	                                 @ResponseBody
+					    @RequestMapping(value="login.do")
+					    public List<Student> register(Student student) throws IOException{
+						System.out.println(student.getName());
+						String name = student.getName();
+						Student stu = new Student();
+						stu.setAge(58);
+						stu.setName("小斌");
+						List<Student> students = new ArrayList<Student>();
+						students.add(stu);
+						students.add(student);
+						return students;
+					    }
+
+7、请求转发的处理 ：
+         * 请求转发  : forward关键字代表 ： rquest.getRequestDispatcher().forward(req,resp); 
+	                    其不能与视图解析器混合使用，当使用forward时，视图解析器无效，其后必须加 完整的路径。
+			    1）、转向某一视图 ： 	mv.setViewName("forward:/welcome.jsp");
+			             当控制器为 String 时，请求转发为 ：  return "forward:/welcome.jsp";
+			    2）、转发到另一个控制器： 格式 "forward:xxx.do"
+			             return "forward:show.do";    /   setViewName("forward:xxx.do");
+	 * 重定向： redirect关键字代表： request.sendRedirect("xxx");  同样不能与视图解析器混合使用
+	                      注意 : 重定向不能访问受保护文件下的jsp, 
+	                    1）、转向某一视图 ： mv.setViewName("redirect:/welcome.jsp");
+			            返回值字符串 ：return "redirect:/welcome.jsp"
+			    2）、重定向到某一控制器 ：    mv.setViewName("rdirect:show.do");
+
+8、框架实现异常的处理：
+        *  SimpleMappingExceptionResovler处理异常 ：处理器方法抛出异常，由中央调度器捕获异常，调用异常处理器对象，集中处理异常。
+	    框架把实现HandlerExceptionResolver接口类叫做异常处理器，只有异常处理器能解决异常。
+			   1)、 定义异常类继承Exception，实现带参构造和无参构造
+			   2）、  在 springmvc.xml中配置方式如下 ：
+					  <!-- 注册异常处理器  -->
+					 <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+					    <!-- 指定异常和处理页面 ，可以不用配置该信息-->
+					   <property name="exceptionMappings">
+					      <props>
+						 <prop key="cn.hegongda.exceptions.NameException">/nameError.jsp</prop>
+						 <prop key="cn.hegongda.exceptions.AgeException">/ageError.jsp</prop>
+					      </props>
+					   </property>
+					    <!-- 当有其他异常时。指定跳转页面 -->
+					   <property name="defaultErrorView" value="/defaultError.jsp"></property>
+					     <!--异常信息配置如下。ex中 包含异常信息内容 -->
+					   <property name="exceptionAttribute" value="ex"></property>
+					 </bean>
+			      3）、   在页面中获取异常信息 ：   ${ex.message }
+	  * 实现自定义异常处理器 ： 可以对异常进行集中处理
+	       1）、定义类实现HandlerExceptionResolver接口
+	                   public class UserExceptionResolver implements HandlerExceptionResolver {
+				public ModelAndView resolveException(HttpServletRequest request,
+						HttpServletResponse response, Object handler, Exception ex) {
+					ModelAndView mv = new ModelAndView();
+					mv.addObject("ex", ex);
+					if(ex instanceof NameException){
+						mv.addObject("tip", "姓名有误");
+						mv.setViewName("/defaultError.jsp");
+					}
+					return mv;
+	       2）、声明自定义异常处理器：
+	                     <bean class="cn.hegongda.exceptions.UserExceptionResolver"></bean>
+             
+	     * 通过注解的方式处理异常 ： 在处理器上加上 @ExceptionHandler, 该处理器可以专门处理异常
+	             @ExceptionHandler(value=NameException.class)
+			    public ModelAndView doNameException(Exception ex){
+			         // 调用service方法可以将异常保存到数据库、 可发送邮件、保存到日志
+				ModelAndView mv = new ModelAndView();
+				mv.addObject("ex", ex);
+				mv.addObject("tip", "姓名有误");
+				mv.setViewName("/defaultError.jsp");
+				return mv;
+			    } 
+
+	       由于其只能在某个控制器内进行定义，多个控制器不能进行共享，所以应该定义全局异常处理器，单独定义一个类，在类名加上
+	           @ControllerAdvice,这样各个控制器 可以共享异常处理。相当于自定义处理异常
+		       @ControllerAdvice
+			public class aapExceptionResolver {
+				 @ExceptionHandler(value=NameException.class)
+				    public ModelAndView doNameException(Exception ex){
+					ModelAndView mv = new ModelAndView();
+					mv.addObject("ex", ex);
+					mv.addObject("tip", "姓名有误");
+					mv.setViewName("/defaultError.jsp");
+					return mv;
+				    } 
+                     在springmvc中配置 如下 ：
+		          <!-- 找到@ControllerAdvice位置 -->
+			 <context:component-scan base-package="cn.hegongda.exceptions"/>
+			    // 配置注册驱动
+			 <mvc:annotation-driven/>
+
+9、拦截器的使用 ：  拦截用户的请求，控制用户的请求是否能被处理器 进行处理。
+                               时间点 ： 在获取处理器适配器之后，执行处理器方法之前。
+			       实现步骤 ： 
+			           1）、定义类实现 HandlerInterceptor 接口。
+				        public class MyInterceptor implements HandlerInterceptor {
+							/**
+							 * preHandler : 预处理方法 ，用户的请求先到该方法，以便于对请求作出判断
+							 * 参数 ： Handler ： 处理器对象
+							 */
+							public boolean preHandle(HttpServletRequest request,
+									HttpServletResponse response, Object handler) throws Exception {
+								   HttpSession session = request.getSession();
+								   System.out.println("hshhi");
+							       Student student = (Student) session.getAttribute("student");
+							       if(student!=null){
+								   return true;
+							       }else{
+								   return false;
+							       }
+							/**
+							 * postHandle : 在处理器的方法执行之后执行，可以接收处理器执行结果，用于二次处理
+							 * 
+							 * ModelAndView : 返回值结果
+							public void postHandle(HttpServletRequest request,
+									HttpServletResponse response, Object handler,
+									ModelAndView mv) throws Exception {
+							}
+							 * afterCompletion : 该方法最后执行，用于垃圾回收，内存释放，只用当preHandle 返回值为true 时
+							 *                    该方法才会执行
+							public void afterCompletion(HttpServletRequest request,
+									HttpServletResponse response, Object handler, Exception ex)
+									throws Exception {
+								System.out.println("最终");}							}
+
+				   2）、在springmvc配置文件中 注册拦截器，指定 拦截的URI。
+                                                      <!-- 声明拦截器 -->
+							  <mvc:interceptors>
+							     <mvc:interceptor>
+							       <!-- 指定拦截路径 -->
+							       <mvc:mapping path="/**"/>
+							       <mvc:exclude-mapping path="/register.do"/>      // 不拦截该方法
+								<!-- 注册拦截器 -->
+							       <bean class="cn.hegongda.interceptors.MyInterceptor"/>
+							     </mvc:interceptor>
+							  </mvc:interceptors>
+										 
+	     拦截器和过滤器的比较 ：
+	           1）、功能性上 ： * 过滤器主要是对请求、应答对象的参数设置
+		                             * 拦截器主要是拦截请求，对请求进行验证
+		  2）、指定方式上   * 过滤器有tomcat创建过滤器对象并执行
+		                             * 拦截器由框架，在中央调度器中获取拦截器的数组，使用数组中每个拦截器的对象。
+		 3）、执行时间点    *   过滤器只有一个执行时间点
+		                             *   拦截器有三个执行时间点
+          					   
+							 
+文件上传预下载 ：  
+			//域对象，实现序列化接口
+			public class User implements Serializable{
+			    private String username;
+			    private MultipartFile image;
+			    public User() {
+				super();
+			    }
+			    public String getUsername() {
+				return username;
+			    }
+			    public void setUsername(String username) {
+				this.username = username;
+			    }
+			    public MultipartFile getImage() {
+				return image;
+			    }
+			    public void setImage(MultipartFile image) {
+					this.image = image;
+				    }   
+				}
+			@RequestMapping(value="/register")
+			     public String register(HttpServletRequest request,
+				     @ModelAttribute User user,
+				     Model model) throws Exception {
+				System.out.println(user.getUsername());
+				//如果文件不为空，写入上传路径
+				if(!user.getImage().isEmpty()) {
+				    //上传文件路径
+				    String path = request.getSesssion().getServletContext().getRealPath("/images/");
+				    //上传文件名
+				    String filename = user.getImage().getOriginalFilename();
+				    File filepath = new File(path,filename);
+				    //判断路径是否存在，如果不存在就创建一个
+				    if (!filepath.getParentFile().exists()) { 
+					filepath.getParentFile().mkdirs();
+				    }
+				    //将上传文件保存到一个目标文件当中
+				    user.getImage().transferTo(new File(path + File.separator + filename));
+				    //将用户添加到model
+				    model.addAttribute("user", user);
+				    return "userInfo";
+				} else {
+				    return "error";
+				}
+			    }
+			       
+	  在springmvc.xml中配置相关的文件  ：
+	       <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+			<!--文件上传大小限制-->
+			<property name="maxUploadSize" value="200000"></property>
+		    </bean>
+		    <!--文件上传过大异常处理-->
+		    <bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		    <property name="exceptionMappings">
+			<props>
+			    <!-- 遇到MaxUploadSizeExceededException异常时，自动跳转到WebContent目录下的error.jsp页面 -->
+			    <prop key="org.springframework.web.multipart.MaxUploadSizeExceededException">error</prop>
+			</props>
+		    </property>
+		    </bean>
+
+springMVC文件下载 ：
+		      @RequestMapping("/loadimg")
+		    public ResponseEntity<byte[]> download(HttpServletRequest request,String fileName)throws  Exception{
+			String path = request.getSession().getServletContext().getRealPath("/image")+"/"+fileName;
+			HttpHeaders headers = new HttpHeaders();
+			File file = new File(path);
+			fileName = new String(fileName.getBytes("utf-8"),"iso-8859-1");
+			headers.setContentDispositionFormData("attachment",fileName);
+			headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+			return new ResponseEntity<byte[]>(FileUtils.readFileToByteArray(file),headers, HttpStatus.CREATED);
+		    }

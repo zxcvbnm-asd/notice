@@ -1,0 +1,487 @@
+                                               MyBatis是持久层框架，时Apache下的顶级项目
+
+1、在src 下配置 SqlMapConfig.xml文件 ： 文件名可以任意 
+     <!DOCTYPE configuration
+			 PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+			 "http://mybatis.org/dtd/mybatis-3-config.dtd">
+			<configuration>
+				<!-- 和spring整合后将被废除 -->
+				 <environments default="development">
+						 <environment id="development">
+						   <!-- 采用jdbc事务管理，事务控制由 mybatis管理 -->
+						 <transactionManager type="JDBC"/>
+							 <dataSource type="POOLED">
+								 <property name="driver" value="com.mysql.jdbc.Driver"/>
+								 <property name="url" value="jdbc:mysql://localhost:3366/mybatis"/>
+								 <property name="username" value="root"/>
+								 <property name="password" value="584521"/>
+							 </dataSource>
+						</environment>
+					 </environments>
+					 <!-- 加载映射文件 -->
+					 <mappers>
+					   <mapper resource="User.xml"/>
+					 </mappers>
+			</configuration>
+
+  配置sql语句文件 ：
+              <!DOCTYPE mapper
+		 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		 <mapper namespace="test">
+		 <!-- 在映射文件中配置sql语句，将sql语句封装到mapper中 
+		       id : 标识映射文件中sql语句,将sql语句封装到 mappedstatement对象中， 称为statement id
+		       parameterType : 指定输入参数类型， #{}相当于占位符，里面传的是参数
+		       resultType ： 代表返回值类型，一般代表映射的对象
+		 -->
+		    <select id="findUserById" parameterType="int" resultType="cn.hegongda.pojo.User">
+			 SELECT * FROM USER WHERE id=#{id}
+		    </select>
+		 </mapper>
+
+   创建实体类 ： 属性与表单字段相对应
+   编写java语句 ：
+               // 配置文件位置
+             	String resource = "SqlMapConfig.xml";
+		得到配置文件流
+		InputStream ins = Resources.getResourceAsStream(resource);
+		// 创建会话工厂，传入入mybatis配置文件
+		SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(ins);
+		// 创建会话
+		SqlSession session = sessionFactory.openSession();
+		User user = session.selectOne("test.findUserById", 1);
+		System.out.println(user.getUsername());
+		session.close();
+
+2、mybatis的查询方式 ：
+        * 安某一属性查询 ： 
+	                <select id="findUserById" parameterType="int" resultType="cn.hegongda.pojo.User">
+				 SELECT * FROM USER WHERE id=#{id}
+			   </select>
+        * 模糊查询 ：
+	            // 该种方式将传递的参数原样转换成字符串 , 可能会出现sql 注入问题    select(test.findByName, "张");
+		      <select id="findUserByName" parameterType="java.lang.String"  resultType="cn.hegongda.pojo.User">
+			        SELECT * FROM USER WHERE username LIKE '%${value}%'
+		    </select>
+
+		  //   该种方式属于正常接收参数型  ：     select(test.findByName, "%张%");
+		    <select id="findUserByName" parameterType="java.lang.String"  resultType="cn.hegongda.pojo.User">
+			 SELECT * FROM USER WHERE username LIKE  #{value}
+		    </select>
+
+	 * 插入数据 ：  session.insert("test.insertUser", user);
+	       <insert id="insertUser" parameterType="cn.hegongda.pojo.User"> 
+                         INSERT INTO user (username,birthday,sex,address)  VALUES (#{username},#{birthday},#{sex},#{address})	
+             </insert>
+
+	  * 删除数据 ：
+	       <delete id="deleteUser" parameterType="java.lang.String">
+		       DELETE FROM USER WHERE id=#{value}
+	    </delete>
+
+	 * 更新数据 ： session.update("test.updateUser", user);
+	      <delete id="updateUser" parameterType="cn.hegongda.pojo.User">
+                      UPDATE USER SET username=#{username},birthday=#{birthday},sex=#{sex},address=#{address} where id=#{id}
+              </delete>
+
+3、返回主键的方式 ：
+          * 对于自增主键的返回  : 
+	        <insert id="insertUser" parameterType="cn.hegongda.pojo.User">
+		        //   keyProperty : 对应User中的属性 id    
+			      order :  在insert语句执行后获取id
+			      resultType  : id 返回值的类型   //
+						 <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+						     SELECT LAST_INSERT_ID()
+						 </selectKey>
+					       INSERT INTO user (username,birthday,sex,address)  VALUES (#{username},#{birthday},#{sex},#{address})	
+	       </insert>
+             当指定自增返回值后，会自动将 给user对象， 直接 user.getUid即可
+	  * 针对uuid型主键获取返回值 ：
+	               <selectKey keyProperty="id" order="BEFORE" resultType="java.lang.String">
+						     SELECT UUID()
+			</selectKey>
+
+4、Hibernate 与 Mybatis 的应用场景 ：
+            Hibernate ： 使用需求变化不多的项目 ， 需求固定，比如管理系统
+	    Mybatis :  适用需求变化较多的项目 ： 互联网项目
+
+5、Mybatis 对dao 层的开发方法 ：
+                  SqlSession 是线程不安全的，最好用在方法体中
+         *  原始的 Dao 层开发方法 ： 
+		       定义Dao接口，定义Dao实现类，通过构造方法将 SqlSessionFactory 注入到dao层。
+			private SqlSessionFactory  sessionFactory;
+			// 通过构造器注入 sessionFactory
+			public UserDaoImpl(SqlSessionFactory sessionFactory) {
+				 this.sessionFactory = sessionFactory;
+			}
+			@Override
+			public User findUserById(int id) {
+				SqlSession session = sessionFactory.openSession();
+				User user = session.selectOne("test.findUserById", id);
+				session.close();
+				return user;
+			}
+
+			// 测试层 ：
+			      @Before
+				public void setUp() throws IOException{
+					String resource = "SqlMapConfig.xml";
+					InputStream ins = Resources.getResourceAsStream(resource);
+				    sessionFactory = new SqlSessionFactoryBuilder().build(ins);
+				}
+
+				@Test
+				public void test(){
+					System.out.println(sessionFactory);
+					userDao = new UserDaoImpl(sessionFactory);
+					User user = userDao.findUserById(1);
+					System.out.println(user.getUsername());
+				}
+	* Mapper 代理开发 dao层 ：
+	    定义UserMapper 接口，相当于 IUserDao.
+	    将配置文件 改名为 ： UserMapper.xml, 里面的配置不变，空间命名为 namespace="UserMapper的权限类命名"
+	    UserMapper 接口中的方法 ： 
+                             方法名 ： 为ID名
+			     参数类型   ： parameterType类型
+			     返回值类型  ：  resultType类型
+            // 配置文件类型
+	       <mapper namespace="cn.hegongda.mapper.UserMapper">
+		    <select id="findUserById" parameterType="java.lang.Integer" resultType="cn.hegongda.pojo.User">
+			 SELECT * FROM USER WHERE id=#{value}
+		    </select>
+	       </mapper>
+            //  Mapper接口中的 方法
+	       public interface UserMapper {
+			User findUserById(Integer id);
+			void insertUser(User user);
+                }
+
+6、SqlMapConfig.xml 配置文件 ；
+       *   将数据库连接相关信息配置到 jdbc.properties文件中，通过 <properties>标签引入。
+             <properties resource="jdbc.properties"/>
+
+       *   settings 全局参数配置  ： 开启二级缓存，开启延迟加载等
+
+       *  设置别名，便于开发 ，例如 java.lang.Integer 的别名  int
+          在 SqlMapConfig.xml配置  ： 有两种方式 
+	       <typeAliases>
+				    <typeAlias type="cn.hegongda.pojo.User" alias="user"/>    // 单个别名配置，user针对 paramterType 和 resultType 类型
+
+				   <package name="cn.hegongda.pojo"/>     // 为pojo包下多有类设置别名，其别名为 类名， 首字母不区分大小写
+               </typeAliases>
+
+	 * typeHandlers 类型处理器 ： 已经将大部分类型的 数据类型转换成了 jdbc类型，一般不需要自己定义
+
+	 *  Mapper（加载映射文件的方式）
+	         <!-- 加载映射文件 -->
+		 <mappers>
+		                   // 通过resource加载，原始dao开发方法
+			   <mapper resource="cn/hegongda/pojo/User.xml"/>                                   
+			          //  此时UserMapper.xml与 UserMapper接口没在同一包下
+			   <mapper resource="cn/hegongda/pojo/UserMapper.xml"/>      
+			          //  通过class方式 加载配置文件，需要遵循一定的规范，
+				           UserMapper.xml文件必须与UserMapper 接口在同一个包下
+                                           xml文件中的 空间命名必须是 接口的权限命名
+			   <mapper class="cn.hegongda.mapper.UserMapper"/> 
+			           // 批量加载映射文件， 遵循的规则与上一个相同
+			   <package name="cn.hegongda.mapper"/>
+		 </mappers>
+
+7、输入的包装类型  : 构造查询语句类，创建查询条件
+           <!-- 综合查询用户信息 -->
+		    <select id="findUserList" parameterType="cn.hegongda.pojo.UserQuery" resultType="user">
+			 SELECT * FROM USER WHERE sex=#{exUser.sex}  AND username LIKE '%${exUser.username}%'
+		    </select>
+           源代码 ：  
+			   public void query(){
+				SqlSession session = sessionFactory.openSession();
+				UserMapper user = session.getMapper(UserMapper.class);
+				  // 包装类
+				UserQuery userQuery = new UserQuery();
+				ExpanUser exUser = new ExpanUser();
+				exUser.setSex('1');
+				exUser.setUsername("小");
+				userQuery.setExUser(exUser);
+				List<User> users = user.findUserList(userQuery);
+		              }
+              包装类定义：
+	                      public class UserQuery {
+				    private ExpanUser exUser;
+					public ExpanUser getExUser() {
+						return exUser;
+					}
+					public void setExUser(ExpanUser exUser) {
+						this.exUser = exUser;
+					}
+				}
+
+8、输出结果集类型：
+     resultType :  此输出结果集对应的查询语句中的 字段 必须与类中属性名相同，否则将查询不到相应字段所对应的信息
+   
+      resultMap : 高级查询用到该输出类型 ：
+                        当查询的列名与与pojo类的属性名不一致时，可以通过resultMap实心列名与属性名之间的映射
+                          // 定义resultMap
+			  <resultMap type="user" id="userMap">
+				      <id column="id_" property="id"/>                                              //  查询结果集的唯一标识
+				      <result column="username_" property="username"/>                // 普通名映射
+		       </resultMap>
+		   
+			    <select id="findUserMap" parameterType="int" resultMap="userMap">      // 引入resultMap
+				SELECT  id id_, username username_ FROM USER WHERE id=#{value}
+			    </select>
+
+9、动态SQL语句 ：
+          <select id="findUserCount" parameterType="cn.hegongda.pojo.UserQuery" resultType="int">
+		 SELECT count(*) FROM USER                           (sex=#{exUser.sex}   and    username LIKE '%${exUser.username}%')
+		   <where>                                                             
+				<if test="exUser!=null">
+					 <if test="exUser.sex!=null and exUser.sex!=''">
+					           sex=#{exUser.sex}                                            // 不加and
+					 </if>
+					 <if test="exUser.username!=null and exUser.username!=''">
+					        and   username LIKE '%${exUser.username}%'
+					 </if>
+				</if> 
+		       </where>
+	    </select>
+	    当满足一个条件就会添加一个条件。这样就会使灵活性大大增加  <where> 会自动去掉第一个and
+      
+      SQL片段，将一些重复性代码抽取出来，基于单表定义SQL片段，在其他statement中也可以引用。
+			  // 定义SQL片段 ， 不加where
+			      <sql id="user_query_sql">
+					<if test="exUser!=null">
+						 <if test="exUser.sex!=null and exUser.sex!=''">
+						    and sex=#{exUser.sex}
+						 </if>
+						 <if test="exUser.username!=null and exUser.username!=''">
+						    and username LIKE '%${exUser.username}%'
+						 </if>
+					</if> 
+				</sql>
+			   // 引用SQL片段
+				  <select id="findUserCount" parameterType="cn.hegongda.pojo.UserQuery" resultType="int">
+					 SELECT count(*) FROM USER 
+						 <where>
+						   // 可以引用多个sql片段，当其他SQL片段不在 该 mapper.xml中时，则需要加上 namespace
+						    <include refid="user_query_sql"></include>
+						 </where>
+				    </select>
+    	
+	 <foreach> 标签的使用 ：
+	         <if test="ids!=null">
+			    <!-- and id IN(10,16,30 -->
+			   <foreach collection="ids" item="user_id" open="and id in(" close=")"  separator=",">
+				#{user_id}
+			   </foreach>
+                  </if>
+	     collection ： 遍历的属性     open ： 语句开启的标志    close ： 语句结束的标志   separator： 中间用什么分割开
+	     在包装类中定义 List<Integer>  ids;  里面用于存放ID
+
+10、MyBatis的关联查询 ：
+         一对一查询
+              resultType ：在查询时将 所查询的列在拓展类中补全。构造查询语句。
+	      resultMap ： 定义resultMap, 在pojo类中加入外键对象，产生get 和 set方法。
+	               <resultMap type="cn.hegongda.pojo.Orders" id="ordersMap">
+				     <!-- 正常映射订单信息 -->
+				     <id column="id" property="id"/>
+				     <result column="number" property="number"/>
+				     <result column="createtime" property="createtime"/>
+				     <result column="note" property="note"/>
+				     
+				     <!-- 配置关联映射信息 -->
+				     <!-- property : 关联查询对象在orders对应的属性名
+					  javaType : 关联对象对应的权限类命名
+				      -->
+				     <association property="user" javaType="cn.hegongda.pojo.User">
+					<id column="user_id" property="id"/>
+					<result column="username" property="username"/>
+					<result column="address"  property="address"/>
+				     </association>
+			 </resultMap>
+
+	   注意点  ：  * 一对一查询如果对结果没有特殊要求，使用resultType比较简单。而resultMap需要单独定义，实现有些麻烦，但如果有特殊要求，
+	                      则可以将关联查询映射到 pojo属性中。
+                            *   resultMap可以实现延时加载， 而resultType不能实现延时加载
+
+	一对多查询  （使用resultMap）：查询订单中的订单明细，一个订单中有多个明细。
+	                     在orders pojo中类中 定义属性 ： List<OrderDetail>  orderDetails;  生产get ， set方法
+			     在 OrderMapper.xml文件中定义 resultMap
+                                    // resultMap之间可以相互继承。
+			      <resultMap type="orders" id="orderDetailMap" extends="ordersMap">
+			            //      Collection ： 对关联查询到的多条记录映射到集合中
+				             property   ： 指定pojo类中集合属性
+					     ofType       :  指定集合中泛型的权限类名
+				     <collection property="orderDetails" ofType="cn.hegongda.pojo.OrderDetail">
+				          // id : 仍然作为查询结果集的唯一标识
+					<id column="orderdetail_id"  property="id"/>
+					<result column="items_num" property="items_num"/>
+					<result column="items_id" property="items_id"/>
+				     </collection>
+				</resultMap>
+
+			查询语句 ：
+			        SELECT orders.*,
+				user.`username`,user.`address`,
+				orderdetail.`items_num`,orderdetail.`items_id`,orderdetail.id orderdetail_id
+				FROM USER,orders,orderdetail
+				WHERE  user.id=orders.`user_id` AND orderdetail.`orders_id`=orders.`id`
+				         
+	                     
+	    多对多查询 ：  
+	                  主表user 
+	              <resultMap type="cn.hegongda.pojo.User" id="UODIMap">
+			       <id column="user_id" property="id"/>
+			       <result column="username" property="username"/>
+			       <result column="address"  property="address"/>
+			            // user表中 有 List订单集合     一对多  
+			       <collection property="ordersList" ofType="cn.hegongda.pojo.Orders">
+				    <id column="id" property="id"/>
+					     <result column="number" property="number"/>
+					     <result column="createtime" property="createtime"/>
+					     <result column="note" property="note"/>
+					              // 订单中又有 明细集合     一对多
+				     <collection property="orderDetails" ofType="cn.hegongda.pojo.OrderDetail">
+				       <id column="orderdetail_id"  property="id"/>
+						<result column="items_num" property="items_num"/>
+						    // 明细中有商品具体信息    一对一
+						<association property="item" javaType="cn.hegongda.pojo.Item">
+						     <id column="item_id" property="id"/>
+						     <result column="name" property="name"/>
+						     <result column="detail" property="detail"/> 
+						 </association>
+				     </collection>
+			       </collection>
+			 </resultMap>
+			     
+11、Mybatis 延迟加载设置
+       延迟加载原理  ：*   先查询单张表，如果需要查询关联表的信息，根据延迟加载，根据外键找相应的 statement查询相应关信息，这样就可以提高数据
+                                       库的性能。 注意：只有 association、cellection 具有延迟加载功能。
+				*    在Mapper.xml中定义resultMap :   
+				             <!-- 根据订单信息，延迟加载查询用户信息 ，定义resultMap-->
+					    <resultMap type="orders" id="lazyLoadingMap">
+						 <!-- 配置订单信息 -->
+						  <id column="id" property="id"/>
+						     <result column="number" property="number"/>
+						     <result column="createtime" property="createtime"/>
+						     <result column="note" property="note"/>
+						<!-- 配置用户信息，调用相关的statement -->
+						        注意 ： 此statement 不在该xml下,引入时需要 加上namespace
+						 <association property="user" column="user_id" javaType="cn.hegongda.pojo.User" select="cn.hegongda.mapper.UserMapper.findUserById" ></association>
+					    </resultMap>
+					    <select id="findUsersByOrdersLazyLoding" resultMap="lazyLoadingMap">
+					                       select * from orders
+					    </select>
+                                     *  在SqlMapConfig.xml中常量的配置 ：
+				            <settings>
+						  <!--打开延迟加载的开关  -->
+						     <setting name="lazyLoadingEnabled" value="true"/>
+						  <!--将积极加载改为消极加载及按需加载  -->
+						     <setting name="aggressiveLazyLoading" value="false"/>
+					       </settings>
+
+				       *   Mapper.java 代码 ：
+				                  for(Orders orders : list){
+								System.out.println(orders.getNumber());
+								orders.getUser();        // 当需要user信息时才会发出SQL语句
+					    }
+
+12、Mybatis 缓存  ：
+           * 一级缓存：  是 sqlSession级别的缓存，每个SQLsession在数据中查询到信息后会保存到内存中，当sqlsession再次发出相同的 SQL语句后，会
+	                        向内存中读取数据，当有commi(update、delete)时，内存中的缓存会被清除，这样可以避免发生脏读。
+				各个sqlsession之间是不相互影响的，且 Mybatis 默认支持一级缓存的。
+					  
+	   * 二级缓存  ：  时Mapper级别的缓存 ，多个SQLSession之间共享一个Mapper缓存区域，其作用范围大于一级缓存。	
+	                          Mapper缓存区域的分配规则 ： 根据namespace进行分配，不同namespace有各自的二级缓存区域。
+
+				*  在SqlMapConfig.xml中的配置二级缓存的总开关 ：
+					      <!-- 开启二级缓存总开关，默认就是true -->
+						    <setting name="cacheEnabled" value="true"/>
+
+				 * 在mpper.xml中配置二级缓存 ：加上该标签即可
+				          <cache/>
+                                   若要让相关的语句禁用二级缓存，则只需要在相关statement中设置 useCache="false"即可
+				          <select id="findUserById" parameterType="java.lang.Integer" resultType="user"  useCache="false">
+                                    对于save、update、delete语句 时需要清空缓存 ： fulshCache="true" 即可
+				          <select id="findUserById" parameterType="java.lang.Integer" resultType="user" flushCache="true" useCache="false">
+			          *  对于相应的pojo类，应该实现 serializable 序列化接口，为了将缓存数据取出执行反序列化操作。
+				  * 同样对于 commit（）操作，二级缓存也会自动清空。
+
+13、Mybatis整合ehcache(分布式缓存)
+               用于项目是集群分布，所以需要进行分布式缓存，将缓存进行统一的管理。这时就可以 配置redis等缓存框架。
+	       mybatis提供了一个cache接口，如果要实现自己的缓存逻辑，实现cache接口即可。
+               步骤 ： 1、   引入两个jar包，在src下新建 ehcache.xml文件。
+	                   2、  在Mapper中托管 ：   <!-- 将二级缓存交给cache接口的实现类，也就是 ehcache,不是由mybatis来进行缓存 -->
+                                                                     <cache type="org.mybatis.caches.ehcache.EhcacheCache"/>
+
+14、ssm整合配置，在applicationContext.xml中配置 SqlSessionFactory。有两种配置方式 ：
+          第一种原始dao层配置 ：User.xml 中配置相关查询方法。
+	         在 application 中关键配置 ：
+		      //  配置sqlSessionFactory
+			   <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+			      <property name="configLocation" value="SqlMapConfig.xml"></property>     // 引入SqlMapConfig.xml文件所在位置
+			       <property name="dataSource" ref="dataSource"></property>                        // 引入数据源
+			    </bean>
+
+		    //   注入sqlSessionFactory
+			    <bean id="userDao" class="cn.hegongda.dao.Impl.UserDaoImpl">
+				<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+			    </bean>
+
+	            //  SqlMapConfig.xml中的配置 ：
+		         <configuration>
+			       <typeAliases>
+				<!--  <typeAlias type="cn.hegongda.pojo.User" alias="user"/> -->
+				   <package name="cn.hegongda.pojo"/>
+			       </typeAliases>
+					 <!-- 加载映射文件 -->
+				 <mappers>
+					 <mapper resource="cn/hegongda/pojo/User.xml"/>
+					<!--   <mapper resource="cn/hegongda/pojo/UserMapper.xml"/>
+					   <mapper class="cn.hegongda.mapper.UserMapper"/>
+					 <package name="cn.hegongda.mapper"/> -->
+				</mappers>
+			</configuration>
+
+			  UserDaoImpl  类需要继承  SqlSessionDaoSupport。
+	
+	    第二种配置Mapper方式进行配置 ：
+	                *  每一个Mapper都配置一个Bean，这样就会造成大量代码的冗余。这种方法不建议使用
+			* 通过扫描器的方式配置 ：
+			  ApplicationContext.xml :
+			      	   <!-- mapper批量扫描，将扫描出来的Mapper自动生成代理对象，此时不需要在SqlMapCongfig.xml
+					  进行配置文件的加载。此时生成的bean 的ID为 mapper的类名。（首字母小写）        
+				     -->
+				    <bean  class="org.mybatis.spring.mapper.MapperScannerConfigurer">      // 默认 ID=userMapper
+					   <!-- 指定需要扫描的Mapper包名，多个Mapper时需要用,隔开  -->
+					 <property name="basePackage" value="cn.hegongda.mapper"></property>
+					 <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>
+				    </bean>		      
+                               注意 ： 此时在SqlMapConfig.xml中的加载文件扫描相关包的配置可以不用写。
+
+15、Mybatis逆向工程  ：
+            单独写测试程序，自动生成 Mapper 和 pojo 类。然后将 Mapper 和 pojo 类拷贝到项目中。
+            
+	    查询方法 ：
+	       	// 自定义查询           创建criteria 查询条件
+			public void testSelectByExample() {
+				ItemsExample itemsExample = new ItemsExample();
+				ItemsExample.Criteria criteria = itemsExample.createCriteria();
+				 criteria.andNameEqualTo("笔记本");
+				 List<Items> items = itemMapper.selectByExample(itemsExample);
+				 System.out.println(items.size());
+			}
+
+	          public void testSelectByPrimaryKey()   // 根据主键查询内容
+		  public void testUpdateByPrimaryKeySelective()  // 根据主键更新指定列
+		  public void testUpdateByPrimaryKey()    // 根据主键更新所有列
+
+
+                     
+					
+				   
+	  			  
+				    
+	      
+
+
+		  

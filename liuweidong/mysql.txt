@@ -1,0 +1,395 @@
+
+1、JDBC操作数据酷步骤：
+                 // 注册驱动，用反射技术，将驱动类加入到内容
+		 Class.forName("com.mysql.jdbc.Driver");
+
+		 // 获得数据库的链接
+		 // 用DriverManager中的静态方法getConnection(String url, String user, String password);
+		 // 返回值为Connection的实现类
+		 // url:数据库地址"jdbc:mysql://localhost:3366/mydatabase"
+		 String url = "jdbc:mysql://localhost:3366/mydatabase";
+		 String user = "root";
+		 String password = "584521";
+		 Connection co = DriverManager.getConnection(url, user, password);
+
+		 // 获得执行语句的平台，通过数据库连接对象，获取sql执行者语句对象
+		 // 方法： co.createStatment() 返回值为 Statment
+		 Statement stat = co.createStatement();
+
+		 // 执行sql语句，通过sql执行者对象调用方法  int executeUpdata(String sql), 仅能执行updata,insert,delete语句
+		 // 执行成功，则返回行数
+		   int row = stat.executeUpdate
+		          ("insert into product (id,pname,price) values (9,'金箍棒',3369)");
+
+		 // 执行sql语句,调用方法 ResultSet executeQuery(String sql)执行sql查询语句select
+		  String sql = "select * from product";
+		  ResultSet rs = stat.executeQuery(sql);
+
+		  // 处理结果集 : 调用函数 boolean next(),相当于迭代器中的next()
+		  while(rs.next())
+		  {
+			  System.out.println(rs.getInt("id")+"     "+
+		                             rs.getString("pname")+"    "+rs.getDouble("price"));
+		  }
+		 
+		 //释放资源
+		 co.close();
+		 stat.close();
+		 rs.close();
+
+    总体：1、注册驱动
+              2、获得链接
+	      3、获取SQL语句执行者对象
+	      4、执行SQL语句
+	      5、处理结果集
+	      6、释放资源
+
+    防止数据库注入攻击：
+               /*
+		 * 防止注入攻击： Statement接口实现类，执行sql语句
+		 * 子接口：prepareStatement(String aql) 实现预编译处理，防止注入攻击
+		 */
+      
+               // 注册驱动
+		Class.forName("com.mysql.jdbc.Driver");
+		// 获得链接
+		String url = "jdbc:mysql://localhost:3366/mydatabase";
+		String user = "root";
+		String password = "584521";
+		Connection con = DriverManager.getConnection(url, user, password);
+		// 执行sql
+		String name = sc.nextLine();
+		String scert = sc.nextLine();
+		String sql = "SELECT pname,pass FROM passlock WHERE pname=? AND pass=?;";
+		// 获得对象
+		PreparedStatement stat = con.prepareStatement(sql);
+		stat.setString(1, name);
+		stat.setString(2, scert);
+		ResultSet rs = stat.executeQuery();
+		// 处理结果集
+		System.out.println(rs.next());
+
+           JDBC工具类：  自己创建一个类进行方法的调用， 需要将url，user,password写成配置文件，文件位置在src目录下，在运行时，会自动在bin目录下
+	                         生成一份配置为文件。
+				 当读取配置文件时，运用反射技术读取指定资源
+				 InputStream in = JDBCUtil.class.getClassLoader().getResourceAsStream("config.properties");
+				                            先获取Class+ 类加载器 + 指定文件
+
+            静态代码块： 只运行一次，不能抛异常
+				 static{
+						   try{
+							   readConfig();
+							   //注册驱动
+							   Class.forName(DriverClass);
+							   // 获取链接
+							    con = DriverManager.getConnection(url, user, password);
+						   }catch(Exception ex){
+							   throw new RuntimeException("数据酷连接失败");
+						   }  
+					   }
+
+2、*  QueryRunner 类，调用方法，可以实现对数据库的更新，删除，添加。（update, insert, delete ）
+            Connection con = JDBCUtil.getCon();
+		
+		QueryRunner qr = new QueryRunner();
+		String sql = "insert into product (pname, price) values (?, ?)";
+		Object []params = {"水杯", 25};
+		int a = qr.update(con, sql, params);
+		System.out.println(a);
+		DbUtils.closeQuietly(con);
+     *  JavaBean类，实现对数据的封装。
+
+     其八种处理结果集：
+			// 第八种处理方法 ： MapListHandler
+			// 将结果集的每一行封装到Map中，并存储到List集合中
+			public static void mapListhandler() throws SQLException
+			{
+				QueryRunner qr = new QueryRunner();
+				String sql = "select * from product";
+				List<Map<String , Object>> list = qr.query(con, sql, new MapListHandler());
+				for(Map<String, Object> map : list)
+				{
+					for(String key : map.keySet())
+					{
+					  System.out.print(key+"   "+map.get(key));
+					}
+					System.out.println();
+				}
+			}
+			
+			// 第七种处理方法： Maphandler
+			// 将结果集的第一行封装到Map集合中
+			// Map<列名，Object>
+			public static void mapHandler() throws SQLException
+			{
+				QueryRunner qr = new QueryRunner();
+				String sql = "select * from product";
+				Map<String, Object> map = qr.query(con, sql, new MapHandler());
+				for(String key : map.keySet())
+				{
+					System.out.println(key + "  "+map.get(key));
+				}
+			}
+			
+			// 第六种处理结果方法： ScalarHandler
+			// 查询后，只有一个结果
+			public static void scalarHandler() throws SQLException
+			{
+				QueryRunner qr = new QueryRunner();
+			    String sql = "select count(*) from product";
+			    long i = qr.query(con, sql, new ScalarHandler<Long>());
+			    System.out.println(i);
+			    DbUtils.close(con);
+			}
+			
+			// 第五种处理结果集 cloumnListHandler
+			// 将指定列存储到数据集合List当中
+			public static void columnListHandler() throws SQLException
+			{
+				QueryRunner qr = new QueryRunner();
+				String sql = "select * from product";
+				List<Object> list = qr.query(con, sql, new ColumnListHandler<Object>("pname"));
+				for(Object obj : list)
+				{
+					System.out.println(list);
+				}
+				DbUtils.close(con);
+			}
+			
+			
+			//第四种处理结果集的方式： BeanListHandler
+			public static void beanListHandler() throws SQLException
+			{
+				QueryRunner qr = new QueryRunner();
+				String sql = "select * from product";
+				List<Product> list = qr.query(con, sql, new BeanListHandler<Product>(Product.class));
+				System.out.println(list);
+				DbUtils.close(con);
+
+			}
+			
+			// 第三种处理结果集的方式： BeanHandler   需要建一个类
+			// 将处理结果集的第一行数据封装到JavaBean对象中
+			//被封装的javaBean对象，product类必须是无参构造
+			public static void beanHandler() throws SQLException
+			{
+				QueryRunner qr = new QueryRunner();
+				String sql = "select * from product";
+				Product pro = qr.query(con, sql, new BeanHandler<Product>(Product.class));
+				System.out.println(pro);
+				DbUtils.close(con);
+			}
+			
+			// 第二种处理结果集 ArrayListHandler
+			// 将结果集的每一行封装到对象数组中，并存储到List集合中
+			public static void arrayListHandler() throws SQLException
+			{
+				QueryRunner qr = new QueryRunner();
+				String sql = "select * from product";
+				List<Object[]> result = qr.query(con, sql, new ArrayListHandler());
+				for(Object[] objs : result)
+				{
+					for(Object obj : objs)
+					{
+						System.out.print(obj+"\t");
+					}
+					System.out.println();
+				}
+				DbUtils.closeQuietly(con);
+			}
+			
+			// 第一种处理结果集 ArrayHandler
+			//将结果的第一行存储到对象数组中
+			public static void arrayHandler() throws SQLException
+			{
+				QueryRunner qr = new QueryRunner();
+				String sql = "select * from product";
+				Object []result = qr.query(con, sql, new ArrayHandler());
+				for(Object obj: result)
+				{
+					System.out.print(obj);
+				}
+				DbUtils.closeQuietly(con);
+			}
+
+3  DBCP连接池：  需要导入的jar 包：  apach dbpc jar、pool、 connector、dbuits
+
+         连接池的建立：
+                BasicDataSource dataSource = new BasicDataSource();    // 实现了 Connection 接口
+
+	       d.setUrl("jdbc:mysql://localhost:3366/mydatabase");
+		d.setUsername("root");
+		d.setPassword("58421");
+		d.setMaxIdle(5);    // 设置最大空闲连接
+		d.setMinIdle(1);   // 设置最小空闲连接
+		d.setInitialSize(8);   // 设置连接池初始化个数
+		d.setMaxActive(13);     // 设置最大连接个数
+		d.setMaxWait(10000);    // *等待时间
+
+		Connection con = dataSource.getConnection;
+		con.close();
+
+		 连接池对Mysql的对象进行了增强，增强close方法， 此时的close方法是将 当前连接 归还给连接池
+
+      c3p0连接池： 更灵活， 底层结构为动态代理
+               ComboPooledDataSource dataSource = new ComboPooledDataSource();
+		
+		dataSource.setDriverClass("com.mysql.jdbc.Driver");
+		dataSource.setJdbcUrl("jdbc:mysql://localhost:3366/mydatabase");
+		dataSource.setUser("root");
+		dataSource.setPassword("584521");
+		dataSource.setAcquireIncrement(5);
+		dataSource.setMaxPoolSize(20);
+		dataSource.setMinPoolSize(2);
+		dataSource.setInitialPoolSize(10);
+		
+		Connection con = dataSource.getConnection();
+		
+		System.out.println(con);
+
+	    ** 可以在src下配置xml文件，文件名必须为  c3p0-config.xml
+	       <?xml version="1.0" encoding="UTF-8"?>
+<c3p0-config>
+
+	  <default-config>
+	    <property name="driverClass">com.mysql.jdbc.Driver</property>
+		<property name="jdbcUrl">jdbc:mysql://localhost:3366/mydatabase</property>
+		<property name="user">root</property>
+		<property name="password">584521</property>
+		<property name="initialPoolSize">5</property>
+		<property name="maxPoolSize">20</property>
+	  </default-config>
+  
+	  <named-config name="oracle"> 
+	    <property name="driverClass">com.mysql.jdbc.Driver</property>
+		<property name="jdbcUrl">jdbc:mysql:///web_07</property>
+		<property name="user">root</property>
+		<property name="password">123</property>
+	  </named-config>
+	</c3p0-config>
+
+	    ComboPooledDataSource dataSource = new ComboPooledDataSource("oracle");   // 指定配置
+
+4、大数据：
+     向数据库中存入mp3等较大文件： 
+       变量类型： mediumblob    16G
+                         text                  64k
+			 longtext          4G
+
+     项数据库中存入mp3:
+                // 通过commens  jar 包  可以直接将文件转化成字节数组
+		byte[] bytes = FileUtils.readFileToByteArray(new File("D://我的资料库//Music/相约一九九八.mp3"));
+		// blob构造器： 通过字节构造
+		Blob blod = new SerialBlob(bytes);
+		
+		Class.forName("com.mysql.jdbc.Driver");
+		Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3366/mydatabase",
+				"root", "584521");
+		String sql = "insert into music values (?,?,?)";
+		PreparedStatement stat = con.prepareStatement(sql);
+		stat.setInt(1, 1);
+		stat.setString(2, "相约一九九八.mp3");
+		// 第三个参数为 blob 类型
+		stat.setBlob(3, blod);
+
+
+		从数据库中读取并保存到本地硬盘：
+		   while(rs.next()){
+				Blob bolb = rs.getBlob("map3");
+				// 获得blob 读取流
+				InputStream in = bolb.getBinaryStream();
+				OutputStream os = new FileOutputStream("C://max");
+				// 复制
+				IOUtils.copy(in, os);
+	
+5、批处理：
+                   Class.forName("com.mysql.jdbc.Driver");
+			Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3366/mydatabase?rewriteBatchedStatements=true",
+					"root", "584521");
+			String sql = "insert into child values(?,?)";
+			PreparedStatement stat = con.prepareStatement(sql);
+			 // 添加参数，数据库自动将这些参数生成语句
+			for(int i = 0; i < 3000; i++){
+				stat.setInt(1, i);
+				stat.setString(2, "stu"+i);
+				// 添加批
+				stat.addBatch();     
+			}
+			// 执行批
+			stat.executeBatch();  
+		
+	MySql默认批处理是关闭的，若要将其打开，则在url后添加：?rewriteBatchedStatements=true",
+	这样将大大提高数据插入的速度				
+
+6、Mysql 在 Tomcat 上的资源配置：  JNDI
+    
+
+7、ThreadLocal<T>  : 解决多线程并发访问 共享资源的问题 ， 其底层数据结构为 Map ， key 值存放的d当前线程。   
+      有三个方法：  t.set(T);      t.get();  t.remove();
+
+8、JdbcUtils的完美版
+			    public class JdbcUtils {
+			     private static ThreadLocal<Connection> tl = new ThreadLocal<>();
+			     private static ComboPooledDataSource dataSource = new ComboPooledDataSource();
+			     
+			     public static Connection getConnection() throws SQLException{
+				 // 以当前线程为键值，看是否已经存在连接
+				Connection con = tl.get();
+				 // 若不等于null 说明该线程已经获取到了连接，直接返回获取到的连接
+				if(con != null){
+					return con;
+				}
+				// 若等于null， 则返回新建连接
+				return dataSource.getConnection();
+			     }
+			     
+			     public static ComboPooledDataSource getPool(){
+				 return dataSource;
+			     }
+			    
+			     // 开启事务
+			     public static void beginTransaction() throws Exception{
+				 // 仍然先判断是否获取连接
+				 Connection con = tl.get();
+				 if(con != null){
+					  throw new SQLException("事务已经开启，不要重复开启");
+				 }
+				 con = getConnection();
+				// 开启事务
+				 con.setAutoCommit(false);
+				 // 将con存放到TreadLocal中
+				 tl.set(con);
+				 
+			     }
+			     
+			     // 提交事务
+			     public static void commitTransaction() throws SQLException{
+				 Connection con = tl.get();
+				 if(con == null){
+					 throw new RuntimeException("事务还未开启");
+				 }
+				 // 提交事务
+						con.commit();
+						con.close();
+						tl.remove();
+			     }
+			     
+			     // 回滚事务
+			     public static void rollbackTransaction() throws SQLException{
+				 Connection con = tl.get();
+				 if(con != null){
+							con.rollback();
+				}
+			     }
+			     
+			     // 对连接进行关闭
+			     public static void releaseConnection(Connection connection){
+				 Connection con = tl.get();
+				 try {
+						if(con == null)  connection.close();
+						 if(con != connection) connection.close();
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+			     }
+			}

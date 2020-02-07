@@ -1,0 +1,263 @@
+@Configuration       // 代表了一个 bean 的 xml配置文件
+@ComponentScan(value = "cn.hegongdas",includeFilters = {
+        // 指定排除类型
+        //@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,classes = {PersonDao.class})
+        // 通过自定义扫描类进行扫描
+        @ComponentScan.Filter(type = FilterType.CUSTOM,classes = {MyFilterType.class})
+},useDefaultFilters = false)   // 需要默认全部扫描设置为false
+public class Factory {
+    @Bean
+    public Person person(){
+        Person person  = new Person();
+        person.setAge(25);
+        person.setName("liuweidong");
+        return person;
+    }
+
+ MyFilterType自定义类需要实现 TypeFilter
+   public class MyFilterType implements TypeFilter {
+    @Override
+    public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory) throws IOException {
+        // 获取注解
+        AnnotationMetadata annotationMetadata = metadataReader.getAnnotationMetadata();
+        //获取正在读取的类
+        ClassMetadata classMetadata = metadataReader.getClassMetadata();
+        //获取类的资源信息，如路径
+        Resource resource = metadataReader.getResource();
+        String className = classMetadata.getClassName();
+	// 设置过滤调节
+       if(className.contains("dao")){
+            return true;
+        }
+        return false;
+    }
+}
+
+			  /**
+			     * singleton :单实例的  ioc容器启动就会调用方法创建对象将对象放到ioc容器中，以后每一次获取将是
+			     *            同一个bean
+			     * prototype : 多实例的,用到该对象时才会对其进行创建
+			     * @return
+			     */
+			  //  @Scope("prototype")
+			    @Lazy    // 懒加载， 针对单实例的bean，在创建IOC容器时，不会创建bean
+			    @Bean(name = "person")
+
+   @Conditional({})    // 根据条件判断是否注册bean
+            @Conditional({MyCondition.class})
+	    @Bean(name="liu")
+	    public Person person01(){
+ 
+       其中自定义条件，实现Condition接口即可。
+	    public class MyCondition implements Condition {
+		    @Override
+		    public boolean matches(ConditionContext conditionContext, AnnotatedTypeMetadata annotatedTypeMetadata) {
+			Environment environment = conditionContext.getEnvironment();
+			// 获取到操作系统的型号， 是window 还 linux，  当返回true时才会创建bean.
+			String property = environment.getProperty("os.name");
+			System.out.println(property);
+			if(property.contains("qq")){
+			    return true;
+			}
+			return false;
+		    }
+		}
+
+
+快速导入第三方组建  ：@import({})
+		@Configuration
+		@Import({User.class, Student.class})
+		public class Factory1 {
+	    注意 ： student 和 user 没有在configuration中注册， 直接导入
+
+	    定义实现类批量导入组件 ：实现接口 importSelector
+		  @Configuration
+		  @Import({User.class, Student.class, MyImportSelector.class})
+
+			     public class MyImportSelector implements ImportSelector {
+			    @Override
+			    public String[] selectImports(AnnotationMetadata annotationMetadata) {
+				return new String[]{"cn.hegongdas.bean.Child","cn.hegongdas.bean.Old"};
+			    }
+			}
+
+	      定义实现类实现接口 ImportBeanDefinitionRegistrar, 可以自己注册类
+	      @Import({User.class, Student.class, MyImportSelector.class, MyImportBeanDefinitionRegistrar.class})  // 在配置类上进行注解
+	       public class MyImportBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
+			    @Override       （注解类信息，注册）
+			    public void registerBeanDefinitions(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry) {
+				RootBeanDefinition rootBeanDefinition = new RootBeanDefinition(Man.class);      // 将类经注册
+				registry.registerBeanDefinition("man", rootBeanDefinition);       //   手工注册类
+			    }
+ 
+ 通过工厂FactoryBean获取bean  ：
+       
+          此时创建了一个制造Person类的工厂 ：
+			       public class PersonFactoryBean implements FactoryBean<Person> {
+			    @Override
+			    public Person getObject() throws Exception {
+				return new Person();
+			    }
+                            // 创建类的类型
+			    @Override
+			    public Class<?> getObjectType() {
+				return Person.class;
+			    }
+                          // 类是否为单利
+			    @Override
+			    public boolean isSingleton() {
+				return false;
+			    }
+			}
+	  在主配置类中注册工厂 ： 表面返回的是 PersonBeanFactory , 实际返回的Person类。
+	        @Bean(name="zhang")
+		    public PersonFactoryBean personFactoryBean(){
+			return new PersonFactoryBean();
+		    }
+
+关于bean的生命周期进行注解 ：
+	*               定义相关bean，在其类中增加init()  和 destory() 的方法
+		       在主配置类中 ：
+				@Bean(initMethod = "init",destroyMethod = "destory")          // 指定其初始化方法，和销毁方法
+				    public Child child (){
+					return new Child();
+				    }
+		      
+		      对于单例的bean ： 当bean的属性已经赋值好后调用初始化方法
+						   当容器关闭后，容器会调用其校会的方法
+		       对于多实例bean ： bean的销毁不交给容器管理，可以自己指定
+
+        *        将相关的bean实现 initializingBean  和 DisposableBean接口， 重写其方法即可
+		  public class Child implements InitializingBean ,DisposableBean {
+		    public Child(){
+			System.out.println("已经创建了该实例");
+		    }
+
+		    @Override
+		    public void destroy() throws Exception {
+			System.out.println("该bean已经被销毁了");
+		    }
+
+		    @Override
+		    public void afterPropertiesSet() throws Exception {
+			System.out.println("已经初始化完毕");
+		    }
+		}
+
+         *        通过@PostConstruct  和 @PreDestory 进行  （只需要在相关的bean中引入改标签）
+	         public class Child  {
+			    public Child(){
+				System.out.println("已经创建了该实例");
+			    }
+
+			    @PostConstruct       //  在bean创建完成相关的属性已经赋值后进行调用
+			   public void init(){
+				System.out.println("初始化");
+			   }
+
+			   @PreDestroy
+			   public void destory(){
+			       System.out.println("已经销毁");
+			   }
+			}
+   
+          * BeanPostProcessor  (interfa):  bean后处理器 
+	          -  postProcessBeforeInitialization     ：  在bean已经创建并在初始化之前执行
+		  -  postProcessAfterInitialization        ：  在bean初始化之后执行
+		  @Component
+			public class MyBeanPostProcessor implements BeanPostProcessor {
+			    @Override
+			    public Object postProcessBeforeInitialization(Object o, String s) throws BeansException {
+				System.out.println("初始化之前")
+				return o;
+			    }
+
+			    @Override
+			    public Object postProcessAfterInitialization(Object o, String s) throws BeansException {
+				System.out.println("初始化之后");
+				return o;
+			    }
+			}
+                       已经创建了该实例（构造器）
+			初始化之前 
+			初始化              （init）
+			初始化之后
+
+自动装配 ： Autowired :（required=false ） // 如果容器中没有该组件，就不进行装配，不会报错
+                  首先回到ioc容器中找到相关组件，如果找到多个组件，就会根据 变量名去组建找到相对应的 id进行注入
+		  @Qualifier("bookstore")     // 明确指定装配的 id组件
+		  // autowired 和 Qualifier  结合使用
+		  @primary ： 首选装配, 只需要在相关的bean上加上标签 @primary 即可
+
+		  @Resource :  默认按照bean的名称进行装配，也是进行自动装配
+
+@Profile用于激活不同环境下的 容器中的组件 ： 在test的测试下用数据源一， 开发环境下用数据源二，生产环境下用数据源三。
+          在每个bean上加上标签 @Profile("")  // 用于指定开发环境
+	   @Configuration
+		public class Factory3 {
+
+		    @Profile("test")
+		    @Bean(name="test")
+		    public Child child1(){
+			return new  Child();
+		    }
+
+		    @Profile("dev")
+		    @Bean(name="dev")
+		    public Child child2(){
+			return new Child();
+		    }
+
+		    @Profile("pro")
+		    @Bean(name="pro")
+		    public Child child3(){
+			return new Child();
+		    }
+       在运行主运行程序时，需要进行虚拟机参数配置  ：
+            -Dspring.profiles.active=test（生产环境）
+
+Aop 注解版面向切面编程 ：
+    定义通知： 前置通知 ： before
+                     后置通知 ： after
+		     异常通知  ：afterThrowing
+		     返回值结果通知 ： afterReturning
+    定义切面类 :(@Aspect 代表该类为一个切面)
+          @Aspect
+		public class MyAspect {
+
+		    @Pointcut("execution(* *..service..*(..))")          // 定义切点，限制目标方法
+		    public  void pointCut(){}
+
+		    @Before("pointCut()")
+		    public void before(){
+			System.out.println("即将执行目标放方法");
+		    }
+
+		   @After("pointCut()")      （通过joinpoint 参数可获取目标方法的相关值）
+		    public void after(JoinPoint joinPoint){
+			System.out.println("已经执行完毕目标方法"+joinPoint.getSignature().getName());
+		    }
+
+		    @AfterReturning(value = "pointCut()",returning = "result")        // 指定返回值
+		    public void afterReturning(String result){
+			System.out.println("目标方法返回值进行执行");
+		    }
+
+		    @AfterThrowing(value = "pointCut()",throwing = "exception")       // 指定异常
+		    public void afterThrowing(Exception exception){
+			System.out.println("目标方法执行出现异常");
+    }
+		}
+       
+        在组件中将切面放到容器中 ：
+	        @EnableAspectJAutoProxy(proxyTargetClass = true)        //        添加该属性表示使用的是cglib的动态代理
+		@Configuration
+		@ComponentScan("cn.hegongdas.service")
+		public class Factory4 {
+
+		    @Bean
+		    public MyAspect myAspect(){
+			return new MyAspect();
+		    }
+
+		 @EnableXXX代表开启某一项功能

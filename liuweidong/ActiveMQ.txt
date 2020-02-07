@@ -1,0 +1,310 @@
+
+ActiveMQ是Apache下的一个项目，直接上传到linux系统进行解压，需要按装jdk.
+启动 ： ./activemq start
+停止 ： ./ activemq  stop
+ 
+根据JMS消息规范如下步骤进行发送和接收消息 ：
+   @Test( 单点模式 )
+	public void sendMessage() throws Exception{
+		// 创建连接工厂
+		ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://192.168.1.106:61616");
+		// 创建一个连接对象
+		Connection connection = connectionFactory.createConnection();
+		// 开启链接
+		connection.start();
+		// 创建session
+		Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);// 不开启事务，进行自动应答
+		// 使用session创建一个destination对象，有两种形式： quence/topic ， 使用前者进行单点传播
+	    Queue queue = session.createQueue("queue-test");
+	    // 创建一个消息生产者
+	    MessageProducer producer = session.createProducer(queue);
+	    // 创建消息Message
+	    TextMessage message = session.createTextMessage("liuweidong is  person");
+	    // 发送消息
+	    producer.send(message);
+	    // 关闭资源
+	    session.close();
+	    connection.close();
+	    producer.close();
+	    
+	}
+	
+    // 测试消息的消费者
+	 @Test
+	 public void consumer() throws Exception{
+		// 创建一个工厂链接MQ服务器
+		 ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://192.168.1.106:61616");
+		//创建链接
+		 Connection connection = connectionFactory.createConnection();
+		// 开启链接
+		 connection.start();
+		// 创建一个session
+		 Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+		 // 创建一个destination
+		 Queue queue = session.createQueue("queue-test");
+		 // 创建一个消费者
+		 MessageConsumer consumer = session.createConsumer(queue);
+		 // 获取信息
+		 consumer.setMessageListener(new MessageListener() {
+
+		 // 获取信息 ： consumer.recieve();
+			
+			@Override
+			public void onMessage(Message message) {
+				TextMessage textMessage = (TextMessage) message;
+				String text = null;
+				try {
+					text = textMessage.getText();
+					System.out.println(text);
+				} catch (JMSException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
+		 System.in.read();
+		 // 关闭资源
+		 consumer.close();
+		 session.close();
+		 connection.close();
+	}
+
+	发布订阅模式 ：
+	     Topic topic = session.createTopic("queue-test");
+
+
+  1、 activeMQ 的安全认证 ：用户名密码登陆规则 
+          在activeMQ核心配置文件activemq.xml的broker标签中加入以下代码，开启安全认证 ：
+		      <plugins>
+		    <!--  use JAAS to authenticate using the login.config file on the classpath to configure JAAS -->
+		    <!--  添加jaas认证插件activemq在login.config里面定义,详细见login.config-->
+		    <!--   >  代表所有的topic -->
+		    <jaasAuthenticationPlugin configuration="activemq" />
+		    <!--  lets configure a destination based authorization mechanism -->
+		    <authorizationPlugin>
+			<map>
+			    <authorizationMap>
+				<authorizationEntries>
+				    <authorizationEntry topic=">" read="admins" write="admins" admin="admins" />
+				    <authorizationEntry queue=">" read="admins" write="admins" admin="admins" />
+				    <authorizationEntry topic="ActiveMQ.Advisory.>" read="admins" write="admins" admin="admins"/>
+				    <authorizationEntry queue="ActiveMQ.Advisory.>" read="admins" write="admins" admin="admins"/>
+				</authorizationEntries>
+			    </authorizationMap>
+			</map>
+		    </authorizationPlugin>
+		</plugins>
+
+	   认证插件在 login.config文件中 ：
+	        activemq {
+		        org.apache.activemq.jaas.PropertiesLoginModule required
+			org.apache.activemq.jaas.properties.user="users.properties"          // 用户密码信息取 user.properties中配置 
+			org.apache.activemq.jaas.properties.group="groups.properties";    // 组信息取group.properties中去配置
+		};
+	      
+           group.properties 中配置文件 内容 ：
+		      ##  一个用户组下可能会有多个用户，多个用户用‘’，‘’隔开
+			    admins=admin,root
+	   user.properties 中配置文件内容 ：
+	          ## 用户名所对应的的密码，一个用户名对应一个密码
+			admin=admin
+			root=584521
+
+2、activemq的持久化
+      *     activeMQ持久化是对消息数据进行持久化，activemq消息默认是存放在内存中的，当内存不够用的时候或者服务器正常关闭的时候，
+	     缓存中的没有处理消息就会持久化到磁盘中。
+	     具体配置仍然在conf/active.xml中进行配置。
+
+      * activemq默认存储策略是 kahadb
+         kahadb是一个文件型数据库。是用内存+文件来保持数据持久化的。
+                <persistenceAdapter>
+                    <kahaDB directory="${activemq.data}/kahadb"/>
+               </persistenceAdapter>
+	 特性  ： 以日志的形式存储消息
+	              消息索引以B-tree结构存储，可以快速更新
+		      支持JMS事务
+		      支持多种回复机制
+ 
+       * JDBC持久化方式  ：
+           将消息数据持久化到数据库中。不指定数据库，可以存储到任意的数据库中。 如mysql、Oracle
+	      <broker brokerName="test-broker" persistent="true" xmlns="http://activemq.apache.org/schema/core">
+
+                 // jdbc持久化策略
+	      	<persistenceAdapter> 
+			<jdbcPersistenceAdapter dataSource="#mysql-ds" createTablesOnStartup="false" /> 
+		</persistenceAdapter>
+
+		//在broker标签之外，配置数据源信息 。需要向 activemq/lib下传送相关的  jar包
+		   <bean id="mysql-ds" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+			<property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+			<property name="url" value="jdbc:mysql://192.168.1.101:3306/mydb1?relaxAutoCommit=true"/>
+			<property name="username" value="root"/>
+			<property name="password" value="584521"/>
+			<property name="maxActive" value="200"/>
+			<property name="poolPreparedStatements" value="true"/>
+		   </bean>
+
+ 发送消息的形式 ： producer.send(message, DeliveryMode.PERSISTENT, 1, 5000);  
+ *   各个参数的意义 ： deliverMode : 是否支持持久化，：static final int NON_PERSISTENT = 1;  不支持，数据保存到内存中
+ *                                                                                  static final int PERSISTENT = 2; ：支持，数据保存到数据库中
+ *                proprity : 消息优先级
+ *                longToLive : 消息的存活时间 ：单位毫秒 。 当消息过期以后，就会进入死信队列。（ActiveMQ.MLQ）
+ *            
+ *   对于持久化的消息，当消息过期以后，会保存到死信队列中。死信队列中的消息不能恢复。消息一旦过期，就相当于无用了
+ *   对于不持久化的消息，当消息过期以后，不会保存到死信队列中。直接丢弃
+ *   
+     
+     消息确认机制 ：
+       当consumer拉取消息后，没有对消息进行acknowledge确认，消息不会从MQ中删除，当有其他的consumer消费消息时，会重新消费
+       MQ中的消息。造成消息重复被消费
+
+
+RabbitMq : 是基于AMQP高级消息协议的消息队列，是跨语言的消息队列，主要组成部分 ：
+                  producer ：生产者  
+		  broker ： 消息队列服务进行 （exchange :消息队列交换机，queue ：队列）
+		  consumer ： 消费者 
+		  channel :信道
+
+		  exchang交换机的四种类型 ： direct、fanout、topic、headers
+
+		发送消息的过程 ：
+		     * 生产者与borker建立tcp连接
+		     * 生产者与broker建立信道
+		     * 消息通过信道发送到exchange交换机
+		     * 交换机按照一定的规则将消息发送到指定的队列
+
+		消费者接受消息的过程 ：
+		    * 消费者与broker建立tcp连接
+		    * 消费者与broker建立信道
+		    * 消费者监听指定的queue
+		    * 将有消息到达queue时，broker默认将消息推送到指定的队列
+		    * 消费者接受到消息并进行确认
+
+     Rabbitmq的几种工作模式 ：
+         * workerQueues  :  多个消费端共同监听一个消息队列中的消息。采用默认交换机。
+	                             * 一条消息只能被一个消费者接受
+				     * rabbitmq采用轮询方式将消息平均发给消费者
+				     * 消费者在处理完某条消息后，才会接收消息
+	 * publish/subscribe : 需要声明交换机
+	                             * 每一个消费者监听自己的消息队列
+				     * 生产者发送消息后，交换机将消息发送到绑定的每一个队列，每一个绑定给交换机的队列都将接收到消息
+	
+	 * routing :  * 每一个消费者监听自己的消息队列，并设置routingkey
+	                  * 生产者将消息发送给交换机，交换机根据routingkey将消息发送到指定的队列
+
+	      routingkey和publish/subscribe的区别 ：
+	           发布订阅模式将消息发送到所有绑定的队列
+		   路由的工作模式将消息根据routingkey发送到指定的队列
+     
+          * Topics工作模式 ：* 每一个消费者监听自己的消息队列，并且设置带通配符的routingkey
+	                               * 消息发送到broker，broker根据routingkey发送到指定的队列
+
+	  * headers : header模式取消了路routinhkey，使用key/value方式匹配队列
+
+	  * RPC远程调用
+
+     Rabbitmq整合springboot: 需要进行配置：声明交换机，声明队列，以及绑定队列 
+                      生产者 ： 
+		       @Configuration
+			public class RaabitmqConfig {
+
+			    //public static final String QUEUE_CMS_POSTPAGE = "queue_cms_postpage";
+			    public static final String EXCHANGE_ROUTING_CMS_POSTPAGE = "ex_routing_cms_postpage";
+
+			    @Value("${xuecheng.mq.queue}")
+			    private String queue_cms_post_page;
+
+			    @Value("${xuecheng.mq.routingKey}")
+			    private String routingKey;
+
+			    @Bean
+			    public Exchange EXCHANGE_ROUTING_CMS_POSTPAGE(){
+				return ExchangeBuilder.directExchange(EXCHANGE_ROUTING_CMS_POSTPAGE).durable(true).build();
+			    }
+
+			   /* @Bean
+			    public Queue QUEUE_CMS_POSTPAGE(){
+				return new Queue(queue_cms_post_page);
+			    }
+
+			    @Bean
+			    public Binding binding(@Qualifier(QUEUE_CMS_POSTPAGE) Queue queue,
+						   @Qualifier(EXCHANGE_ROUTING_CMS_POSTPAGE) Exchange exchange){
+			       return BindingBuilder.bind(queue).to(exchange).with(routingKey).noargs();
+		i	    }*/
+			}
+
+
+	             发送消息 ：（注入  rabbitTemplate）	  
+                          rabbitTemplate.convertAndSend(RaabitmqConfig.EXCHANGE_ROUTING_CMS_POSTPAGE,siteId,json);
+
+					  
+ 消费端  ：
+      @Configuration
+		public class RaabitmqConfig {
+
+		    public static final String QUEUE_CMS_POSTPAGE = "queue_cms_postpage";
+		    public static final String EXCHANGE_ROUTING_CMS_POSTPAGE = "ex_routing_cms_postpage";
+
+		    @Value("${xuecheng.mq.queue}")
+		    private String queue_cms_post_page;           // 在application.yml文件中已经定义
+
+		    @Value("${xuecheng.mq.routingKey}")
+		    private String routingKey;
+
+		    @Bean(EXCHANGE_ROUTING_CMS_POSTPAGE)
+		    public Exchange EXCHANGE_ROUTING_CMS_POSTPAGE(){
+			return ExchangeBuilder.directExchange(EXCHANGE_ROUTING_CMS_POSTPAGE).durable(true).build();
+		    }
+
+		    @Bean(QUEUE_CMS_POSTPAGE)
+		    public Queue QUEUE_CMS_POSTPAGE(){
+			return new Queue(queue_cms_post_page);
+		    }
+
+		    @Bean
+		    public Binding binding(@Qualifier(QUEUE_CMS_POSTPAGE) Queue queue,
+					   @Qualifier(EXCHANGE_ROUTING_CMS_POSTPAGE) Exchange exchange){
+		       return BindingBuilder.bind(queue).to(exchange).with(routingKey).noargs();
+		    }
+		}
+
+   接收消息的方式 ：
+      @Component
+		public class ConsumerPostPage {
+
+		    @Autowired
+		    private PageService pageService;
+
+		    @RabbitListener(queues = {"${xuecheng.mq.queue}"})
+		    public void getMessage(String msg){
+			// 进行消息解析
+			Map map = JSON.parseObject(msg, Map.class);
+			// 取出pageId
+			String pageId = (String) map.get("pageId");
+			// 调用pageService进行保存
+			pageService.savePageToServerPath(pageId);
+		    }
+		}
+
+							    
+
+server.1=192.168.25.131:2991:3991
+server.2=192.168.25.131:2992:3992
+server.3=192.168.25.131:2993:3993
+/usr/local/zoo-cluster/zookeeper01/data
+
+ <persistenceAdapter>
+    <replicatedLevelDB
+      directory="${activemq.data}/leveldb"
+      replicas="3"
+      bind="tcp://0.0.0.0:63631"
+      zkAddress="localhost:2191,localhost:2192,localhost:2193"
+      sync="local_disk"
+      zkPath="/activemq/leveldb-stores"
+      hostname="mqcluster"/>
+  </persistenceAdapter>
+
+failover:(tcp://192.168.25.131:61616,tcp://192.168.25.131:61617,tcp://192.168.25.131:61618?randomize=false
+
+  <transportConnector name="nio" uri="nio://0.0.0.0:61615?trace=true"/>

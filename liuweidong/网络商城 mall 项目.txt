@@ -1,0 +1,119 @@
+1、创建父工程，pom ， 用于对依赖的jar包进行管理。
+2、创建common模块。 jar ,用于工具类
+3、创建聚合工程， mall-manager, pom， 
+     在聚合工程下，有三个工程 ：（service层为war包，作为一个单独的服务，其余为jar包）
+      service  、dao、interface、pojo 
+      service层的web.xml中需要注册得的有 ： 
+4、创建web层，为war，通过dubbo的zookeeper实现与 service层之间的相互通信。
+     配置dubbo的监控中心 ：
+       dubbo的监控与zookepper 安装到同一台服务器上。将dubbo-admin.war 包安装到tomcat的webapps下即可。
+        启动tomcat，访问 http://192.168.1.105:8080/dubbo-admin/  就回到监控中心得页面。
+	密码 ：root
+	用户 ：root
+5、 导入mybatis的分页插件，将其打成jar包，使用方式:
+              //执行SQL语句之前设置分页信息
+		PageHelper.startPage(1, 10);
+		// 查询语句
+		List<TbItem> list = itemMapper.listItem();
+		//对查询结果进行处理(可以输出分页的多种信息)
+		PageInfo<TbItem> s = new PageInfo<TbItem>(list);
+		System.out.println(s.getPages());
+		System.out.println(s.getSize());
+		System.out.println(s.getTotal());
+6、FastDFS 图片服务器
+        java客户端操作 ：
+	   @Test
+	public void upload() throws Exception, MyException{
+		// 创建一个配置文件
+		// 加载配置文件
+		ClientGlobal.init("E:/workspace/mall/mall-web/src/main/resources/config/client.config");
+		// 創建trackerClient客戶端
+		TrackerClient trackerClient = new TrackerClient();
+		// 使用trackerClient进行联连接，获取TrackerServer
+		TrackerServer trackerServer = trackerClient.getConnection();
+		// 创建storageClient对象，需要两个参数
+		StorageClient storageClient = new StorageClient(trackerServer, null);
+		// 上传文件
+		String[] strings = storageClient.upload_file("C:/Users/Administrator/Pictures/1.jpg", "jpg", null);
+		//遍历
+		for (String string : strings) {
+			System.err.println(string);
+		}
+             在client.config文件中配置tracker_server端口号 ： tracker_server=192.168.25.133:22122
+	      配置文件在项目的任意位置都行，上传时取绝对路径。
+	      for循环遍历取出的结果为 ：
+	                        group1
+                                M00/00/00/wKgZhVySAOuATc7LAABjEE1HX38599.jpg
+	       可以通过网址直接进行对图片的访问 ：
+	               http://192.168.25.133/group1/M00/00/00/wKgZhVySAOuATc7LAABjEE1HX38599.jpg
+	          
+	 由于部分浏览器不支持富文本编辑，要 解决浏览器兼容问题 ： 直接返回文本类型，借助工具将对象转化成String的json形式。
+
+7、项目中Redis的相关操作 ：
+      1、 Redis集群原理 ：
+            (1)所有的redis节点彼此互联(PING-PONG机制),内部使用二进制协议优化传输速度和带宽.
+           (2)节点的fail是通过集群中超过半数的节点检测失效时才生效.
+           (3)客户端与redis节点直连,不需要中间proxy层.客户端不需要连接集群所有节点,连接集群中任何一个可用节点即可
+	   (4)redis-cluster把所有的物理节点映射到[0-16383]slot上,cluster 负责维护node<->slot<->value
+            Redis 集群中内置了 16384 个哈希槽，当需要在 Redis 集群中放置一个 key-value 时，redis 先对 key 使用 crc16 算法算出一个结果，
+             然后把结果对 16384 求余数，这样每个 key 都会对应一个编号在 0-16383 之间的哈希槽，redis 会根据节点数量大致均等的将
+	     哈希槽映射到不同的节点
+	  
+	2、 实现集群的步骤 ：
+	    *  redis集群至少搭建6台服务器，其中三台为主，另外三台为从，当主服务器挂掉，从服务器开始工作
+	    *   使用ruby脚本搭建集群。需要ruby的运行环境。
+	         安装ruby  :   
+		       yum install ruby
+                       yum install rubygems
+		 需要导入第三方库，并且进行安装， 库： redis-3.0.0.gem
+		      gem install redis-3.0.0.gem
+		  将redis的文件夹下 src中的文件 redis-trib.rb 复制到redis的 bin 目录下，用于启动 。
+		  配置redis.conf   :  cluster-enabled yes  将注释去掉， 表示支持集群
+		  启动命令 ：
+		           ./redis-trib.rb create --replicas 1 192.168.1.108:7001 192.168.1.108:7002 192.168.1.108:7003 192.168.1.108:7004 
+			    192.168.1.108:7005 192.168.1.108:7006
+			 --replicas 1  ： 代表从服务器的台数只有一台
+			 其余各个服务器的ip和端口号
+	     * 链接集群 ：  redis01/redis-cli -p 7002 -c      -c: 有时连接到的可能是从服务器，-c可以转发到相应的主服务器
+	  3、在项目中的使用 ：
+	       商城首页会从数据库中加载相应的内容，这时，当有大量的用户访问首页时，会造成数据库压力过大。所以应该讲第一次获取的数据
+	       放到redis中作为缓存。
+	       当像数据库中添加、删除、更改相关数据时，应该进行 同步缓存， 将缓存从数据中删除
+
+8、在linux系统下安装solr :
+       1、解压上传的solr 文件，进入solr文件目录，将 dist 目录下文件 solr-4-4-4.war复制到tomcat的webapps下
+       2、启动tomcat，将war包自动解压，解压后删除war包
+       3、root/solr-4.10.3/example/lib/ext目录下的所有的jar包，添加到solr工程中，进入到该目录后进行：
+            cp  *  /usr/local/solr/tomcat/webapps/solr/WEB-INF/lib/   将所有jar包复制到tomcat工程下
+       4、创建一个solrhome。/example/solr目录就是一个solrhome。复制此目录到/usr/local/solr/solrhome：
+             cp -r solr /usr/local/solr/solrhome
+       5、关联solr及solrhome。需要修改solr工程的web.xml文件，修改tomcat下的solr工程文件
+       6、在solrhome中配置业务与：
+              第一步：把中文分析器添加到工程中。（常用配置工具文件中有）
+			1、把IKAnalyzer2012FF_u1.jar添加到solr工程的lib目录下
+			2、把扩展词典、配置文件放到solr工程的WEB-INF/classes目录下。  （先建一个classes文件）
+	     第二步：配置一个FieldType，制定使用IKAnalyzer
+			修改solrhome 中的 schema.xml文件 ：  /usr/local/solrhome/collection1/conf
+			修改Solr的schema.xml文件，添加FieldType：
+			<fieldType name="text_ik" class="solr.TextField">
+			  <analyzer class="org.wltea.analyzer.lucene.IKAnalyzer"/>
+			</fieldType>
+			第三步：配置业务域，type制定使用自定义的FieldType。
+			设置业务系统Field
+			<field name="item_title" type="text_ik" indexed="true" stored="true"/>
+			<field name="item_sell_point" type="text_ik" indexed="true" stored="true"/>
+			<field name="item_price"  type="long" indexed="true" stored="true"/>
+			<field name="item_image" type="string" indexed="false" stored="true" />
+			<field name="item_category_name" type="string" indexed="true" stored="true" />
+
+			<field name="item_keywords" type="text_ik" indexed="true" stored="false" multiValued="true"/>
+			<copyField source="item_title" dest="item_keywords"/>
+			<copyField source="item_sell_point" dest="item_keywords"/>
+			<copyField source="item_category_name" dest="item_keywords"/>
+                        <!--CopyField复制域，功能就是在添加文档的时候自动的把源域的内容复制到目标域。可以把目标域作为默认搜索域
+			可以提高查询的性能。
+			
+	 solr集群： solrcloud 请求量比较大，并发量比较高的时候才会用到。 基于solr和zookeeper搭建solrcloud
+					   
+			      
+      

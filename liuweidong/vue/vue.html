@@ -1,0 +1,430 @@
+1、vue时面向MVVM的语言，实现了模型数据的绑定，避免了使用js或者jquery对dom元素的直接操作。
+2、创建vue的方式 ：
+     引入vue.js : <script type="text/javascript" src="js/vue.js"></script>
+	 创建标签体 ： <div id="app">---------</div>
+	 在script标签体中创建vue实例 ：
+	   <script>
+	      var vm = new Vue({
+				el:'#app',       // 代表该实例控制标签的范围
+				// 对应M
+				data:{            // 数据于，于页面中的数据进行绑定
+					msg:'欢迎来到王者荣耀' ,  // 与标签体中的数据相对应，直接将数据渲染到页面上，不在进行dom操作元素了
+					color:"red",
+                },
+				methods:{   // 方法模型，页面中可以调用该方法
+				    show(){}    
+				}
+		</script>
+
+		 在页面中绑定方法的两种方式 ：
+		 1. v-on:click="show()"  :    <button type="button" v-on:click="change">点击发生改变</button>
+		 2. @click="show"  <button type="button" @click="stop">stop</button>
+	    
+		当页面在渲染数据域中的元素时，由于网速原因可能出现，显示的是{{msg}}等闪烁的样式，此时应该禁止其闪烁，避免该用户带来不好的
+		体验，此时可以用 v-cloak 进行设置：
+				<style>
+				   [v-cloak]{
+					   display: none;
+				   }
+			   </style>
+		       <p v-cloak >{{msg}}</p> 
+
+3、vue进行循环 ：
+       <div id="app">
+		   <!--遍历数组-->
+		  <div v-for="(item,index) in list" :key="index">{{item}}-->{{index}}</div>
+		   <!--遍历对象数组-->
+		   <div v-for="(user,i) in lists">id值为：{{user.id}}----姓名：{{user.name}}--索引{{i}}</div>
+		   <!--遍历对象中的属性值-->
+		   <div v-for="(val,key,i) in user">值为{{val}}---键：{{key}}---索引：{{i}}</div>
+		   <!--遍历数字,count值从一开始-->
+		   <div v-for="count in 10">{{count}}</div>
+      </div>
+
+	  <script>
+              data:{
+				list:[1,2,3,4,5],
+				lists:[
+					{id:'1',name:'liu1'},
+					{id:'2',name:'liu2'},
+					{id:'3',name:'liu3'},
+					{id:'4',name:'liu4'}
+				],
+				user:{
+					id:25,
+					name:'zhang',
+					age:36
+				}
+            },
+	  </script>
+
+4、 v-if 和 v-show 的区别 ：
+        <div v-if="item%2==1" :style="{color:'red'}">
+              {{item}}
+         </div>
+		 <div v-else=""></div>
+
+		 <div v-show="user.name=='liu1'">
+               {{user.name}}
+          </div>
+
+		    v-if : 会有频繁切换的性能消耗，伴随着标签的删除和创建
+			v-show: 不会进行标签的删除和切换，只是将display的属性设置为none
+			在进行标签的频换切换时，不要使用v-if
+
+5、vue中的class的样式 ：
+      <style>
+        .inner{width: 200px;height: 200px; background-color: orange; }
+        .red{color: red; }
+        .active{ letter-spacing: 2px;}
+        .size{ font-size: 20px;}
+    </style>
+
+	   <!--直接绑定类-->
+       <span :class="['red','active','size']">this is my house</span>
+       <!--通过true false是否进行禁用-->
+       <span :class="{'red':true,'active':true,'size':false}">this is my house</span>
+       <!--通过三元表达式的方式进行绑定, 属性可以带引号也可以不带引号-->
+       <span :class="['red','active',{'size':flag}]">this is my house</span>   
+       <!--在数据中定义好style-->
+       <span :class="filed">this is my house</span>
+
+	   <script>
+			 data:{
+                      flag:false,
+                      filed:{'red':true,'active':true,'size':false}
+             }
+	   </script>
+
+6、vue绑定style中的样式 ：
+        <span :style="{color:'red','font-size':'36px'}">this  is  my house</span>
+       <span :style="styles">this  is  my house</span>
+       <!--绑定多个样式-->
+       <span :style="[styles,styles1]">this  is  my house</span>
+
+		<script>
+		    styles:{color:'red','font-size':'36px'},
+            styles1:{'background-color':'yellow'},
+		</script>
+
+7、vue的事件修饰符：
+         stop ： 可以组织冒泡事件，当内层中包含外层，此时点击内层的事件，也会触发外层，造成冒泡，
+		      <div @click="one">
+                  <button @click.stop="btn">内层按钮</button>    // 正常不加stop也会触发one事件
+             </div>
+        prevent : 阻止默认行为，跳转页面用prevent，则不会进行跳转
+		       <a href="#" @click.prevent="linkClick">跳转</a>    // 当没有prevent时，则页面会进行刷新
+        capture:  捕获机制，从外层想内层进行扩散
+        self : 只有当触发该标签绑定事件时，才会进行回调，捕获和冒泡都会被阻止
+        once : 只能触发一次，事件可以进行传递
+
+8、vue实现数据的双向绑定 ：  
+       v-model：可以实现数据的双向绑定， 而v-bind只能实现属性的单项绑定， v-bind 可以简写  :class
+       v-model 适用于表单标签    email textarea checkbox select readio
+      <input type="text" v-model="msg"/>
+
+9、vue的生命周期 ：
+    <script>
+			//这是遇到的第一个生命周期函数,在vue实例化之前进行执行，data和method中的数据都未初始化
+        beforeCreate(){
+            //alert("这是遇到的第一个生命周期函数")
+        },
+        // 遇到的第二个方法，此时vue的data和methods方法都已经初始化完毕
+        created(){
+            this.show();
+        },
+        // 第三个生命周期函数，此时模板已经在内存中编译完成了，尚未加载到页面
+        beforeMount(){
+            // 此时获取页面中的数据并不能获取到其中最新的数据
+           console.info(document.getElementById("name").innerText)
+        },
+        //第三个生命周期函数，是实例创建的最后一个函数，此时模板已经渲染到页面，可以获取到相关的数据
+        mounted(){
+            console.info(document.getElementById("name").innerText)
+        },
+        // 运行中的两个事件
+        // data中数据更改之前进行执行，此时data中数据已经更改了，但是页面上的数据还未发生变化
+        beforeUpdate(){
+
+        },
+        // 此时内存中的模板重新渲染到页面，可以获取更改后的数据
+        updated(){
+
+        },
+        // 销毁阶段两个函数
+        beforeDestroy(){
+        },
+        destroyed(){
+        }
+	</script>
+
+10、vue的过滤器 ：
+       vue分为全局过滤器，和私有过滤器，全局过滤器可以为任意 el  提供使用，而私有过滤器只能在本el范围内进行使用。
+	   调用过滤器 ：（也可以实现过滤器链的调用）
+	    <span>{{msg | '过滤器名'|}}</span>
+		 <span>
+              {{msg|up|color|mix}}
+       </span>  
+	   定义全局过滤器 ：
+	   <script>
+              Vue.filter('过滤器名'：function(传递的参数){ return 进行操作···· })
+			   // 定义过滤器将小写变为大写
+			   Vue.filter('up',function (msg) {
+				   return msg.toUpperCase();
+			   })
+			   // 设置字符串颜色的过滤器
+			   Vue.filter('color',function (msg) {
+				   return  msg.substr(0,5);
+			   })
+	   </script>
+
+	   定义私有过滤器 ：
+	     <script>
+			   filters:{
+				   // 设置私有过滤器，过滤器名:传递的参数,当私有过滤器与全局过滤器重名时，优先执行私有过滤器
+				   stringFormat:function (msg) {
+					  return msg.toLowerCase()
+				   },
+				   mix:function (msg) {
+					   return msg.toLowerCase()
+				   }
+			   }
+		  </script>
+
+11、vue按键触发事件：
+        全部按键别名 ：enter tab  delete  esc space  up down left right
+		 <input type="text" class="form-control" v-model="name" @keyup.enter="add">  // 当按下enter键时就会触发add事件
+
+12、vue自定义全局指令 ：
+           <!--当打开首页时，光标就到文本框,自定义vue指令，调用vue指令时，必须以v-进行开头-->
+            <!--绑定指令，设置样式-->
+            <input type="text" class="form-control" v-model="keywords" v-focus v-color="'blue'">
+
+			// 定义全局指令 ：
+			<script>
+			   //  定义指令名称，不用加 v-, 内置了三个函数，el参数就代表dom元素，是固定的
+			    Vue.directive('focus',{
+				       bind:function(el){      // 当指令绑定到该元素的时候，会立即执行该函数，只执行一次，此时元素还没有插入到dom中    
+					       // 对于style行为，在该函数内进行设置
+						   el.style.color='red'   // 将字体颜色设置为红色
+					   },
+					   inserted:function(el){  // 代表元素插入到dom中去时，才会执行该函数，el代表dom对象
+					       //对于js行为，在该函数内进行设置
+						     el.focus()  // 网页打开时，就让其立刻获取到焦点
+					   },
+					   update:function(el){
+					   }
+				})
+			</script>
+
+
+			设置私有的指令方式 ：
+			  <script>
+			         // 在某个el下进行定义
+					  directives:{
+								'font':{                            // 可以进行简写
+									bind:function (el) {
+										el.style.backgroundColor='black'
+									}
+								},
+								// 指令简化的方式
+								'fontsize':function (el) {
+									el.style.fontSize='50px'
+								}
+                        }
+			</script>
+
+13、在vue中关于数组的操作方式 ：
+          push；   splic(1,4):代表删除指定下标后的第几个元素
+         <script>
+		     // 向数组中添加对象 ：
+		        var car = {id:this.id,car:this.name,ctime:new Date()};
+                this.list.push(car)
+
+			 // 查看数组是否存在某一个元素，若存在返回该元素的下标值：
+			      var index = this.number.findIndex((n)=>{
+						   if(n == num){
+							   return n;
+						   }
+                   })
+
+			 // 查看数组中是否包含某一个元素，如果包含，则进行相关的操作，返回true，否则返回false
+			 //  n 是数组中的元素， i 代表数组的下标
+			   var flag = this.number.some((n,i)=>{
+                    if(n == num){
+                        return true;
+                    }
+                })
+ 
+			// 对数组进行过滤查询，将查询到的符合条件的元素放到一个新的集合中
+				var newList = this.list.filter(item=>{
+                 if(item.car.includes(keywords)){  // 查看是包含keywords关键字
+                     return item;
+                 }
+		 </script>
+
+14、vue组件 ：vue组件的出现就是为拆分vue实例的代码量，可以进行模块化和组件化开发（）
+                    模块化 ： 从逻辑角度进行开发，
+                   组件化：基于UI界面进行开发
+       第一种创建组件的方式：
+	     <script>
+                        var com1 = Vue.extend({
+							 template:'<h2>this is the first template</h2>'   // template:"#temp"   此时在app的范围之外，创建template模板，
+							 // template 的根元素只能有一个，不能有多个
+						 })
+						   // 注册组件
+                       Vue.component("coms",com2);
+		 </script>
+	 第二种创建组件的方式：
+	        <script>
+                     Vue.component("login",{
+					template:'<p>aahha</p>'
+				})
+		 </script>
+    第三种创建组件的方式，即创建私有的组件。在App的范围内进行创建。（以上两种创建的均属于全局组件）
+	    <script>
+			   components:{
+				 'news':{
+					 template:"<p>这是一个组件</p>"
+				 }
+			 }
+		 </script>
+
+	 在页面中引用组件：
+					<news></news>  // 组件名即可
+     当组件名为 myCom时，存在大小写混合模式时，需要开启驼峰命名模式
+				  <my-com></my-com>
+
+	  组件中的data和methods属性的定义 ：
+				<script>
+					   Vue.component("login",{
+						template:'#temp',
+						data:function(){                     // 返回的数值是一个方法
+							return {
+								msg:"换用来到王者荣耀"
+							}
+						},
+						methods:{
+							show(){
+								alert("nfk")
+							}
+						}
+				</script>
+
+      vue组件进行切换：
+			   定义两个组件，一个登陆组件，一个注册组件。
+			   设置连个href用于切换组件。设置一个组件占位符 ：
+				 <a href="#" @click="cName='login'">登陆组件</a>
+				<a href="#" @click="cName='register'">注册组件</a>
+
+				 <component  :is="cName"></component>   <!-- 组件占位符 -->
+
+				 在data区域中设置一个变量： data{ cName:'login'}  // 默认使用login组件
+
+       vue父组件向子组件中传递值：
+				<login v-bind:parentmsg="msg"></login>
+
+				<script>
+						Vue.component("login",{
+							template:'#temp',
+							props:['parentmsg'],        // 在子组件中声明该属性
+							methods:{
+								show(){
+									this.msg = this.parentmsg;
+									alert(this.msg)
+								}
+							}
+						})
+				 </script>
+
+		 子组件调用父组件中的方法并传值：
+				  <login @fun="get"></login>    // 绑定父组件中的方法
+				   
+				 在子组件中设定方法：
+					methods:{
+						show(){
+						   this.$emit('fun','avh')            // $emit 调用父组件方法并传递参数
+						}
+				}
+
+		 通过render的方式渲染组件，在vue实例中;
+		   <script>
+					  render:function (createElements) {  // createElements 为一个方法，调用该方法能将组件渲染为html结构
+				                  return createElements(login)   // return返回结果会替换el指定的容器，即app的div将会被换掉，register组件被换掉了
+			            }
+	       </script>
+
+       
+
+15、通过refs获取dom元素和组件
+          <span ref="sp">this is my house</span>       普通标签
+          <login ref="logins"></login>                          组件
+          <script>
+				alert(this.$refs.sp.innerText)  // $refs可以直接获取原生dom元素*/
+				alert(this.$refs.logins.msg);   // 可以获取组件中的值
+				 this.$refs.logins.tip()           // 获取组件中的方法
+          </script>
+
+16、Vue进行路由的配置 : 设置组件，为组件进行分配路由
+      
+	   设置两个组件，在App范围内进行路由的设置：
+	     <router-link to="/login">登陆</router-link>
+         <router-link to="/register">注册</router-link>
+
+          <router-view></router-view>     路由占位符
+
+		  <script>
+		         // 创建路由，进行组件的匹配
+		        var router = new VueRouter({
+						routes:[
+							{path:"/",redirect:'/login'},                   // 重定向
+							{path:'/login',component:login},
+							{path:'/register',component:register},
+						]
+					})
+
+				//	在vue实例中声明：
+					data: {
+						show: true
+					},
+
+					router: router
+		  </script>
+
+	   通过children属性实现嵌套路：
+			子组件中继续路由：
+				  <template id="login">
+						<div>
+						<router-link to="/login/pass">密码登陆</router-link>
+						<router-link to="/login/mess">短信登陆</router-link>
+
+						<router-view></router-view>
+						</div>
+			  </template>
+		   路由设置：
+				 <script>
+						  {path:'/login',component:login,
+							children:[            // children属性增设子路由
+								{path:'pass',component:pass},          // 设置pass，不加 /
+								{path:'mess',component:mess},
+						  ]},
+				 </script>
+		
+		通过路由传递参数，并获取参数的方法：
+			 <!--第一种传递参数的方式 ： ?  &-->
+			<router-link to="/login?name=liu">登陆</router-link>
+
+			<!--第二种传递参数的方式-->
+			<router-link to="/register/13">注册</router-link>
+			/*第二种传递参数的路由匹配规则 /:id方式*/
+            {path:'/register/:id',component:register}
+
+			{{this.$route.query.name}} ： // 获取路由中的参数  $route.query.相关的对象属性
+			{{$route.params.id}}           ： //params的方式获取传递的参数
+		     
+
+
+        
+
+			
+	    

@@ -1,0 +1,91 @@
+1、java画图：
+                 // 得到画板
+                BufferedImage bi = new BufferedImage(70, 30, BufferedImage.TYPE_INT_RGB);   （画板宽， 画板高， 画板类型（白板））
+		// 得到绘制环境
+		Graphics2D g2 = (Graphics2D) bi.getGraphics();
+		// 填充画板
+		g2.setColor(Color.yellow);
+		g2.fillRect(0, 0, 70, 30);
+		// 画边框
+		g2.setColor(Color.darkGray);
+		g2.drawRect(0, 0, 70-1, 30-1);
+		//设置字体
+		g2.setFont(new Font("宋体", Font.BOLD, 24));
+		g2.setColor(Color.blue);
+               
+	        // 生成图片
+	        ImageIO.write(bi, "JPEG", new FileOutputStream("E:\\1.jpg"));
+
+		System.out.println(str);
+
+
+java生成二维码  ：
+   // 加密
+	public BufferedImage encoderQRcode(String content, String imgType, int size,String imgPath) throws IOException{
+         // 图片生成的文件夹
+		File file = new File(imgPath);
+	
+		// 内存的一张图片
+		BufferedImage bufImage = null;
+		
+		Qrcode qrcode = new Qrcode();
+		// 二维码可存放信息类型  ， 数字 英文 全都能放
+		qrcode.setQrcodeEncodeMode('B');
+		// 设置二维码的排错率， L M Q H  排错率越高，可存储的信息越少
+		qrcode.setQrcodeErrorCorrect('M');
+	 	// 设置二维码的尺寸  范围1 - 40
+		qrcode.setQrcodeVersion(size);
+		// 将文字等信息生成一个有关boolean类型的二维数组  得到二位 boolean[][]数组
+		boolean[][] code = qrcode.calQrcode(content.getBytes("UTF-8"));
+		//由于二维码的尺寸在内存中太小，所以需要对尺寸进行放大
+		int imgSize = 67 + 12 * (size-1);
+		// 三个参数 ; 长 宽 图片颜色的组成（red green blue） RGB, 可以直接写 1
+		bufImage = new BufferedImage(imgSize, imgSize, 1);
+		// 得到2D画板
+		Graphics2D gs = bufImage.createGraphics();
+		// 设置背景颜色
+		gs.setBackground(Color.WHITE);
+		// 设置图片颜色
+		gs.setColor(Color.BLACK);
+		// 画板在（0，0）坐标开始画 ， 画板的长宽 为 size
+		gs.clearRect(0, 0, imgSize, imgSize);
+		// 设置偏移量，使画板与边框之间存在一定距离
+		int paxOff = 2;
+		// 遍历 画小黑格  
+		for(int i = 0; i < code.length; i++ ){
+			for(int j = 0; j < code.length; j++){
+				if(code[j][i]){
+					gs.fillRect(j*3+paxOff, i*3+paxOff, 3, 3);
+				}
+			}
+		}
+		//在二维码上生成logo
+		java.awt.Image logo = ImageIO.read(new File("c://3.jpg"));
+		
+		int maxWidth = bufImage.getWidth();
+		int maxHeight = bufImage.getHeight();
+		// 各个参数的意义 ： 要画的logo对象 、二维码的位置、在画板的2/5处、logo的长宽  ： 为图片的1/5
+		gs.drawImage(logo, imgSize/5*2, imgSize/5*2,maxHeight/5,maxWidth/5,null);
+		
+		
+		// 释放画板
+		gs.dispose();
+		// 闪存
+		bufImage.flush();
+		// 生成图片
+		ImageIO.write(bufImage, imgType, file);    三个参数 ： 内存图片 、图片类型 ： png  jpg   , 图片存放位置
+
+                     将图片写道响应中
+		 public static void output(BufferedImage bufImage, OutputStream out) throws IOException{
+			ImageIO.write(bufImage, "png", out);
+		    }
+
+		public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+
+		// 获取图片
+		BufferedImage bufImage = QrcodeUtils.getRrCode("liuweidong");
+		// 将图片写到 请求页面
+		QrcodeUtils.output(bufImage, response.getOutputStream());
+		
+	}

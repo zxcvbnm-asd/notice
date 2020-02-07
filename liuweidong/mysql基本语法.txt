@@ -1,0 +1,596 @@
+基本命令语句： 
+  select version();  查看版本
+  show databases;   查看数据库
+  创建数据库 create database 数据库名；
+  删除数据库： drop database 数据库名；
+  查看表： show tables;
+  查看表的结构： desc  表名；
+  删除表： drop table 表名；
+  使用某个数据库 ： use Test;  use+数据库名称；
+  查看数据库的内容： show tables;
+  查看在哪个数据库 ：select database();
+  查看其他数据库： show tables from mysql;
+
+1、数据库的语言
+      ** DDL :数据定义语言，用来定义数据库对象：数据库，表，列等： 关键字：create, alert,drop等
+
+      **DML:数据操作语言： 对数据哭中表的记录更新，  关键字：insert，delete,update
+
+      **DCL:数据控制语言：用来定义数据库访问权限以及安全级别以及创建用户  ， oracle ， grant（授权）
+
+      **DQL: 数据库查询语言： 关键字：select  from ,where等
+
+      Mysql语言不区分大小写，关键字大写，自己定义的语言小写， 注释与Java一样
+
+ 2、数据类型：
+     int 整形            float 小数             varchar 字符串                      data 日期（没有小时分秒）
+
+     Date 操作：
+          UPDATE product SET createtime='2012-1-25' WHERE id=8;
+	  SELECT * FROM product WHERE createtime BETWEEN '2012-2-13' AND '2012-3-16';
+
+
+3、创建数据表：
+     create table 表名（
+       列名1  数据类型  约束，
+       列名2   数据类型  约束，
+       列名3  数据类型  约束
+     ）；
+
+     主键约束，保证列的数据具有唯一性，非空性，而主键自身没有任何实际意义。
+     方式： 列名  数据类型  primary key  AUTO_INCREMENT(实现列的序号自动增长)
+
+     not null unique  （非空 且唯一）
+
+4、修改表
+      ** 添加列
+         alter table 表名 add 列名 数据类型  约束；ALTER TABLE uers ADD tel INT;
+
+     **修改列的类型，原来是varchar（5），修改成varchar（10）
+        alter     table    表名    modify   新列名   数据类型   约束 ；ALTER TABLE uers MODIFY tel VARCHAR(10);
+    
+    ** 修改列名
+         alter table 表名  change 旧列名  新列名 数据类型 约束；ALTER TABLE uers CHANGE tel newtel DOUBLE;
+    
+    ** 删除列名
+       alter table 表名 drop 列名；                 ALTER TABLE uers DROP newtel;
+
+    **修改表名
+      rename table 旧表名 to 新表名；               RENAME TABLE uers TO users;
+
+    ** 删除主见列 ： alter table 表明 drop primary key
+
+  5、向表中添加数据
+       * insert into 表名 （列名1， 列名2）  values (值1， 值2)；
+          INSERT INTO product (id,pname,price) VALUES (1,'手机',250); 
+
+       * 不考虑主键因素
+         insert into 表名 （列名） values (值1)；
+            INSERT INTO product (pname,price) VALUES ('大哥大', 3600);
+
+      * 不加列表，直接输入值 (不能忽略主键)
+         insert  into 表名  values ();
+	    INSERT INTO product VALUES (4,'摩托',1000);
+   
+      * 批量写入多个数据
+        insert into 表名  （列名） values （列值），（列值）；
+        INSERT INTO product (id,pname,price) VALUES (5,'毛巾',60.5),(6,'大衣',69);
+
+6、更新表格：
+     update 表明     set      列1="",    列2 = “”  where id = ''  or  id = '' ;
+     数据库中一些运算符： <>代表不等于
+					not   非
+					and  与
+					or    或
+ 
+
+ update 表名    set      列1=""  where  id in(1, 2, 3);  
+   UPDATE product SET price = 1200 WHERE id = 3;
+
+7、删除表中数据：
+   delete from  表名  where id = 5;
+     DELETE FROM product WHERE id = 6
+ 
+   面试题：  delete 是将表中的数据一条一条的删除，不清空auto_Increment
+                  truncate 是清除整个表，重新建表， auto_increment从0开始
+
+    dos命令行乱码问题： 输入 set names'gbk';
+
+8、查询数据
+      *  查询指定列
+          select 列名1 ··· from 表名
+         SELECT pname,price FROM product;
+    
+     *查询删除重复记录   关键字： distinct
+        SELECT DISTINCT pname FROM product;
+
+     *   查询临时命名  关键字： as
+           SELECT pname AS lname FROM product;
+
+     * 查询数据时进行计算
+          SELECT pname, price*10 AS sum1 FROM product; 
+   
+   ----按条件进行数据查询
+		-- 查询大于1000  
+		SELECT * FROM product WHERE price > 1000;
+		-- 查询1000-2000的--                    between  and
+		SELECT *FROM product WHERE price BETWEEN 2000 AND 5000;
+		-- 查询2500， 1200的--                 in
+		SELECT * FROM product WHERE price IN(2500, 1200);
+		-- 查询不在 2500， 1200的           not in
+		SELECT * FROM product WHERE price NOT IN (2500, 1200);
+
+        **like 模糊查询：
+	         -- 查询含有‘大’字的商品--        关键字：          列名 like '  '   需要配合通配符： %
+		SELECT * FROM product WHERE  pname  LIKE'%大';
+		-- 查询两个字的商品                        一个“_ ” 代表一个字
+		SELECT * FROM product WHERE pname LIKE'__';
+		-- 查询非空         关键字  is not null
+		SELECT * FROM product WHERE price IS NOT NULL；
+
+        ** 升降序排列   关键字： order by   asc:升序  desc : 降序
+	      -- 对价钱排序
+		SELECT * FROM product ORDER BY price ASC;
+		-- 降序
+		SELECT * FROM product ORDER BY price DESC;
+
+       ** 聚合函数
+               -- 查询表中共有多少条数据   函数 ： count(*)
+		SELECT COUNT(*) FROM product;
+
+		-- 查询总金额 --       函数 sum(列名)
+		SELECT SUM(price) FROM product;
+
+		--  查询平均工资 --   函数  avg(列名)
+		SELECT AVG(price) FROM product;
+
+		-- 查询最高工资       max(列名)   min(列名)
+		SELECT MAX(price) FROM product;
+
+       ** 分组查询：必须跟随聚合函数
+            关键字 ； group by    二次过滤后用到的关键字为： having
+
+		SELECT SUM(smoney) AS 'total',sname FROM slary WHERE sname LIKE'%服务员%' 
+		GROUP BY sname
+		HAVING total>1200;
+
+9、mysql的基本方言： limit
+    SELECT * FROM product LIMIT 1,3;      // 代表查询 2 ，3 ，4 行数据。  可用于分页查询
+
+10、查询数据库编码
+       show variables  like 'char%';
+      修改小黑屏幕编码方式：
+          找到Mysql 中的  my.ini w
+	         [client]
+		port=3366
+		[mysql]
+		default-character-set=gbk  (将其改为gbk, 原来为 utf-8)
+
+11、 数据库的备份导入,利用工具
+        在doc中导出与恢复数据
+	1）.导出数据库
+	   在未登录时：
+	   mysqldump -uroot -p584521 mydatanase>c:/a.sql
+	   注意 ： 数据库名 > c:/a.sql (不加分号)
+	               只是复制了数据库中表的内容，并没t有create database 的语句
+
+	 2）导入数据库中的内容
+	     * 先创建一个数据库，退出
+	     * 执行 ： mysql -uroot -p584521 mydatabase<c:/sql        // 数据库中表的内容导入了创建数据库
+	     * 进行查询可得
+	    另一种 方式 ： source c:/a.sql; 
+
+12、外键约束：
+           1）、外键必须是另一表中的主键
+	   2）、外键可以重复
+	   3）、外键可以为空
+	   4）、一张表中可以有多个外键
+
+13、建立主从表： 主表的主键是从表的外键
+	     *        主表 ： 
+			   CREATE TABLE dept(
+			    depon INT PRIMARY KEY AUTO_INCREMENT,
+			    dname VARCHAR(20)
+			);
+
+		  从表：
+		       create table emp(
+			   empon int primary key auto_increment,
+			   ename varchar(20),
+			   depon int,
+			   constraint fk_emp_dept foreign key(depon) references dept(depon)  （外键约束语句）
+			);
+
+			若在从表中未加外建约束，则需要在修改表：
+			   alter table emp ADD   constraint fk_emp_dept foreign key(depon) references dept(depon) 
+	    
+	     *    一对一的关系：
+			   从表中的主键同时也兼备外键，引用主表中的主键。（非空，唯一，引用主键）
+			   从表中的约束为 ：  constraint fk_city_school foreign key(主键列名) reference school(主见列)
+
+	     * 多对多关系： 主表何从表的主见列没有任何关系，需要创建一个中间表，对其约束
+	                            CREATE TABLE stu_teacher(
+				   sid INT,       //  一个表的主见列
+				   tid INT,       // 另一个表的主见列
+				   CONSTRAINT fk_stu FOREIGN KEY(sid) REFERENCES stu(sid),
+				   CONSTRAINT fk_teacher FOREIGN KEY(tid) REFERENCES teacher(tid)
+				);
+
+14、表的查询：
+            * 合并结果集： 要求：两张表的结果集必须相同  （关键字 ： union all）
+	         SELECT * FROM stu_teacher
+		UNION ALL
+		SELECT * FROM teacher;
+
+		而 union 则表示重复的部分删除
+
+      **** 连接查询：内连接、外链接、自然查询
+           内连接方言：            在两个表中查询内容：必须加上 where条件
+					       SELECT emp.`ename`,emp.`sal`,dep.`pname`
+						FROM emp,dep
+						WHERE emp.pid=dep.`pid`;
+						内连接查询时, 显示的结果表,只显示两个表都有的数据
+
+	   内连接标准：	        select  * 
+	                                 from 表1 inner join 表2
+					 on   表1 = 表2
+           自然连接 ：     select *
+	                         from 表1 natural join 表2
+
+	    外链接查询 ：（左外链接，右外连接，全外）  
+	                   select * 
+			   from 表1  left  outer join 表2
+			   on 条件
+
+	    左外连接查询 ：
+	         左外连接查询时, 显示的结果表会把left join in 左边的表所有数据显示出来, 右边的数据用null补充
+                 右外连接查询时，显示的结果会把右right outer join 右边表的数据全部显示出来，左边无数据用null进行补充
+	   子查询：
+	      1、select * from 表 where ID=（select * from 表 ID=5）  where后面作为条件存在
+	      2、select *
+                   from (Select * from emp where pid=20) e            /// 在from 后面代表一张表存在
+             
+
+15、算利润率的问题：
+             SELECT p.`year`,IFNULL(CONCAT((p.`money`-p1.`money`)/p1.money,'%'),'0%') '增长比'
+		FROM profit p LEFT OUTER JOIN profit p1
+		ON p.`year`=p1.`year`+1
+       通过一张表找到其隐藏关系
+          
+16 面试 （Mysql）   
+          事务的四大特性（ACID）
+	   *  原子性 （Atomicity） :事务中所有操作是不可在分割的原子单位。事务中所有操作要么全部执行成功，要么全失败
+	   * 一致性 ：（Consistency） ： 事务执行后，数据库状态与其他业务规则保持一致。
+	      如转账业务，无论成功与否，参与两个业务转账的余额之和是不变的。
+	   * 隔离性 （Isolation）：指在并发操作中，不同事物之间应该是隔离的，每个并发中的事物不会相互干扰。
+	   * 持久性（Durability）: 一旦事务提交成功后。事务中所有数据都必须被持久化到数据库中。
+	      事务提交，数据库崩溃，重启数据库，恢复数据
+
+    事务的开启 与 提交
+         开启  : start transaction
+	 提交 ： commit(数据发生变化)
+	             rollback (数据恢复到原来状态)
+
+    // 事务的固定代码格式
+      try {
+			con = JDBCTools.getCon();
+			// 开启事务
+			con.setAutoCommit(false);
+		   
+			// 提交事务
+			con.commit();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally{
+		// 回滚事务
+			con.rollback();
+		}
+
+视图  ：
+
+	视图是一个虚拟表（非真实存在），是跑到内存中的表，真实表是硬盘上的表，怎么就得到了虚拟表，就是你查询的结果，只不过之前我们查询
+	出来的虚拟表，从内存中取出来显示在屏幕上，内存中就没有了这些表的数据，但是下次我要是想用这个虚拟表呢，没办法，只能重新查一次，
+	每次都要重新查。其本质是【根据SQL语句获取动态的数据集，并为其命名】，用户使用时只需使用【名称】即可获取结果集，可以将该结果
+	集当做表来使用。
+	　　为什么要用视图：使用视图我们可以把查询过程中的临时表摘出来，保存下来，用视图去实现，这样以后再想操作该临时表的数据时就
+	无需重写复杂的sql了，直接去视图中查找即可，但视图有明显地效率问题，并且视图是存放在数据库中的，如果我们程序中使用的sql过分依
+	赖数据库中的视图，即强耦合，那就意味着扩展sql极为不便，因此并不推荐使用
+
+	视图一般都是用于查询，尽量不要修改(插入、删除等)视图中的数据，虽然有时候可以修改成功，但是尽量不要这样做，因为这个视图可能
+	是多个表联合起来生成的一个结果，如果你修改它，可能会造成很多表里面的数据都跟着被修改了
+  
+     语法 ： 创建视图：
+			 CREATE VIEW 视图名称 AS  SQL语句
+			 CREATE VIEW book_view  AS SELECT bname,price FROM t_book
+		       
+		修改视图中数据  ：（改变视图中的数据时，原表中的数据也会改变）
+		          UPDATE student_view SET age = 89 WHERE NAME='liu'
+	        删除视图 ：
+		              drop view view名 
+		
+
+触发器 ：
+          Mysql的触发器 ：触发器是一种与表操作有关的数据库对象，当触发器所在表上出现指定事件时，将调用该对象，即表的操作事件触发表上的触发器的执行。
+Mysql有6中触发器 ： beforeinsert  afterinsert  beforeupdate  afterupdate  beforedelete  afterdelete
+  
+DELIMITER $      存储过程的标志
+CREATE TRIGGER tri_stuInsert AFTER INSERT   // 创建触发器
+ON student FOR EACH ROW
+BEGIN                                  // 开始标志
+ DECLARE sname VARCHAR(10);             // 声明变量
+ SET sname = NEW.sname;                 // 将插入的新数据的sname赋值给sname
+ INSERT INTO blog (NAME,sub_time) VALUES (sname,NOW());  // 向日志表中插入如新的记录
+END$   // 结束                   
+DELIMITER ;
+
+有OLD 和 NEW 之分 ： OLD的代表在操作气之前的旧的数据，NEW代表操作之后新的数据。 new.列名
+
+drop trigger 触发器名称  // 删除触发器
+show trigger : 显示触发器
+
+
+存储过程 ：
+   　　 存储过程包含了一系列可执行的sql语句，存储过程存放于MySQL中，通过调用它的名字可以执行其内部的一堆sql
+          也就是说存储过程其实是什么？是一堆sql的集合体， 可以直接用mysql里面提供的一堆功能，有了存储过程以后，
+	  它的好处是我项目逻辑中需要的各种查询都可以让DBA或者你自己封装到存储过程里面，以后使用的时候直接调用存储过程名就可以了
+	  (1).增强SQL语言的功能和灵活性：存储过程可以用控制语句编写，有很强的灵活性，可以完成复杂的判断和较复杂的运算。
+
+	(2).标准组件式编程：存储过程被创建后，可以在程序中被多次调用，而不必重新编写该存储过程的SQL语句。而且数据库专业人员可以随
+	    时对存储过程进行修改，对应用程序源代码毫无影响。
+
+	(3).较快的执行速度：如果某一操作包含大量的Transaction-SQL代码或分别被多次执行，那么存储过程要比批处理的执行速度快很多。
+	因为存储过程是预编译的。在首次运行一个存储过程时查询，优化器对其进行分析优化，并且给出最终被存储在系统表中的执行计划。
+	而批处理的Transaction-SQL语句在每次运行时都要进行编译和优化，速度相对要慢一些。
+	  
+	  上面一大堆话的总结：程序与数据库结合使用的三种方式：
+		#方式一：
+		    MySQL：存储过程
+		    程序：调用存储过程
+
+		#方式二：
+		    MySQL：
+		    程序：纯SQL语句
+
+		#方式三：
+		    MySQL:
+		    程序：类和对象，即ORM（本质还是纯SQL语句），
+
+     创建存储过程  ：
+               * 无参数存储过程 ：
+	          DELIMITER //
+			CREATE PROCEDURE p1()
+			BEGIN
+			 SELECT * FROM student;
+			END  //
+		DELIMITER;
+                分隔符
+                    MySQL默认以";"为分隔符，如果没有声明分割符，则编译器会把存储过程当成SQL语句进行处理，因此编译过程会报错，
+		    所以要事先用“DELIMITER //”声明当前段分隔符，让编译器把两个"//"之间的内容当做存储过程的代码，不会执行这些代码；
+		    “DELIMITER ;”的意为把分隔符还原。
+                 调用存储过程 ： call 存储名（）； 
+		 查看存储过程的信息 ： SHOW CREATE PROCEDURE p1
+
+	     *  带参数存储过程 ：
+	         DELIMITER //
+			CREATE PROCEDURE p2(
+			   IN n1 INT,
+			   OUT res INT
+			)
+			BEGIN 
+			   SELECT * FROM student WHERE age > n1;
+			   SET res = 1;                 // 当SQL语句执行成功则res = 1;
+			END //
+			DELIMITER;
+		   // 将变量@res设置为0	 
+			 SET @res=0;                // 没执行SQL语句之前将@res设置为0
+			 CALL p2(20,@res);       // 调用存储过程
+			 SELECT @res;              // 查看res的值
+
+	       *  inout既可以作为传入值，也可以作为传出值
+	             DELIMITER //
+			 CREATE PROCEDURE p3(
+			     INOUT n1 INT                 // 既可以作为输出值，也可以作为输入值
+			 )
+			 BEGIN
+			   SELECT * FROM student WHERE age > n1;
+			   SET n1 = 30;
+			 END //
+			 DELIMITER;
+			 
+			 
+			 SET @n1 = 20;   -----》20
+			 CALL p3(@n1);
+			 
+			 SELECT @n1;    ----》30
+ 
+              * 存储过程结合事务 ：
+	          DELIMITER //
+			CREATE PROCEDURE insert_student(
+			    OUT return_code INT
+			)
+			BEGIN 
+			 DECLARE EXIT HANDLER FOR SQLEXCEPTION       // 抛出sql异常则回滚数据
+			 BEGIN
+			  SET return_code = 1;                                         
+			  ROLLBACK;
+			 END;
+			 DECLARE EXIT HANDLER FOR SQLWARNING         // 抛出SQL警告回滚
+			 BEGIN
+			  SET return_code = 2;
+			  ROLLBACK;
+			 END;
+			 START TRANSACTION;                                           // 开启事务
+			 INSERT INTO student (NAME,age,sex) VALUES ('jia',100,100);
+			 COMMIT;                                                               // 提交事务
+			 SET return_code = 0;   
+			END //
+			DELIMITER; 
+                   当参数为out时，也可以进行传入 
+
+	       * 删除存储过程   ：  DROP PROCEDURE p1
+
+	       在sql的客户端个变量赋值 ：
+	          set  @res = 1;
+		  SELECT sname INTO @res FROM student WHERE id = 2      // 给查到的名字赋值给res
+
+	   if ....  then  ....else  ....   end if .... end    （判断姓名是否为liuweidong,如果不是，将b设置为0， 如果是，将b设置为0）
+		    DELIMITER //
+			CREATE PROCEDURE p2(OUT b INT, IN `name` VARCHAR(10))
+			BEGIN
+			  IF `name`='liuweidong' THEN
+			      SET b = 1;
+			  ELSE
+			      SET b = 0;
+			  END IF;
+			  SELECT * FROM student;
+			END
+			//
+
+	   对于case语句的编写 ：
+	      case 变量名   when  值1 then ...  when 值2 then ... else ... end case
+	      CREATE PROCEDURE p1(OUT b INT, IN `name` VARCHAR(10))    // 如果输入的name=liu,b = 1,zhang b =2 其他 b = 3
+			BEGIN
+			  CASE `name`
+			  WHEN 'liu' THEN
+			  SET b = 1;
+			  WHEN 'zhang' THEN
+			  SET b = 2;
+			  ELSE
+			  SET b = 3;
+			  END CASE;
+			  SELECT * FROM student;
+			END
+
+	   while 循环语句 ：  当输入参数小于8时，不断的向数据库中添加数据，奇数为1，偶数性别为0；
+	                                                                                                                         while 条件  do  .......  end while
+	       WHILE b < 8 DO
+		   IF b%2=0 THEN
+		    INSERT INTO student (id,sname,sex) VALUES(b*10,'liu',0);
+		   ELSE
+		    INSERT INTO student (id,sname,sex) VALUES(b*10,'liu',1);
+		   END IF;
+		    SET b = b + 1;
+		  END WHILE;
+
+           repeat  ....  until  条件  end repeat 语句 ： 先操作，后进行判断 
+	        REPEAT 
+			      INSERT INTO student (id,sname,sex) VALUES(b*100,'liu',0);
+			      SET b = b + 1;
+              UNTIL b > 5
+              END REPEAT;
+
+函数  ：
+      ROUND(x,y) : x 一个数，y小数部分保留几位
+      RAND（）; 产生一个随机数，在0~1之间
+聚合函数 ：
+     AVG()  SUM() MIN() MAX() COUNT()
+字符串 ：
+    LOWER()  UPPER() CONCAT()  
+    SUBSTRING()  ： 返回字符串 ，字符安下标从1开始。 substring(str,1)   返回整体  substring(str,1,1) 返回下标1开始后的第一个
+    CHAR_LENGTH(uname)  ：返回字符串的长度
+时间函数 ：
+        NOW() :返回当前时间
+	CURDATA() : 返回当前日期
+	CURTIME() : 返回当前时间
+        SELECT DATE_FORMAT('2009-10-04 22:23:00', '%W %M %Y');
+        -> 'Sunday October 2009'
+       mysql> SELECT DATE_FORMAT('2007-10-04 22:23:00', '%H:%i:%s');
+        -> '22:23:00'
+加密函数 ：
+    MD5(str);
+    password(str);
+
+   
+   ======== 查询SQL语句的时间 ：
+     show variables  like 'profiling%'
+
+     set profiling=1
+
+     执行自己的SQL语句
+
+     查看执行时间 show profiles;
+c
+
+=============================================================================
+    1.行锁和表锁
+
+在mysql 的 InnoDB引擎支持行锁，与Oracle不同，mysql的行锁是通过索引加载的，即是行锁是加在索引响应的行上的，要是对应的SQL语句没有走索引，
+则会全表扫描，
+
+行锁则无法实现，取而代之的是表锁。
+
+
+
+表锁：不会出现死锁，发生锁冲突几率高，并发低。
+
+行锁：会出现死锁，发生锁冲突几率低，并发高。
+
+
+
+锁冲突：例如说事务A将某几行上锁后，事务B又对其上锁，锁不能共存否则会出现锁冲突。（但是共享锁可以共存，共享锁和排它锁不能共存，
+排它锁和排他锁也不可以）
+
+死锁：例如说两个事务，事务A锁住了1~5行，同时事务B锁住了6~10行，此时事务A请求锁住6~10行，就会阻塞直到事务B施放6~10行的锁，
+而随后事务B又请求锁住1~5行，事务B也阻塞直到事务A释放1~5行的锁。死锁发生时，会产生Deadlock错误。
+
+
+
+锁是对表操作的，所以自然锁住全表的表锁就不会出现死锁。
+
+
+2.行锁的类型
+
+行锁分 共享锁 和 排它锁。
+
+共享锁又称：读锁。当一个事务对某几行上读锁时，允许其他事务对这几行进行读操作，但不允许其进行写操作，也不允许其他事务给这几行上排它锁，
+允许上读锁。
+
+排它锁又称：写锁。当一个事务对某几个上写锁时，不允许其他事务写，但允许读。更不允许其他事务给这几行上任何锁。包括写锁。
+
+
+
+上共享锁的写法：lock in share mode
+
+例如： select  math from zje where math>60 lock in share mode；
+
+
+
+上排它锁的写法：for update
+
+例如：select math from zje where math >60 for update；
+
+
+
+3.行锁的实现
+
+注意几点：
+
+1.行锁必须有索引才能实现，否则会自动锁全表，那么就不是行锁了。
+
+2.两个事务不能锁同一个索引，例如：
+
+
+[sql] view plain copy
+事务A先执行：  
+select math from zje where math>60 for update;  
+  
+事务B再执行：  
+select math from zje where math<60 for update；  
+这样的话，事务B是会阻塞的。如果事务B把 math索引换成其他索引就不会阻塞，但注意，换成其他索引锁住的行不能和math索引锁住的行有重复。  
+3.insert ，delete ， update在事务中都会自动默认加上排它锁。
+实现：
+
+
+会话1：
+begin；
+select  math  from zje where math>60 for update；	
+会话2：
+
+begin；
+update zje set math=99 where math=68；
+阻塞...........
+会话相当与用户
+如上，会话1先把zje表中math>60的行上排它锁。然后会话2试图把math=68的行进行修改，math=68处于math>60中，所以是已经被锁的，
+会话2进行操作时，
+
+就会阻塞，等待会话1把锁释放。当commit时或者程序结束时，会释放锁。

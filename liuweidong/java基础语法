@@ -1,0 +1,259 @@
+1、接口类
+
+   * 关键字 ： interface
+
+   格式： public  interface 名字
+             {
+	     	public abstract void  function();
+	     }
+    注意：接口类内必须是抽象方法，不能有主体。
+             方法前固定格式： public abstract
+	     定义成员变量时， 必须是常量 ： int  a = 5;
+	     public ststic final int a = 5; 完整
+	     接口名可直接调用  interface.a; 但不能更改其值
+
+2、类实现接口
+
+    *关键字 implments
+
+     方式 ： class A implments interface()
+		{
+			public void function()
+			{
+			   Syso();
+			}
+		}
+
+  3、 多态：   父类名  变量名 = new 子类名（）；
+         
+	 抽象类， 继承，接口均可。（子类必须实现父类的方法重写）
+
+         特点：
+	    *成员变量 ； 编译时，参考父类有没有这个变量， 有，编译成功，没有编译失败
+	      运行时，是父类的成员变量
+
+	     * 成员方法：
+	           编译时，看父类有没有这个方法，有，成功，没有，失败。
+		    运行的是子类重写的方
+
+4、构造方法：
+    *     public 类名（参数）
+	      {
+		      
+	      }
+    
+    * Person  p = new Person();  在new使，自动调用构造方法。
+    *构造方法可以重载.
+
+5 this 关键字：
+		
+	public class A
+	{
+	        priavte String name;
+		priavte  int age;
+
+		(1)public A()
+		{
+			this("张三" ， 20)；
+		}
+
+		(2)public A(String name,   int age)
+		{
+			this.name = name;
+			this.age = age;
+		}
+	}
+
+	main()
+	{
+		(3)A a = new A();
+	}
+
+   （3） ---- （1）-----（2）
+
+6、super 关键字 ：（用于继承类）
+
+	* 用于子类调用父类构造函数
+
+	 public class Fu
+	 {
+	     priavte String name;
+		
+		public  Fu(String name)
+		{
+		(1)    this.name = name;
+		}
+
+	 }
+
+	 class Zi extends Fu()
+	 {
+		public Zi(String name)
+		{
+		(2)	super("name")；
+		}
+	 }
+
+	 main（）
+	 {
+		(3)Zi z = new Zi("张三");
+	 }
+
+          (3) -----(2)-----(1)
+	 * super 和 this 只能用一个
+	  
+	  	public class Fu
+	 {
+	     priavte String name;
+		
+		public  Fu(String name)
+		{
+		(0)    this.name = name;
+		}
+
+	 }
+
+	 class Zi extends Fu()
+	 {
+		public Zi(String name)
+		{
+		(1)	this("name")；
+		}
+
+		public Zi(String name)
+		{
+		  (2)	super(name);
+		}
+	 }
+
+         main（）
+	 {
+		(3)Zi z = new Zi("张三");
+	 }
+	 (3) -----(1) -----（2）-----（0）
+
+7 、final 关键字：
+
+       修饰类： public final A(){}    : 该类没有子类， 也不能被继承， 其他正常。
+       修饰方法;  public final void (){}    该方法不能被子类重写
+       修饰基本数据类型 ：  final int  a =5；   a为5固定不变，不能再给a赋值。a = 6错误
+       修饰引用数据类型 ：  final  Fu f = new　Ｆｕ（）；　　ｆ的地址始终不能变。
+       修饰成员变量　：　public  class a()
+                                       {
+				       		final int age = 5;  // age 不能改变
+
+						public A()
+						{
+							this.age = age;   // 可以在构造方法中赋值， 不能在setAge中赋值
+						}
+				 
+8、static 关键字：
+	*可以实现数据共享， 当多个事物有同一个属性的时候，可定义成static 类型成员变量。可以直接用该类名调用该成员变量 （静态属于类）
+	*子类重写父类时，编译看父类，运行看是否为静态方法，当为静态方法时，调用父类静态方法，非静态时调用子类方法。成员变量则都调用父类。
+	*当调用静态成员变量时，则用静态方法。否则用非静态方法
+	* 静态函数没有this指针，只能访问静态成员或静态方法。
+
+9、匿名类 ： new smoke();  匿名类只能用一次。
+
+10、 内部类 ： 定义在外部类中：
+
+	public class Outer
+		{
+			private int a = 5;
+
+		    class Inner
+			{
+				 public void show()
+				{
+					 System.out.println(a);
+				 }
+			}
+		}
+	访问内部类中方法方式：
+		public class Test {
+
+			  public static void main(String[] args) {
+				Outer.Inner t = new Outer().new Inner();
+				t.show();
+			}
+		}
+
+11 、局部内部类：
+         
+	      public class Fu {
+		public void show()
+		{
+			class Inner{
+				public void print()
+				{
+					System.out.println("你好");
+				}
+			}
+			
+			Inner in= new Inner();
+			in.print();
+		}
+
+		调用：
+		public class Test {
+		       public static void main(String[] args) {
+				Fu f = new Fu();
+				f.show();
+			}
+		 }
+
+12、匿名内部类 ： 只能写在方法中
+   
+	public interface Stu {
+		
+		public abstract void show();
+
+	}
+
+	调用：
+	public class Test {
+		 public static void main(String[] args) {
+			
+			 new Stu(){
+				 public void show()
+				 {
+					 System.out.println("学生");
+				 }
+			 }.show();
+		}
+	}
+
+
+C:\Program Files\Java\jdk1.8.0_181\bin;
+
+13、抽象类作为参数传递 ： 只能将子类对象用于传递。 
+       抽象类作为返回值，只能返回子类对象。
+	      
+		public class Test {
+		public static void main(String[] args) {                                        
+		       Student s = new Student();
+				
+				Person p = operator();}
+			
+			public static Person operator()
+			{
+				return new Student();
+			}
+		}                                                                                                  )
+				
+
+
+	public class Test {
+	public static void main(String[] args) {
+		
+		Student s = new Student();
+		
+		 operator(s);
+		
+	}
+	
+	public static void operator(Person s)
+	{
+		s.work();
+        }
+

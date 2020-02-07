@@ -1,0 +1,96 @@
+1、类的加载器： 任何一个class文件读取内存时，系统都会为其创建一个class对象。
+   
+      反射原理：
+          * 首先需要把Java文件保存到本地硬盘 .java
+	  * 编译Java文件，生成 .class文件
+	  * 使用JVM，把class文件在内存中使用Class类表示
+	  * 当使用反射的时候，首先要获取到Class类，得到这个类的对象后获取其中的方法、属性、构造器
+
+	  -- 属性类: Filed
+	  --构造方法类： Constructor
+	  -- 方法类： Method
+    
+
+2、获取一个类class文件对象的三种方式：
+
+                //  通过new对象获得
+		 Person p = new Person();
+		 Class c = p.getClass();
+		 System.out.println(c);
+		 
+		 // class类的静态方法获取
+		 Class c1 = Class.forName("cn.hegongda.rex3.Person");
+		 System.out.println(c1);
+		 
+		 // 类名获取
+		 Class c2 = Person.class;
+		 System.out.println(c2);
+
+	要对一个类实例化，可以不用new，还可以用什么方法： 反射
+		 Class c1 = Class.forName("cn.hegongda.rex3.Person");
+		 System.out.println(c1);
+		 Person p1 = (Person) c1.newInstance();
+		 p1.setName("zhandan");
+
+     *** 操作类中有参数的构造方法： 
+                   Constructor cs = c2.getConstructor(String.class, Integer.class);
+		  Person p11 = (Person) cs.newInstance("zhangsan",20);
+		  System.out.println(p11.getAge()+"  "+p11.getName());
+
+    **** 操作类中的属性：
+                  // 得到类文件对象
+                 Class c1 = Class.forName("cn.hegongda.rex3.Person");
+		  // 创建出类对象
+		 Person p5 = (Person) c1.newInstance();
+		 // 通过getDeclasedFiled()传入类中属性名的属性对象
+		 Field f =  c1.getDeclaredField("name");
+		 // 若该属性为私有，则需要对其权限进行更改
+		 f.setAccessible(true);
+		  //  设置属性值
+		 f.set(p5, "lisi");
+		 输出属性值
+		 System.out.println(f.get(p5));
+
+    **** 操作类中的普通方法：
+                Class c0 = Class.forName("cn.hegongda.rex3.Person");                // 获取Class对象
+		 Person p7 = (Person)c0.newInstance();                                       // 创建类对象
+		 Method m = c0.getDeclaredMethod("setName", String.class);    // 传入类中方法名，及参数，得到方法对象
+		 m.invoke(p7, "husan");                                                               // 执行该方法并传递参数
+		 System.out.println(p7.getName()); 
+                  
+		  // 操作私有方法需要设置权限
+                      m.setAccessible(   true   );
+		 // 当操作静态方法的时候，则不需要类的实例
+		     m.invoke(null, "husan"); 
+
+  ***** 泛型擦除
+          集合中泛型为伪泛型，所以可以通过反射直接调用其add方法，重新设置其赋值类型
+        
+                List<String> arr = new ArrayList<String>();
+		arr.add("a");
+		Class c = arr.getClass();
+		Method m = c.getMethod("add", Object.class);
+		m.invoke(arr, 25);
+		m.invoke(arr, 26);
+		System.out.println(arr);
+
+
+**** 通过反射配置文件
+          // 创建IO流
+	 FileReader fr = new FileReader("D:\\workspace\\Day33\\config.properties");
+	  // 创建properties集合
+	  Properties pro = new Properties();
+	  // 读取文件中键值队
+	  pro.load(fr);
+	  // 得到类名
+	  String className = pro.getProperty("ClassName");
+	  String methodName = pro.getProperty("MethodName");
+	  // 关闭IO流
+	  fr.close();
+	  System.out.println(className);
+	  // 反射：
+	  Class c = Class.forName(className);
+	  Object obj = c.newInstance();
+	  Method m = c.getMethod(methodName);
+	  
+	  m.invoke(obj);

@@ -1,0 +1,331 @@
+1、监听器设计模式 ， 类似于观察者设计模式。
+     监听器包括三部分：  事件对象 ： 1、获取事件源  2、获取事件类型 
+                                    事件源：1、添加监听器  2、触发监听器 3、业务代码
+				    监听器 ： 对事件进行监听
+
+
+				    事件对象：    public class CurdEvent implements ICurdEvent {
+							    private IListenable listener;
+							    private String methodName;						    								
+								public CurdEvent(IListenable listener, String methodName) {
+									super();
+									this.listener = listener;
+									this.methodName = methodName;
+								}
+
+								@Override
+								public IListenable getListener() {
+									// TODO Auto-generated method stub
+									return listener;
+								}
+
+								@Override
+								public String getEventType() {
+									String eventType = null;
+									eventType = methodName;
+									return eventType;
+								}
+
+				    监听器： public class Listener implements IListener {
+
+						@Override
+						public void handleEvent(ICurdEvent event) {
+						   String method = event.getEventType();
+							if(method.startsWith("add")){
+								System.out.println("已经成功添加");
+							}else if(method.startsWith("remove")){
+								System.out.println("已经成功移出");
+							}else if(method.startsWith("find")){
+								System.out.println("已经查询完毕");
+							}else if(method.startsWith("modefy")){
+								System.out.println("已经成功移出");
+							}
+						   
+
+				    事件源： public class Listenerable implements IListenable {
+			                	private IListener listener;
+						@Override
+						public void setListener(IListener listener) {
+						 
+							this.listener = listener;
+							
+						}
+
+						@Override
+						public void triggleListener(CurdEvent event) {
+							
+							listener.handleEvent(event);	
+						}
+						// 事件元中业务
+							public void addStudent(){
+								System.out.println("学生添加成功LLL");
+								CurdEvent event = new CurdEvent(this,"addStudent");
+								this.triggleListener(event);
+							}
+						
+
+				  主程序 ：public static void main(String[] args) {
+						// 定义事件元
+						Listenerable listenable = new Listenerable();
+						// 定义监听器
+						IListener listener = new Listener();
+						// 添加监听器
+						listenable.setListener(listener);
+						listenable.addStudent();
+			
+2、servlet中有8个监听器，监听的主要对象 ： request、session、servletContext
+
+                   注册监听器：
+		        <listener>
+			     <listener-class> 类权限名 </listener-class>
+			</listener>
+           
+	    1）、HttpServletListener: 监听对 servlet的请求 与 响应  （接口： ServletRequestListener）
+
+	              //  响应结束立刻被销毁
+	              @Override
+			public void requestDestroyed(ServletRequestEvent sre) {
+			    System.out.println("已经销毁");
+			}
+ 
+                     // 访问Web下所有的资源，请求以发送，立刻监听到初始化
+			@Override
+			public void requestInitialized(ServletRequestEvent sre) {
+				System.out.println("已经初始化");
+
+	    2）、HttpServletAttributeListener : 监听request 与属性的添加 修改 和 删除  （接口 ： ServletRequestAttributeListener）
+	            public class HttpAttribute implements ServletRequestAttributeListener {
+
+			@Override
+			public void attributeAdded(ServletRequestAttributeEvent srae) {
+			     System.out.println("属性已经添加"+"  "+srae.getName()+"   "+srae.getValue());
+				
+			}
+
+			@Override
+			public void attributeRemoved(ServletRequestAttributeEvent srae) {
+				 System.out.println("属性已经删除"+"  "+srae.getName()+"   "+srae.getValue());
+				
+			}
+
+			@Override
+			public void attributeReplaced(ServletRequestAttributeEvent srae) {
+				System.out.println("属性已经重新设置"+"  "+srae.getName()+"   "+srae.getValue());
+				
+			}
+
+	     3）、HttpSessionListener : 监听session 的创建于销毁
+	              @Override
+			public void sessionCreated(HttpSessionEvent se) {
+			   
+				 System.out.println("session已经创建");
+
+			}
+
+			@Override
+			public void sessionDestroyed(HttpSessionEvent se) {
+				 System.out.println("session已经被销毁");
+			}
+           
+	    4）、HttpSessionAttributeListener:   监听属性的添加、更改、删除
+
+                     	@Override
+			public void attributeAdded(HttpSessionBindingEvent se) {
+				   System.out.println("属性已经添加"+"  " + se.getName()+"  "+se.getValue());
+			}
+
+			@Override
+			public void attributeRemoved(HttpSessionBindingEvent se) {
+				   System.out.println("属性已经删除"+"  " + se.getName()+"  "+se.getValue());
+			}
+
+			@Override
+			public void attributeReplaced(HttpSessionBindingEvent se) {
+				   System.out.println("属性已经修改"+"  " + se.getName()+"  "+se.getValue());
+
+			}
+		   
+	     5） 、ServletContextListener : 监听 servletContext的 创建 和 销毁， 在服务器启动时，就已经创建
+			@Override
+			public void contextInitialized(ServletContextEvent sce) {
+				 System.out.println("已经就绪");
+
+			}
+
+			@Override
+			public void contextDestroyed(ServletContextEvent sce) {
+				System.out.println("gameover");
+
+			}
+
+	     6）、ServletContextAttributeListener : 
+		  @Override
+			public void attributeAdded(ServletContextAttributeEvent scae) {
+				 System.out.println("添加成功"+"   "+ scae.getName()+"  "+scae.getValue());
+
+			}
+			@Override
+			public void attributeRemoved(ServletContextAttributeEvent scae) {
+				
+			}
+			@Override
+			public void attributeReplaced(ServletContextAttributeEvent scae) {
+			
+			}
+
+	       7) 、HttpSessionBindingListener : 用于监听 session 绑定和解绑 实体类  ， 该种监听器不需要注册
+	                              public class Student implements HttpSessionBindingListener {
+						private String name;
+						private int age;
+						
+					    public Student(){}
+						public Student(String name, int age) {
+							super();
+							this.name = name;
+							this.age = age;
+						}
+
+						public String getName() {
+							return name;
+						}
+						public void setName(String name) {
+							this.name = name;
+						}
+						public int getAge() {
+							return age;
+						}
+						public void setAge(int age) {
+							this.age = age;
+						}
+						// 将实体类对象绑定到session中，会触发该监听器
+						@Override
+						public void valueBound(HttpSessionBindingEvent event) {
+						     System.out.println("已经成功绑定");
+						}
+					    //  将实体类从session中解绑时，会触发该监听器
+						@Override
+						public void valueUnbound(HttpSessionBindingEvent event) {
+							System.out.println("已经成功解绑");
+						}
+
+	    8）、HttpServletActivationListener :  用于对session 的钝化和活化。在实现该接口的同时，也要实现serializable 接口。
+	          钝化 ： 将session从内存中写道硬盘
+		  活化 ： 将session 从硬盘中写入内存
+			        	 public class Person implements HttpSessionActivationListener, Serializable{
+					private String name;
+					private int age;
+				
+					public Person(String name, int age) {
+						super();
+						this.name = name;
+						this.age = age;
+					}
+					
+					public String getName() {
+						return name;
+					}
+
+					public void setName(String name) {
+						this.name = name;
+					}
+					public int getAge() {
+						return age;
+					}
+
+					public void setAge(int age) {
+						this.age = age;
+					}
+
+					@Override
+					public void sessionWillPassivate(HttpSessionEvent se) {
+						  System.out.println("session将要被钝化");
+						
+					}
+
+					@Override
+					public void sessionDidActivate(HttpSessionEvent se) {
+						 System.out.println("session将要被活化");
+						
+					}
+
+
+3、 统计当前访问网站的数量：
+	     
+        // servletContextListener
+			@Override
+			public void contextInitialized(ServletContextEvent sce) {
+				// 定义一个Map, key值为ip，value为sesssion
+				Map<String, List<HttpSession>> map = new HashMap<>();
+				// 获取全局域
+				ServletContext sc = sce.getServletContext();
+				// 将map 存进域属性中
+				sc.setAttribute("map", map);
+
+			}
+          // servletRequestListener
+				@Override
+			public void requestInitialized(ServletRequestEvent sre) {
+				// 获取request
+				HttpServletRequest request = (HttpServletRequest) sre.getServletRequest();
+				// 获取客户端IP
+				String ip = request.getRemoteAddr();
+				// 获取session
+				HttpSession session = request.getSession();
+				ServletContext sc = sre.getServletContext();
+				// 通过全局与属性得到map
+				Map<String, List<HttpSession>> map = (Map<String, List<HttpSession>>) sc.getAttribute("map");
+				// 根据IP得到存放session 的集合
+				List<HttpSession> sessions = map.get(ip);
+				// 将IP 放进 session 有利于后续的删除
+				session.setAttribute("ip", ip);
+				// 判断sessions集合是否为空，若为空，则需要新建一个集合
+				if(sessions ==  null){
+					sessions = new ArrayList<HttpSession>();
+				}
+				// 判断当前session 是否 与集合中session重合，若有重合，则说明当前session已经放进集合中，不需要再放了
+				for(HttpSession currentSession : sessions){
+					if(currentSession == session){
+						return;
+					}
+				}
+				// 将当前session放进集合
+				sessions.add(session);
+				// 重新设置map，并将其放进与属性中
+				map.put(ip, sessions);
+				sc.setAttribute("map", map);
+
+	// httpSessionListener 
+	                      /* 当用户退出时，就要相应的session
+				 * 首先通过session获取到客户端的IP
+				 * 通过IP在map中找到相应的集合，并从集合中删除该session
+				 * 判断集合的大小，若大小为0，则客户已经退出了该网页，移出IP
+				 * 若不为0，则说明客户端用不同的浏览器同时打开了该页面，需要重新设置map并存域属性中
+				 * */
+
+				@Override
+				public void sessionDestroyed(HttpSessionEvent se) {
+					HttpSession session = se.getSession();
+					String ip = (String) session.getAttribute("ip");
+					ServletContext sc = session.getServletContext();
+					
+					Map<String, List<HttpSession>> map = (Map<String, List<HttpSession>>) sc.getAttribute("map");
+					List<HttpSession> sessions = map.get(ip);
+					
+					sessions.remove(session);
+					if(sessions.size() == 0){
+						map.remove(ip);
+					}else{
+						map.put(ip, sessions);
+						sc.setAttribute("map", map);
+					}
+					
+             // 通过servlet使session失效
+	               	HttpSession session = request.getSession(false);
+		if(session != null){
+			session.invalidate();
+		}
+
+
+
+
+

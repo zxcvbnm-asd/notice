@@ -1,0 +1,60 @@
+1、MySql  的逻辑分层 ：
+    * 链接层 ： 提供与客户端链接的服务
+    * 服务层 ： 提供各种用户使用的接口（select、delete···）   ；  提供SQL优化器(MySql QUery optimizer)
+    * 引擎层：提供各种数据的存储方式 （InnoDB MyISAM）
+    * 存储层 ：存储数据 
+    InnoDB : 支持事务 （高并发，行锁
+    MyISAM : 支持性能 （表锁
+    MySql 默认存储方式为 ： InnoDB     
+    查询引擎命令 ： 
+       show engines;
+       show variables like '%storage_engine%'
+
+2、索引  
+   索引 index 是帮助mysql高效获取数据的数据结构（树 ： B树）
+
+   索引的弊端 ：
+        索引本身很大，存放在内存/硬盘中
+	索引不是所有情况都是使用 ： 少量数据    、  频繁更新的字段、很少使用得字段
+	索引会降低增删改的效率
+
+   索引的优势：
+       提高查询效率
+       降低CPU使用率
+
+    分类 ：
+       主键索引  ：  不能为空
+       单值索引 ：  单列 age : 一个表可以有多个单值索引
+       唯一索引 ：  不能重复 ： id
+       复合索引 ：  多个列构成的索引，可以不全都用
+
+    创建索引  ：
+	      方式一：
+		 create  索引类型   索引名   on  表（字段）
+		 单值  ：   create index  name_index  on  stu(name)
+		 唯一  ：   create unique index  id_index  on stu(id)
+		 复合：  create index  name_year_index on stu(name ,year)
+	     方式二：
+		   alter  table  表名   add  索引类型   索引名（字段）
+		 单值  ：   ALTER   TABLE    stu         ADD       INDEX         sname_index(sname);
+		 唯一  ：   ALTER   TABLE    stu         ADD       unique    INDEX         sname_index(sname);
+		 复合：     ALTER   TABLE    stu         ADD       INDEX         sname_index(sname,year);
+	    
+     删除索引  ：
+        drop  index 索引名  on  表名
+	DROP INDEX score_index ON stu
+        
+
+
+3、MyCat 数据库分片：
+        * 在linux系统上安装 Mycat
+	* 启动Mycat， 进 bin 下： 
+	      ./mycat console  前台启动
+	      ./mycat start 后台启动
+	      ./mycat stop  终止
+	      ./mycat restart   重启
+	      ./mycat dump  导出
+	    启动tomcat的前提 ： 配置好相关的节点， 其默认的端口号 ： 8066
+	 * 配置节点的关系 ： schema.xml文件中配置 
+
+   
